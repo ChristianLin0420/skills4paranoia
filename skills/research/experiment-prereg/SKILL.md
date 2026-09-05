@@ -1,6 +1,6 @@
 ---
 name: experiment-prereg
-description: 實驗的預先登記：在花掉算力之前把假設、主指標、什麼算 null、停止與決策規則寫死並凍結。強迫填完六個欄位（要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因），釘死評估協定，並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. For the code itself use vla-code-review; for classical DOE (randomisation, blocking, factorial layouts) or closed-form power analysis, a general statistics skill is a better fit than this one.
+description: 實驗的預先登記：在花掉算力之前把假設、主指標、什麼算 null、停止與決策規則寫死並凍結。強迫填完六個欄位（要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因），釘死評估協定，並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. This does NOT design the experiment — it takes one that already exists and pins it down. For choosing the design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power analysis, use a dedicated experimental-design or statistical-power skill. For the code rather than the protocol, use vla-code-review.
 ---
 
 # experiment-prereg
