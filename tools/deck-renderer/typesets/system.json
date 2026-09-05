@@ -1,0 +1,10 @@
+{
+  "name": "system",
+  "label": "macOS 內建",
+  "note": "不需安裝任何字型，任何 Mac 開啟都不會被替換。傳給外部或 Windows 同事時的保底選項。",
+  "latin": "Helvetica Neue",
+  "display": "Helvetica Neue",
+  "cjk": "PingFang TC",
+  "mono": "Menlo",
+  "google": []
+}

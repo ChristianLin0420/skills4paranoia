@@ -1,0 +1,43 @@
+{
+  "name": "mist",
+  "label": "霧藍 Mist",
+  "bg": "F1F3F5",
+  "surface": "FFFFFF",
+  "ink": "16191D",
+  "ink2": "5C6570",
+  "ink3": "89929C",
+  "rule": "DCE1E6",
+  "rule_soft": "E9EDF0",
+  "accent": "3F6480",
+  "accent_deep": "2B4659",
+  "accent_soft": "DAE3EA",
+  "accent_wash": "EBF0F4",
+  "ladder": [
+    "1B1F24",
+    "4C545D",
+    "7C848E",
+    "A9B0B8",
+    "CFD5DA"
+  ],
+  "series": [
+    "3F6480",
+    "5E8A80",
+    "7B7392",
+    "A98A66",
+    "8C5F5A"
+  ],
+  "heat": [
+    "EDF1F4",
+    "CEDBE3",
+    "A6BECD",
+    "7A9DB2",
+    "3F6480"
+  ],
+  "band": [
+    "DBE3E9",
+    "DFE8E5",
+    "E4E1E9",
+    "EBE5DB",
+    "E9DFDD"
+  ]
+}

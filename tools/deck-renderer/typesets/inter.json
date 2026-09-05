@@ -1,0 +1,10 @@
+{
+  "name": "inter",
+  "label": "Inter + 思源黑體 + JetBrains Mono",
+  "note": "純以螢幕可讀性為目標，小字級最穩，但個性最少。資料極密時選這個。",
+  "latin": "Inter",
+  "display": "Inter",
+  "cjk": "Noto Sans TC",
+  "mono": "JetBrains Mono",
+  "google": ["Inter:wght@400;500;600", "JetBrains Mono:wght@400;500", "Noto Sans TC:wght@400;500;700"]
+}

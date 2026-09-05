@@ -1,0 +1,7 @@
+task,Baseline BC,Diffusion Policy,WAM-v1
+Pick and place,62,78,91
+Stack cube,44,66,84
+Open drawer,51,71,88
+Peg insert,23,39,61
+Cloth fold,12,24,43
+Long-horizon tidy,8,19,34

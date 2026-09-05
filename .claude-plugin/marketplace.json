@@ -1,0 +1,17 @@
+{
+  "name": "christianlin0420",
+  "owner": {
+    "name": "Bor-Jiun Lin",
+    "url": "https://github.com/ChristianLin0420"
+  },
+  "description": "Bor-Jiun Lin's agent skills, organised by topic.",
+  "plugins": [
+    {
+      "name": "christianlin-skills",
+      "source": "./",
+      "description": "Research-grade deck authoring: problem/solution/results structure, low-saturation light design system, research figure specs.",
+      "category": "productivity",
+      "keywords": ["presentation", "keynote", "pptx", "research", "design-system"]
+    }
+  ]
+}

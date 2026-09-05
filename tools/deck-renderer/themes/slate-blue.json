@@ -1,0 +1,43 @@
+{
+  "name": "slate-blue",
+  "label": "石墨藍 Slate Blue",
+  "bg": "F1F2F3",
+  "surface": "FAFBFB",
+  "ink": "14171A",
+  "ink2": "5F656B",
+  "ink3": "8A9096",
+  "rule": "DCE0E3",
+  "rule_soft": "E8EBED",
+  "accent": "3A6183",
+  "accent_deep": "27435C",
+  "accent_soft": "DBE4EB",
+  "accent_wash": "EAF0F4",
+  "ladder": [
+    "20242A",
+    "4B5158",
+    "787E85",
+    "A6ACB2",
+    "CDD2D6"
+  ],
+  "series": [
+    "3A6183",
+    "20242A",
+    "6E8FA8",
+    "787E85",
+    "A6ACB2"
+  ],
+  "heat": [
+    "EDF1F4",
+    "CFDCE6",
+    "A8C0D2",
+    "7C9EB8",
+    "3A6183"
+  ],
+  "band": [
+    "DDE5EB",
+    "DFE1E3",
+    "E7ECF0",
+    "E5E7E8",
+    "EBEDEE"
+  ]
+}

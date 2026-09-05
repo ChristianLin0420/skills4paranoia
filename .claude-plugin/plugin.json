@@ -1,0 +1,25 @@
+{
+  "name": "christianlin-skills",
+  "version": "0.1.0",
+  "description": "Agent skills organised by topic. Currently: research-grade deck authoring — problem/solution/results structure, a low-saturation light design system, and research figure specs.",
+  "author": {
+    "name": "Bor-Jiun Lin",
+    "url": "https://github.com/ChristianLin0420"
+  },
+  "repository": "https://github.com/ChristianLin0420/agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "presentation",
+    "keynote",
+    "pptx",
+    "research",
+    "data-visualization",
+    "design-system"
+  ],
+  "skills": [
+    "./skills/work/research-deck",
+    "./skills/work/deck-design-system",
+    "./skills/work/research-figures"
+  ]
+}
