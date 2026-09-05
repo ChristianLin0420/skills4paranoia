@@ -1,6 +1,6 @@
 ---
 name: experiment-design
-description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位（要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因），並把評估協定釘死。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。Use before committing GPU time to a training run, when designing an ablation or benchmark comparison, or when reproduced numbers do not match and the evaluation protocol needs pinning down.
+description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位（要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因），釘死評估協定，並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. For the code itself use vla-code-review; for classical DOE (randomisation, blocking, factorial layouts) or closed-form power analysis, a general statistics skill is a better fit than this one.
 ---
 
 # experiment-design
@@ -28,6 +28,12 @@ description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位�
 
 問到具體答案為止。「效果不明顯就算 null」不是答案；「主指標的平均差異小於 5 個百分點，或 95% 信賴區間跨過 0」才是。
 
+### 第 2 欄漏掉超參數搜尋預算就白搭
+
+資料量、算力、參數量三個對齊了，但**你的方法調了 100 組超參數、對照組跑預設值**，這個比較還是無效的。這是實務上最常見的不公平比較，因為它不像其他三個那麼顯眼。
+
+要嘛給兩邊同樣的搜尋次數，要嘛把「本方法搜了 N 組、對照組搜了 M 組」寫進設計文件，讓讀者自己折扣。Dodge 等人的做法是把表現報成搜尋預算的函數而不是單一數字 —— 做得到最好，做不到至少要揭露。
+
 ### 第 1 欄的常見失敗
 
 「驗證我們的方法有效」不是是非題，因為它沒有「否」。要寫成「共享世界模型能否在示範資料減半的情況下維持成功率」—— 這個可以答否。
@@ -49,6 +55,23 @@ description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位�
 
 σ 未知時，先跑 3 個 seed 估 σ，再決定要不要補。這是合理的兩階段做法，但要事先講明，不要跑完才決定要不要加。
 
+**跑了 10 個 seed 只報最好的 3 個，等於沒有做這件事。** 事先講好跑幾個，就全部報幾個。要排除某個 run 必須有事前定義的理由（例如「發散且 loss 為 NaN」），而且對兩組適用同一條規則。
+
+### 別把 rollout 當成 seed
+
+這是最容易犯、後果最嚴重的統計錯誤，古典設計裡叫**偽重複（pseudoreplication）**。
+
+100 次 rollout 來自同一個 checkpoint，**不是 100 個獨立樣本**。它們共用同一組權重、同一次訓練的所有隨機性。方法比較的重複單位是**訓練 run（seed）**，不是 rollout。
+
+- rollout 之間的變異量到的是「這個 checkpoint 有多不穩」
+- seed 之間的變異量到的才是「這個方法有多不穩」
+
+**正確做法**：每個 seed 先算自己的平均成功率，得到每個 seed 一個數字；然後在這些數字之間算平均與標準差。`n` 是 seed 數，不是 rollout 數。
+
+把 300 次 rollout（3 seeds × 100）當成 n=300 去算誤差棒，會把真實不確定性低估到荒謬的程度 —— 誤差棒縮小約 √(100)，於是任何兩條線看起來都顯著不同。第 2 節那張表裡的 n 指的一律是 seed 數。
+
+rollout 數還是要夠（每個 seed 的平均才穩），但增加 rollout 不會增加統計檢定力，只有增加 seed 才會。
+
 ## 3. 評估協定要釘死
 
 這一節來自實際的重現失敗（見 `vla-code-review/reference/precedents.md`）。四件事不寫死，你的數字就無法跟任何人比較，包括三個月後的你自己。
@@ -59,6 +82,12 @@ description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位�
 - **成功判準的完整定義** —— 包含保持幀數與夾爪狀態。少了這兩個，判準會提早觸發。
 - **eval seed 協定** —— 固定集合，與訓練步數無關，每個 episode 重新 seed。
 - **擾動測試** —— 不做的話你不知道 90% 是能力還是死記。
+
+### 不要讓硬體與時間混進來
+
+古典設計會隨機化執行順序來對抗批次漂移。對應到這裡：**不要把對照組全跑在 A 節點、實驗組全跑在 B 節點**，也不要對照組跑上個月、實驗組跑這週。驅動版本、卡的個體差異、共用叢集的負載都會混進你的效果裡。
+
+做法：把 run 對節點的指派隨機化，或至少讓每一組都橫跨所有節點。設計文件裡記下每個 run 實際跑在哪台、什麼時候。
 
 ## 4. 算力預算的現實檢查
 
@@ -84,7 +113,9 @@ description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位�
 
 ## 7. 產出
 
-`templates/design.md` 是一頁的設計文件。它同時是：
+`templates/design.md` 是空白模板，`examples/filled-design.md` 是填好的範例 —— 從範例改比從空白填快，而且範例裡的旁註示範了每一欄該有多具體。
+
+這份文件同時是：
 
 - 開跑前的檢查清單
 - `research-deck` 的 `E18 setup` 頁的內容來源
