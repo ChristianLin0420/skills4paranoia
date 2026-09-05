@@ -1,7 +1,7 @@
 {
   "name": "skills4paranoia",
   "version": "0.1.0",
-  "description": "Agent skills that enforce the disciplines people skip: decks that must tie every page to a stated problem, an experiment design that refuses a run with no pre-declared null result, and a VLA/WAM/RL code review that hunts the failures which never raise.",
+  "description": "Agent skills that enforce the disciplines people skip: decks that must tie every page to a stated problem, a pre-registration that refuses a run with no pre-declared null result, and a VLA/WAM/RL code review that hunts the failures which never raise.",
   "author": {
     "name": "Bor-Jiun Lin",
     "url": "https://github.com/ChristianLin0420"
@@ -12,7 +12,7 @@
     "skills",
     "research",
     "code-review",
-    "experiment-design",
+    "pre-registration",
     "vla",
     "reinforcement-learning",
     "presentation",
@@ -22,7 +22,7 @@
     "./skills/work/research-deck",
     "./skills/work/deck-design-system",
     "./skills/work/research-figures",
-    "./skills/research/experiment-design",
+    "./skills/research/experiment-prereg",
     "./skills/research/vla-code-review"
   ]
 }

@@ -4,12 +4,12 @@
 
 | Skill | 管什麼 | 何時用 |
 |---|---|---|
-| [`experiment-design`](experiment-design) | 開跑前拷問設計，把評估協定釘死 | 花掉算力之前 |
+| [`experiment-prereg`](experiment-prereg) | 開跑前拷問設計，把評估協定釘死 | 花掉算力之前 |
 | [`vla-code-review`](vla-code-review) | 專找不會拋錯只會讓數字變差的工程層錯誤 | 開跑前，或重現不出數字時 |
 
 兩個互補：一個管「你有沒有定義清楚什麼叫做對」，一個管「code 有沒有偷偷做錯」。開跑前兩個都跑。
 
-## experiment-design
+## experiment-prereg
 
 六個欄位缺一不可：要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因。
 

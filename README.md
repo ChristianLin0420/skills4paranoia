@@ -13,7 +13,7 @@ skills/
     deck-design-system/
     research-figures/
   research/                 ← 主題：做研究本身
-    experiment-design/
+    experiment-prereg/
     vla-code-review/
 ```
 
@@ -80,7 +80,7 @@ cp -R skills4paranoia/skills/*/* ~/.claude/skills/
 
 | Skill | 管什麼 |
 |---|---|
-| [`experiment-design`](skills/research/experiment-design) | 開跑前拷問設計，把評估協定釘死 |
+| [`experiment-prereg`](skills/research/experiment-prereg) | 開跑前拷問設計，把評估協定釘死 |
 | [`vla-code-review`](skills/research/vla-code-review) | 專找不會拋錯只會讓數字變差的工程層錯誤 |
 
 兩個互補：一個管「你有沒有定義清楚什麼叫做對」，一個管「code 有沒有偷偷做錯」。

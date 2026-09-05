@@ -1,13 +1,17 @@
 ---
-name: experiment-design
-description: 在花掉算力之前拷問實驗設計。強迫填完六個欄位（要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因），釘死評估協定，並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. For the code itself use vla-code-review; for classical DOE (randomisation, blocking, factorial layouts) or closed-form power analysis, a general statistics skill is a better fit than this one.
+name: experiment-prereg
+description: 實驗的預先登記：在花掉算力之前把假設、主指標、什麼算 null、停止與決策規則寫死並凍結。強迫填完六個欄位（要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因），釘死評估協定，並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. For the code itself use vla-code-review; for classical DOE (randomisation, blocking, factorial layouts) or closed-form power analysis, a general statistics skill is a better fit than this one.
 ---
 
-# experiment-design
+# experiment-prereg
 
-跑兩個月才發現設計有問題，是這一行最貴的錯。這個 skill 在開跑前把它擋下來。
+**這個 skill 不設計實驗。** 它接手一個已經設計好的實驗，在花掉算力之前把它釘死。
 
-它不評論你的方法好不好 —— 那是你的專業。它只確認一件事：**這個實驗跑完之後，不論結果如何，你都能得到一個明確的答案。** 跑完才在想「這樣算成功嗎」，就已經太遲了，因為那時候你會找到一個讓自己滿意的切法。
+做的事就是預先登記：宣告要回答的是非題、主指標、什麼結果算 null、停止與決策規則、評估協定，然後**凍結**。跑兩個月才發現設計有問題是這一行最貴的錯，但更貴的是跑完之後才決定什麼叫成功 —— 那時候你一定找得到某個切法讓自己滿意。
+
+它不評論你的方法好不好，那是你的專業。它只確認一件事：**這個實驗跑完之後，不論結果如何，你都能得到一個明確的答案。**
+
+要選擇設計本身（隨機化、區組、因子配置）或做封閉解的檢定力計算，那是另一類 skill 的事，這份會把你推過去。
 
 ## 1. 六個欄位，缺一不可
 
@@ -113,7 +117,7 @@ rollout 數還是要夠（每個 seed 的平均才穩），但增加 rollout 不
 
 ## 7. 產出
 
-`templates/design.md` 是空白模板，`examples/filled-design.md` 是填好的範例 —— 從範例改比從空白填快，而且範例裡的旁註示範了每一欄該有多具體。
+`templates/prereg.md` 是空白模板，`examples/filled-prereg.md` 是填好的範例 —— 從範例改比從空白填快，而且範例裡的旁註示範了每一欄該有多具體。
 
 這份文件同時是：
 
