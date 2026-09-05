@@ -7,27 +7,14 @@ from . import charts, core, layouts, parser, render_pptx, render_svg, strings, v
 
 
 def compile_deck(deck, theme):
-    slides = list(deck["slides"])
-    has_evidence = any(s["layout"].startswith("E") for s in slides)
-    if has_evidence and not any(s["layout"] == "D" for s in slides):
-        idx = max((i for i, s in enumerate(slides) if s["layout"] in ("P1", "P2", "P3")), default=-1)
-        if idx >= 0:
-            n = sum(1 for s in slides if s["layout"].startswith("E"))
-            st = strings.pick(deck["meta"].get("lang"))
-            div = parser._new_slide("D", "", slides[idx]["line"])
-            div["title"] = st["divider_title"]
-            div["subtitle"] = st["divider_sub"] % n
-            slides.insert(idx + 1, div)
-    deck = dict(deck, slides=slides)
-
     ops_per_slide = []
     page = 0
-    for slide in slides:
-        if slide["layout"] not in ("F0", "D"):
+    for slide in deck["slides"]:
+        if slide["layout"] != "F0":
             page += 1
         ctx = {"th": theme, "meta": deck["meta"], "base_dir": deck["base_dir"],
                "s": strings.pick(deck["meta"].get("lang")),
-               "page": page if slide["layout"] not in ("F0", "D") else None}
+               "page": page if slide["layout"] != "F0" else None}
         try:
             ops_per_slide.append(layouts.render_slide(slide, ctx))
         except charts.ChartError as exc:

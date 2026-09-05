@@ -13,11 +13,11 @@ import yaml
 FRONT_IDS = ["P1", "P2", "P3"]
 
 ALIASES = {
-    "cover": "F0", "problem": "P1", "solution": "P2", "results": "P3", "divider": "D",
-    "section": "E01", "statement": "E02", "bullets": "E03", "two-col": "E04",
-    "chart-full": "E06", "chart-side": "E07", "quote": "E08",
+    "cover": "F0", "problem": "P1", "solution": "P2", "results": "P3",
+    "section": "E01", "bullets": "E03", "two-col": "E04",
+    "chart-full": "E06", "chart-side": "E07",
     "timeline": "E09", "table": "E10", "curves": "E11", "matrix": "E12",
-    "filmstrip": "E13", "architecture": "E14", "image-full": "E15", "closing": "E16",
+    "filmstrip": "E13", "architecture": "E14", "image-full": "E15",
     "panels": "E17", "setup": "E18", "ablation": "E19",
     "figure": "E20", "figure-pair": "E21",
 }

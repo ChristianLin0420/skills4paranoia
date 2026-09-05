@@ -71,6 +71,9 @@ xlabel: env steps
 baseline: {value: 56, label: "Diffusion baseline plateau"}
 note: "success rate on 20 held-in tasks · rollouts=100/task"
 ```
+- The split happens at 50k steps | Before that the three curves overlap, so the gap is not from initialisation
+- The diffusion baseline flattens after 125k | Meridian-1 is still climbing, so more data still buys progress
+- The ±1σ band narrows after 100k | All three seeds agree; this is not one lucky run
 ~ TaskSuite-20 · 3 seeds · ±1σ · A100×8 · each point is the success rate over 100 rollouts.
 
 <!-- E17 panels solves=Q1 -->
@@ -94,6 +97,9 @@ xlabel: steps
 baseline: {value: 55, label: "Q4 threshold"}
 note: "one checkpoint, no per-horizon finetuning"
 ```
+- Data scaling has not saturated | 2k→51k shows no knee, so the Q4 data bet holds
+- Decay steepens past 200 steps | Not gradual degradation — something fails at that length
+- Both panels share one checkpoint | So the decay cannot be blamed on horizon-specific training
 ~ Both panels use the same weights (step=200k, seed-averaged). Decay steepens past 200 steps — that is the main Q4 risk.
 
 <!-- E06 chart-full solves=Q1 source="Demonstrations required to reach 60% mean success" -->
@@ -106,6 +112,9 @@ highlight: 2
 delta: pct
 note: "demos required to reach 60% mean success"
 ```
+- Under a third of the data | 510 against 4200 — a gap too wide to need a significance test
+- It comes from the world model, not scale | The ablation buys only 7 points from a larger backbone
+- ±8% error does not move the conclusion | Even the worst estimate stays under a sixth of baseline
 ~ Found by bisection on demo count; each point re-run with 3 seeds, ±8% error.
 
 <!-- E19 ablation solves=Q1 delta=Success best=max source="200k steps, protocol as on page 06" -->
@@ -116,6 +125,9 @@ note: "demos required to reach 60% mean success"
 | + larger backbone | 1.24B | 128 | 38% |
 | + shared world model | 1.20B | 96 | 64% |
 | + 4:1 sim mixing | *1.24B | *104 | *78% |
+- A larger backbone buys only 7 points | Four times the parameters and three times the GPU-hours moves 31% to 38%
+- The world model is where it comes from | Fewer parameters, and success jumps to 64%
+- Sim mixing adds another 14 points | For eight extra GPU-hours — the best return of the three
 ~ Δ is in percentage points against the first row. GPU-hours are wall-clock on A100×8.
 
 <!-- E14 architecture solves=Q1 -->
@@ -139,6 +151,9 @@ data: data/matrix.csv
 unit: "%"
 note: "held-out tasks · 100 rollouts each · seed-averaged"
 ```
+- The first four families all clear 60% | These are the shorter, less contact-heavy tasks
+- Insertion is the one physically explainable gap | 61%, missing force feedback rather than vision
+- Long-horizon sits at 34% for every method | Not a method gap — the problem itself is unsolved
 ~ One checkpoint, no per-task finetuning. Long-horizon tidy is the only category still under 50%.
 
 <!-- E07 chart-side solves=Q2 source="Failure attribution across 12 held-out tasks" -->
@@ -174,11 +189,10 @@ note: "n=384 failed rollouts, hand-labelled by two annotators"
 <!-- E20 figure solves=Q2 source="On-robot capture, not simulation" -->
 # The failures share one moment: the frame where the second subgoal is handed over
 ![Four failed rollouts overlaid, boxes marking where the object is released](figures/failure_grid.png)
+- Failures cluster on one frame | Systematic at a specific moment, not random
+- All at the moment of release | Points at grasp force control, not perception or planning
+- Four different objects | So it is not the geometry of one particular item
 ~ Four representative cases drawn from 384 failures. Screen capture from on-robot video — no underlying numbers exist, so it is placed as-is rather than redrawn.
-
-<!-- E02 solves=Q2 -->
-# Generalisation is not memorisation: held-out success sits only 14 points below in-distribution
-> Same weights throughout, with no per-task finetuning.
 
 <!-- E01 section index=03 -->
 # Deployment
@@ -193,6 +207,9 @@ note: "n=384 failed rollouts, hand-labelled by two annotators"
 | Action decoding | 1.9ms | 2.3ms | 17% | low |
 | Transport and safety | 1.3ms | 2.5ms | 12% | low |
 | *Total | *11.0ms | *14.3ms | *100% | — |
+- Vision encoding is 38% of the budget | The only block with clear headroom; INT8 should recover about 40%
+- p99 sits only 30% above the median | Jitter is controlled, so a 2× p99 safety margin still fits 30Hz
+- Transport and safety will not compress | That 1.3ms is a hard cost — do not spend effort there
 ~ A100 batch=1 · 1000 forward passes · 28Hz closed loop; safety margin taken as 2× p99.
 
 <!-- E10 solves=Q3 source="Estimated against 64 H100s for two months" -->
@@ -204,6 +221,9 @@ note: "n=384 failed rollouts, hand-labelled by two annotators"
 | Compute | *128 GPU-months | 800 GPU-months |
 | Long-horizon estimate | *55% | 60%, high variance |
 | Fallback if it fails | *data stays useful | branches hard to recover |
+- A takes two fifths of B's time | 8 weeks against 20, with the risk concentrated in data quality
+- B costs six times the compute | 800 against 128 GPU-months, competing with the on-robot team
+- A leaves salvage value | Its data stays useful next quarter; abandoned branches do not
 
 <!-- E04 solves=Q3 -->
 # What actually separates the two paths
@@ -216,12 +236,3 @@ note: "n=384 failed rollouts, hand-labelled by two annotators"
 - Early Nov | Force data complete, insertion tasks above 70%
 - Late Nov | Eight hours of uninterrupted closed-loop operation
 - Mid Dec | Long-horizon above 55%, otherwise reopen architecture
-
-<!-- E08 solves=Q3 by="On-robot integration team, August sync" -->
-# Quote
-> We are not short of smarter models. We are short of a model whose latency is stable and whose failures are predictable.
-
-<!-- E16 -->
-# Thank you
-- Full experiment logs and run ids are on the internal wiki
-- you@example.com

@@ -214,19 +214,6 @@ def P3(slide, ctx):
     return ops
 
 
-def D(slide, ctx):
-    th, s = ctx["th"], ctx["s"]
-    label = slide["title"] or s["divider_title"]
-    ops = [rect(MX, H / 2 - 26, 28, 3, th["accent"]),
-           text(MX, H / 2 - 10, CW * 0.7, 38, label, TYPE["title"], th["ink"],
-                tracking=-0.2, font="display")]
-    if slide["subtitle"]:
-        ops.append(text(MX, H / 2 + 24, CW * 0.7, 24, slide["subtitle"], TYPE["small"], th["ink3"]))
-    return ops
-
-
-# --- evidence --------------------------------------------------------------
-
 def E01(slide, ctx):
     th = ctx["th"]
     idx = slide["attrs"].get("index", "")
@@ -239,23 +226,6 @@ def E01(slide, ctx):
     if slide["subtitle"]:
         ops.append(text(MX, 322, CW * 0.6, 34, slide["subtitle"], TYPE["small"], th["ink2"], leading=1.5))
     ops.append(hline(MX, 366, 180, th["rule"]))
-    ops += foot(ctx, slide)
-    return ops
-
-
-def E02(slide, ctx):
-    th = ctx["th"]
-    ops = head(ctx, slide["attrs"].get("eyebrow", ""), claim_tag(slide))
-    s = slide["title"] or ""
-    size = fit(s, TYPE["verdict"], CW * 0.88, 3, 17)
-    h = block_h(s, size, CW * 0.88, 1.34)
-    y = (BODY_TOP + BODY_BOT) / 2 - h / 2 - 16
-    ops.append(text(MX, y, CW * 0.88, h + 6, s, size, th["ink"], leading=1.34,
-                    tracking=-0.2, font="display"))
-    extra = slide["kicker"] + slide["paras"]
-    if extra:
-        ops.append(text(MX, y + h + 16, CW * 0.7, 50, "  ".join(extra), TYPE["body"],
-                        th["ink2"], leading=1.55))
     ops += foot(ctx, slide)
     return ops
 
@@ -297,11 +267,105 @@ def E04(slide, ctx):
     return ops
 
 
+def analysis_row(slide, ctx, y, x=None, width=None, limit=3):
+    """Analysis under the figure, in columns. For figures that need the width."""
+    th = ctx["th"]
+    x = MX if x is None else x
+    width = CW if width is None else width
+    rows = slide["bullets"][:limit]
+    if not rows:
+        return []
+    ops = [hline(x, y, width, th["rule"])]
+    gap = 20.0
+    cw = (width - gap * (len(rows) - 1)) / len(rows)
+    for i, raw in enumerate(rows):
+        lead, detail = split_fields(raw, 2)
+        cx = x + i * (cw + gap)
+        ops.append(rect(cx, y + 10, 14, 2, th["series"][i % len(th["series"])]))
+        lh = block_h(lead, TYPE["small"], cw, 1.4)
+        ops.append(text(cx, y + 19, cw, lh + 4, lead, TYPE["small"], th["ink"], leading=1.4))
+        if detail:
+            ops.append(text(cx, y + 23 + lh, cw, 46, detail, TYPE["meta"], th["ink2"], leading=1.5))
+    return ops
+
+
+def analysis_col(slide, ctx, x, y, w, limit=4):
+    """Analysis beside the figure. Lets a figure that does not need the full
+    width keep its full height instead of being squashed."""
+    th = ctx["th"]
+    rows = slide["bullets"][:limit]
+    ops = []
+    cy = y
+    for i, raw in enumerate(rows):
+        lead, detail = split_fields(raw, 2)
+        if i:
+            ops.append(hline(x, cy, w, th["rule_soft"]))
+            cy += 13
+        ops.append(rect(x, cy + 3, 14, 2, th["series"][i % len(th["series"])]))
+        lh = block_h(lead, TYPE["small"], w, 1.4)
+        ops.append(text(x, cy + 12, w, lh + 4, lead, TYPE["small"], th["ink"], leading=1.4))
+        cy += 16 + lh
+        if detail:
+            dh = block_h(detail, TYPE["meta"], w, 1.5)
+            ops.append(text(x, cy, w, dh + 4, detail, TYPE["meta"], th["ink2"], leading=1.5))
+            cy += dh
+        cy += 10
+    return ops
+
+
+def h_slots(slide, ctx):
+    """How many horizontal slots the figure actually needs.
+
+    A three-bar chart wants no more width than a paragraph; a nine-point
+    training curve does. This is what decides whether the analysis sits
+    beside the figure or under it.
+    """
+    spec = slide.get("chart")
+    if not spec:
+        return 99
+    try:
+        labels, series, _ = charts.load_series(spec, ctx["base_dir"])
+    except Exception:
+        return 99
+    kind = (spec.get("type") or "bar").lower()
+    if kind in ("bar-h", "barh"):
+        return 1
+    if kind in ("matrix", "heatmap"):
+        return len(series)
+    return len(labels) or len(series[0][1] if series else [])
+
+
+def analysis_side(slide, ctx, slots=None, threshold=5):
+    """`right` keeps the figure's height, `below` keeps its width."""
+    forced = slide["attrs"].get("analysis")
+    if forced in ("right", "below"):
+        return forced
+    if len(slide.get("charts") or []) > 1:
+        return "below"
+    slots = h_slots(slide, ctx) if slots is None else slots
+    return "below" if slots > threshold else "right"
+
+
+def with_analysis(slide, ctx, y, draw, slots=None, threshold=5):
+    """Place `draw(box)` and its analysis, choosing the side automatically."""
+    avail = BODY_BOT - y
+    if not slide["bullets"]:
+        return draw((MX, y, CW, avail))
+    if analysis_side(slide, ctx, slots, threshold) == "right":
+        gap = 30.0
+        fw = CW * 0.60
+        return (draw((MX, y, fw, avail))
+                + analysis_col(slide, ctx, MX + fw + gap, y + 2, CW - fw - gap))
+    fh = avail * 0.62
+    return draw((MX, y, CW, fh - 6)) + analysis_row(slide, ctx, y + fh + 4)
+
+
 def E06(slide, ctx):
     th = ctx["th"]
     ops, y = titled(slide, ctx, claim_tag(slide))
     if slide["chart"]:
-        ops += charts.render(slide["chart"], (MX, y + 4, CW, BODY_BOT - y - 8), th, ctx["base_dir"])
+        ops += with_analysis(slide, ctx, y,
+                             lambda box: charts.render(slide["chart"], box, th, ctx["base_dir"]))
     ops += foot(ctx, slide)
     return ops
 
@@ -326,22 +390,6 @@ def E07(slide, ctx):
         cx = MX + lw + gap
         ops += charts.render(slide["chart"], (cx, BODY_TOP + 4, W - MX - cx, BODY_BOT - BODY_TOP - 8),
                              th, ctx["base_dir"])
-    ops += foot(ctx, slide)
-    return ops
-
-
-def E08(slide, ctx):
-    th = ctx["th"]
-    ops = head(ctx, slide["attrs"].get("eyebrow", ""), claim_tag(slide))
-    s = " ".join(slide["kicker"]) or slide["title"] or ""
-    size = fit(s, TYPE["lead"] + 5, CW * 0.78, 4, 14)
-    h = block_h(s, size, CW * 0.78, 1.6)
-    y = (BODY_TOP + BODY_BOT) / 2 - h / 2
-    ops.append(rect(MX, y - 24, 22, 2, th["accent"]))
-    ops.append(text(MX, y, CW * 0.78, h + 6, s, size, th["ink"], leading=1.6))
-    by = slide["attrs"].get("by") or (slide["paras"][0] if slide["paras"] else "")
-    if by:
-        ops.append(text(MX, y + h + 16, CW * 0.7, 18, by, TYPE["small"], th["ink3"]))
     ops += foot(ctx, slide)
     return ops
 
@@ -372,7 +420,7 @@ def _is_num(cell):
         return False
 
 
-def _table(slide, ctx, y, cols, rows, extra_col=None, mark=None, x=MX, width=None):
+def _table(slide, ctx, y, cols, rows, extra_col=None, mark=None, x=MX, width=None, height=None):
     """Shared table renderer. Numeric cells go right-aligned and monospaced."""
     th = ctx["th"]
     width = CW if width is None else width
@@ -382,7 +430,8 @@ def _table(slide, ctx, y, cols, rows, extra_col=None, mark=None, x=MX, width=Non
     rest_w = (width - first_w) / max(1, ncols - 1)
     widths = [first_w] + [rest_w] * (ncols - 1)
     heads = list(cols) + ([extra_col] if extra_col else [])
-    rh = min(32.0, (BODY_BOT - y - 24) / max(1, len(rows)))
+    height = (BODY_BOT - y) if height is None else height
+    rh = min(32.0, (height - 24) / max(1, len(rows)))
     for i, c in enumerate(heads):
         num = i > 0
         ops.append(text(x + sum(widths[:i]), y, widths[i] - 10, 16, c, TYPE["meta"], th["ink2"],
@@ -408,8 +457,12 @@ def _table(slide, ctx, y, cols, rows, extra_col=None, mark=None, x=MX, width=Non
 def E10(slide, ctx):
     ops, y = titled(slide, ctx, claim_tag(slide))
     t = slide["table"] or {}
-    if t.get("cols"):
-        ops += _table(slide, ctx, y, t["cols"], t.get("rows") or [])
+    cols, rows = t.get("cols") or [], t.get("rows") or []
+    if cols:
+        ops += with_analysis(
+            slide, ctx, y,
+            lambda b: _table(slide, ctx, b[1], cols, rows, x=b[0], width=b[2], height=b[3]),
+            slots=len(cols), threshold=4)
     ops += foot(ctx, slide)
     return ops
 
@@ -443,7 +496,11 @@ def E19(slide, ctx):
             v = vals[r]
             row.append("—" if r == 0 or v is None or base is None
                        else charts.fmt_delta(v, base, str(slide["attrs"].get("delta_mode", "pp")), unit))
-    ops += _table(slide, ctx, y, cols, rows, extra_col=ctx["s"]["delta"], mark=mark)
+    ops += with_analysis(
+        slide, ctx, y,
+        lambda b: _table(slide, ctx, b[1], cols, rows, extra_col=ctx["s"]["delta"], mark=mark,
+                         x=b[0], width=b[2], height=b[3]),
+        slots=len(cols) + 1, threshold=4)
     ops += foot(ctx, slide)
     return ops
 
@@ -469,7 +526,7 @@ def E17(slide, ctx):
         return ops + foot(ctx, slide)
     n = len(specs)
     gap = 26.0
-    avail_h = BODY_BOT - y
+    avail_h = (BODY_BOT - y) * (0.66 if slide["bullets"] else 1.0)
     cols = 2 if n == 4 else n
     rows = 2 if n == 4 else 1
     pw = (CW - gap * (cols - 1)) / cols
@@ -478,6 +535,8 @@ def E17(slide, ctx):
         cx = MX + (i % cols) * (pw + gap)
         cy = y + (i // cols) * (ph + gap - 8)
         ops += charts.render(spec, (cx, cy, pw, ph), th, ctx["base_dir"])
+    if slide["bullets"]:
+        ops += analysis_row(slide, ctx, y + avail_h + 4)
     ops += foot(ctx, slide)
     return ops
 
@@ -518,10 +577,16 @@ def E20(slide, ctx):
     ops, y = titled(slide, ctx, claim_tag(slide))
     im = slide["images"][0] if slide["images"] else {"path": "figure.png", "caption": ""}
     cap = im.get("caption") or ""
-    ih = BODY_BOT - y - (17 if cap else 0)
-    ops += picture(im["path"], ctx["base_dir"], MX, y, CW, ih, th, st)
-    if cap:
-        ops.append(text(MX, y + ih + 4, CW, 14, cap, TYPE["meta"], th["ink3"], wrap=False))
+
+    def draw(box):
+        bx, by, bw, bh = box
+        ch = bh - (17 if cap else 0)
+        out = picture(im["path"], ctx["base_dir"], bx, by, bw, ch, th, st)
+        if cap:
+            out.append(text(bx, by + ch + 4, bw, 14, cap, TYPE["meta"], th["ink3"], wrap=False))
+        return out
+
+    ops += with_analysis(slide, ctx, y, draw, slots=1)
     ops += foot(ctx, slide)
     return ops
 
@@ -599,23 +664,11 @@ def E15(slide, ctx):
     return ops
 
 
-def E16(slide, ctx):
-    th, s, m = ctx["th"], ctx["s"], ctx["meta"]
-    title = slide["title"] or s["thanks"]
-    ops = [text(MX, 236, CW, 44, title, TYPE["title"] + 2, th["ink"], align="c",
-                tracking=-0.2, font="display"),
-           rect(W / 2 - 14, 296, 28, 2.5, th["accent"])]
-    lines = slide["bullets"] or slide["paras"] or [str(m.get("contact", ""))]
-    for i, line in enumerate([l for l in lines if l][:3]):
-        ops.append(text(MX, 322 + i * 22, CW, 20, line, TYPE["small"], th["ink2"], align="c"))
-    return ops
-
-
-REGISTRY = {"F0": F0, "P1": P1, "P2": P2, "P3": P3, "D": D,
-            "E01": E01, "E02": E02, "E03": E03, "E04": E04, "E06": E06,
-            "E07": E07, "E08": E08, "E09": E09, "E10": E10, "E11": E11, "E12": E12,
-            "E13": E13, "E14": E14, "E15": E15, "E16": E16, "E17": E17, "E18": E18,
-            "E19": E19, "E20": E20, "E21": E21}
+REGISTRY = {"F0": F0, "P1": P1, "P2": P2, "P3": P3,
+            "E01": E01, "E03": E03, "E04": E04, "E06": E06, "E07": E07,
+            "E09": E09, "E10": E10, "E11": E11, "E12": E12, "E13": E13,
+            "E14": E14, "E15": E15, "E17": E17, "E18": E18, "E19": E19,
+            "E20": E20, "E21": E21}
 
 
 def render_slide(slide, ctx):

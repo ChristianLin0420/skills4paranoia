@@ -13,9 +13,11 @@ MAX_BULLETS = 5
 MAX_PROBLEMS = 4
 
 # Structural pages carry no argument of their own, so they address no problem.
-NO_CLAIM_NEEDED = {"E01", "E16"}
+NO_CLAIM_NEEDED = {"E01"}
 NEEDS_CHART = ("E06", "E07", "E11", "E12")
 NEEDS_FOOTNOTE = ("E06", "E07", "E11", "E12", "E17", "E19", "E20", "E21")
+# A figure with no reading leaves interpretation to the audience.
+NEEDS_ANALYSIS = ("E06", "E10", "E11", "E12", "E17", "E19", "E20", "E21")
 NEEDS_IMAGE = {"E20": 1, "E21": 2, "E14": 1, "E15": 1}
 
 
@@ -98,6 +100,12 @@ def check(deck):
         if len(s["bullets"]) > MAX_BULLETS:
             issues.append(("WARN", s["line"],
                            "%s 有 %d 條列，上限 %d" % (s["layout"], len(s["bullets"]), MAX_BULLETS)))
+        if s["layout"] in NEEDS_ANALYSIS and len(s["bullets"]) < 2:
+            issues.append(("ERROR", s["line"],
+                           "%s 只有圖表沒有分析。用 `- 觀察 | 為什麼重要` 寫 2–3 條；"
+                           "不確定分析主軸就回去問使用者，不要自己編" % s["layout"]))
+        if s["layout"] == "E07" and not s["paras"]:
+            issues.append(("ERROR", s["line"], "E07 左側需要分析段落"))
         if s["layout"] in NEEDS_CHART and not s["chart"]:
             issues.append(("ERROR", s["line"], "%s 需要一個 ```chart 區塊" % s["layout"]))
         if s["layout"] == "E17" and len(s["charts"]) < 2:
