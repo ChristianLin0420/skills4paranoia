@@ -13,6 +13,7 @@ skills/
     deck-design-system/
     research-figures/
   research/                 ← 主題：做研究本身
+    falsify-first/
     experiment-prereg/
     vla-code-review/
 ```
@@ -80,10 +81,11 @@ cp -R skills4paranoia/skills/*/* ~/.claude/skills/
 
 | Skill | 管什麼 |
 |---|---|
-| [`experiment-prereg`](skills/research/experiment-prereg) | 開跑前拷問設計，把評估協定釘死 |
+| [`falsify-first`](skills/research/falsify-first) | 花小錢找出這個想法會不會錯 |
+| [`experiment-prereg`](skills/research/experiment-prereg) | 鎖死量測契約並凍結 |
 | [`vla-code-review`](skills/research/vla-code-review) | 專找不會拋錯只會讓數字變差的工程層錯誤 |
 
-兩個互補：一個管「你有沒有定義清楚什麼叫做對」，一個管「code 有沒有偷偷做錯」。
+三個接成一條線：**這個想法值得測嗎 → 怎麼量才算數 → code 有沒有偷偷做錯**。
 
 清單十一類約 60 項，從精度與學習率的交互作用到評估環境的狀態外洩。每條檢查都掛一個真實 repo 出貨過的案例，所以報告裡的發現有份量：「這裡可能有問題」和「openvla-oft#160 就是這個」是兩回事。
 
