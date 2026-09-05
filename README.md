@@ -4,10 +4,12 @@ Agent skills，依主題分層。純 markdown 規格，沒有要安裝的相依�
 
 ```
 skills/
-  work/                     ← 主題
+  work/                     ← 主題：溝通與記錄
     research-deck/          ← skill
     deck-design-system/
     research-figures/
+  research/                 ← 主題：做研究本身
+    vla-code-review/
 ```
 
 新增主題就在 `skills/` 底下開一個資料夾，把 skill 放進去，再把路徑加到 `.claude-plugin/plugin.json` 的 `skills` 陣列。不需要動其他東西。
@@ -66,6 +68,18 @@ cp -R agent-skills/skills/work/* ~/.claude/skills/
 核心主張是**前三頁講完全部，其餘都是佐證**：第一頁一個大問題拆成 2–4 個中問題，第二頁逐條對應解法，第三頁成果表（含還沒解掉的那一格）。第四頁起每一頁都要宣告 `solves=Qn`，掛不到任何問題的頁就刪掉。
 
 詳見 [skills/work/README.md](skills/work/README.md)。
+
+### research
+
+做研究本身用的 skill。
+
+| Skill | 管什麼 |
+|---|---|
+| [`vla-code-review`](skills/research/vla-code-review) | 審查 VLA / WAM / RL 程式碼，專找不會拋錯只會讓數字變差的工程層錯誤 |
+
+清單十一類約 60 項，從精度與學習率的交互作用到評估環境的狀態外洩。每條檢查都掛一個真實 repo 出貨過的案例，所以報告裡的發現有份量：「這裡可能有問題」和「openvla-oft#160 就是這個」是兩回事。
+
+詳見 [skills/research/README.md](skills/research/README.md)。
 
 ## tools/
 
