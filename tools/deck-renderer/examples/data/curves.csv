@@ -1,4 +1,4 @@
-step,Baseline BC,Baseline BC std,Diffusion Policy,Diffusion Policy std,WAM-v1,WAM-v1 std
+step,Baseline BC,Baseline BC std,Diffusion baseline,Diffusion baseline std,Meridian-1,Meridian-1 std
 0,2,1,3,1,4,1
 25k,9,3,14,4,22,5
 50k,16,4,27,5,41,6

@@ -1,15 +1,15 @@
 ---
-title: WAM-v1 quarterly review
-running: WAM-v1 · Q3
+title: Meridian-1 quarterly review
+running: Meridian-1 · Q3
 subtitle: Freeze the architecture, move Q4 compute to data
-author: Chris Lin
-team: VLA / World-Action Model
+author: Your Name
+team: Robotics Learning
 date: 2026-09-05
 lang: en
 theme: slate-blue
 typeface: plex
-footer: Internal · figures in this deck are illustrative
-contact: chrislin@nvidia.com
+footer: Example deck · all figures are fictional
+contact: you@example.com
 ---
 
 <!-- F0 cover -->
@@ -23,7 +23,7 @@ contact: chrislin@nvidia.com
 
 <!-- P2 solution -->
 # Split learning physics from learning tasks with a shared world model, and let the task head learn only the residual
-![WAM-v1: frozen vision encoder, shared world model, lightweight action decoder](figures/arch.png)
+![Meridian-1: frozen vision encoder, shared world model, lightweight action decoder](figures/arch.png)
 - Q1 | The world model is shared across tasks and the decoder learns only a residual; the vision encoder stays frozen with adapters | trainable params 11%, demos to target 4200 → 510
 - Q2 | Simulated rollouts mixed 4:1 with material and lighting randomisation; context window spans the full episode | 68% mean over 12 held-out task families
 - Q3 | The frozen encoder quantises cleanly and the world model runs a single forward pass at inference | 11ms/step, 28Hz closed loop
@@ -35,8 +35,8 @@ contact: chrislin@nvidia.com
 | Method | Demos to target | Held-out | Long-horizon | Latency | Stability |
 | --- | --- | --- | --- | --- | --- |
 | Baseline BC | 4200 | 31% | 8% | 7ms | 71% |
-| Diffusion Policy | 1750 | 41% | 19% | 23ms | 84% |
-| WAM-v1 | *510 | *68% | *34% | *11ms | *92% |
+| Diffusion baseline | 1750 | 41% | 19% | 23ms | 84% |
+| Meridian-1 | *510 | *68% | *34% | *11ms | *92% |
 ```chart
 type: line
 data: data/curves.csv
@@ -45,7 +45,7 @@ unit: "%"
 xlabel: env steps
 note: "success rate on 20 held-in tasks"
 ```
-~ ManiSkill-20 · 3 seeds · ±1σ · A100×8 · rollouts=100/task · "long-horizon" is the >200-step subset.
+~ TaskSuite-20 · 3 seeds · ±1σ · A100×8 · rollouts=100/task · "long-horizon" is the >200-step subset.
 
 <!-- E01 section index=01 -->
 # Sample efficiency
@@ -60,7 +60,7 @@ note: "success rate on 20 held-in tasks"
 ~ Every hyperparameter outside the backbone is identical across the three methods, so the gap is attributable to architecture.
 
 <!-- E11 curves solves=Q1 source="runs/2026-08/curves.csv" -->
-# On the same data budget, WAM-v1 converges at 78%
+# On the same data budget, Meridian-1 converges at 78%
 ## Shaded region is ±1σ over 3 seeds
 ```chart
 type: line
@@ -68,10 +68,10 @@ data: data/curves.csv
 band: std
 unit: "%"
 xlabel: env steps
-baseline: {value: 56, label: "Diffusion Policy plateau"}
+baseline: {value: 56, label: "Diffusion baseline plateau"}
 note: "success rate on 20 held-in tasks · rollouts=100/task"
 ```
-~ ManiSkill-20 · 3 seeds · ±1σ · A100×8 · each point is the success rate over 100 rollouts.
+~ TaskSuite-20 · 3 seeds · ±1σ · A100×8 · each point is the success rate over 100 rollouts.
 
 <!-- E17 panels solves=Q1 -->
 # Data scaling and horizon decay
@@ -100,7 +100,7 @@ note: "one checkpoint, no per-horizon finetuning"
 # Cost to target drops below a third
 ```chart
 type: bar
-labels: [Baseline BC, Diffusion Policy, WAM-v1]
+labels: [Baseline BC, Diffusion baseline, Meridian-1]
 values: [4200, 1750, 510]
 highlight: 2
 delta: pct
@@ -120,7 +120,7 @@ note: "demos required to reach 60% mean success"
 
 <!-- E14 architecture solves=Q1 -->
 # Where the efficiency comes from
-![WAM-v1: frozen vision encoder, shared world model, action decoder](figures/arch.png)
+![Meridian-1: frozen vision encoder, shared world model, action decoder](figures/arch.png)
 The shared world model means the action decoder never relearns physics.
 The vision encoder stays frozen and only adapters train, cutting trainable parameters to 11%.
 Demonstrations are mixed 4:1 with simulated rollouts to offset scarce real data.
@@ -219,4 +219,4 @@ note: "n=384 failed rollouts, hand-labelled by two annotators"
 <!-- E16 -->
 # Thank you
 - Full experiment logs and run ids are on the internal wiki
-- chrislin@nvidia.com
+- you@example.com

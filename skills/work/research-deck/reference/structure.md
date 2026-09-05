@@ -25,17 +25,17 @@
 ## front-matter
 
 ```yaml
-title: WAM-v1 進度回顧
-running: WAM-v1 · Q3        # 頁首右上的短名
+title: Meridian-1 進度回顧
+running: Meridian-1 · Q3        # 頁首右上的短名
 subtitle: 架構凍結與資料規模
-author: Chris Lin
-team: VLA / World-Action Model
+author: Your Name
+team: Robotics Learning
 date: 2026-09-05
 lang: zh                    # zh | en
 theme: slate-blue           # slate-blue | linen | mist
 typeface: plex              # plex | plex-full | inter | system
 footer: 內部討論用
-contact: chrislin@nvidia.com
+contact: you@example.com
 ```
 
 ## P1 問題

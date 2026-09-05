@@ -18,7 +18,7 @@ description: 研究型圖表的規格：訓練曲線與誤差帶、任務×方�
 3. **參考基準** — 有 baseline 就畫一條參考線並標值，讀者才知道好在哪。
 4. **條件註腳** — n=、seeds 數、硬體、關鍵超參數、量測方式。
 
-範例註腳：`ManiSkill-20 · 20 tasks · 3 seeds · ±1σ · A100×8 · rollouts=100/task · lr 3e-4, bs 256`
+範例註腳：`TaskSuite-20 · 20 tasks · 3 seeds · ±1σ · A100×8 · rollouts=100/task · lr 3e-4, bs 256`
 
 ## 2. 圖型選擇
 
@@ -85,7 +85,7 @@ x 軸標籤數量控制在 8 個以內。有軸名時要先量軸名寬度，把
 指向檔案，不要手貼數字。CSV 第一欄是類別或 x 軸刻度，欄名即圖例。要畫 ±1σ 就多給 `<欄名> std` 欄；要畫上下界就給 `<欄名> lo` 與 `<欄名> hi`。
 
 ```csv
-step,Baseline BC,Baseline BC std,WAM-v1,WAM-v1 std
+step,Baseline BC,Baseline BC std,Meridian-1,Meridian-1 std
 0,2,1,4,1
 25k,9,3,22,5
 50k,16,4,41,6

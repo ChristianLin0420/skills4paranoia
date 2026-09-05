@@ -74,7 +74,7 @@ cp -R agent-skills/skills/work/* ~/.claude/skills/
 ```bash
 cd tools/deck-renderer
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m deckkit.build examples/wam-v1-review.md -o out/deck.pptx --preview
+.venv/bin/python -m deckkit.build examples/meridian-1.zh.md -o out/deck.pptx --preview
 ```
 
 ## 授權

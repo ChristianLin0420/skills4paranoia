@@ -82,11 +82,11 @@ description: 產生研究型簡報（PPT / Keynote / HTML）。強制「問題 �
 
 ## 4. 輸入格式
 
-用一份 markdown 當來源，可版控、可 diff、可被其他 agent 產生。完整規格見 `reference/structure.md`，完整範例見 `examples/wam-v1.zh.md` 與 `examples/wam-v1.en.md`。
+用一份 markdown 當來源，可版控、可 diff、可被其他 agent 產生。完整規格見 `reference/structure.md`，完整範例見 `examples/meridian-1.zh.md` 與 `examples/meridian-1.en.md`。
 
 ```markdown
 ---
-title: WAM-v1 進度回顧
+title: Meridian-1 進度回顧
 lang: zh              # zh | en，一份簡報只用一個語言
 theme: slate-blue
 typeface: plex
@@ -100,7 +100,7 @@ typeface: plex
 
 <!-- P2 solution -->
 # 用共享的世界模型把「學物理」和「學任務」拆開，任務端只學殘差
-![WAM-v1 架構](figures/arch.png)
+![Meridian-1 架構](figures/arch.png)
 - Q1 | 世界模型跨任務共享，動作解碼器只學殘差 | 可訓練參數 11%，示範數 4200 → 510
 - Q2 | 模擬 rollout 以 4:1 混入並隨機化材質 | held-out 12 類任務平均 68%
 ~ 三個機制彼此獨立，可個別關閉做消融。
@@ -110,18 +110,18 @@ typeface: plex
 | 方法 | 達標示範數 | 未見任務 | 長時序 | 延遲 |
 | --- | --- | --- | --- | --- |
 | Baseline BC | 4200 | 31% | 8% | 7ms |
-| WAM-v1 | *510 | *68% | *34% | *11ms |
-~ ManiSkill-20 · 3 seeds · ±1σ · A100×8 · rollouts=100/task
+| Meridian-1 | *510 | *68% | *34% | *11ms |
+~ TaskSuite-20 · 3 seeds · ±1σ · A100×8 · rollouts=100/task
 
 <!-- E11 curves solves=Q1 -->
-# 同樣的資料量，WAM-v1 收斂到 78%
+# 同樣的資料量，Meridian-1 收斂到 78%
 ```chart
 type: line
 data: data/curves.csv
 band: std
-baseline: {value: 56, label: "Diffusion Policy 收斂點"}
+baseline: {value: 56, label: "Diffusion baseline 收斂點"}
 ```
-~ ManiSkill-20 · 3 seeds · ±1σ · A100×8
+~ TaskSuite-20 · 3 seeds · ±1σ · A100×8
 ```
 
 `~ ` 開頭那行是條件註腳。`*` 前綴的儲存格用重點色。`solves=Q1` 宣告這頁支撐哪個中問題。

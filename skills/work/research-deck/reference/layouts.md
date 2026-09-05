@@ -72,7 +72,7 @@ xlabel: 訓練步數
 title: 成功率 vs 資料量          # E17 面板內的小標題
 note: "rollouts=100/task"      # 貼著圖的條件說明
 band: std                      # 讀 "<欄名> std" 畫 ±1σ；或 bounds 讀 lo/hi
-baseline: {value: 56, label: "Diffusion Policy 收斂點"}
+baseline: {value: 56, label: "Diffusion baseline 收斂點"}
 delta: pp           # bar / bar-h：對第一根算差，pp 百分點、pct 相對百分比
 highlight: 2        # 要強調的索引
 max: 100            # 固定軸上限，便於跨頁比較

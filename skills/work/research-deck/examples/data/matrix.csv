@@ -1,4 +1,4 @@
-task,Baseline BC,Diffusion Policy,WAM-v1
+task,Baseline BC,Diffusion baseline,Meridian-1
 Pick and place,62,78,91
 Stack cube,44,66,84
 Open drawer,51,71,88

@@ -1,15 +1,15 @@
 ---
-title: WAM-v1 進度回顧
-running: WAM-v1 · Q3
+title: Meridian-1 進度回顧
+running: Meridian-1 · Q3
 subtitle: 架構凍結與 Q4 算力配置提案
-author: Chris Lin
-team: VLA / World-Action Model
+author: Your Name
+team: Robotics Learning
 date: 2026-09-05
 lang: zh
 theme: slate-blue
 typeface: plex
-footer: 內部討論用 · 本檔數據為範例
-contact: chrislin@nvidia.com
+footer: 範例文件 · 所有數據皆為虛構
+contact: you@example.com
 ---
 
 <!-- F0 cover -->
@@ -23,7 +23,7 @@ contact: chrislin@nvidia.com
 
 <!-- P2 solution -->
 # 用共享的世界模型把「學物理」和「學任務」拆開，任務端只學殘差
-![WAM-v1：凍結視覺編碼器、跨任務共享世界模型、輕量動作解碼器](figures/arch.png)
+![Meridian-1：凍結視覺編碼器、跨任務共享世界模型、輕量動作解碼器](figures/arch.png)
 - Q1 | 世界模型跨任務共享，動作解碼器只學殘差；視覺編碼器凍結，只微調 adapter | 可訓練參數 11%，達標示範數 4200 → 510
 - Q2 | 模擬 rollout 以 4:1 混入並隨機化材質與光照；context window 覆蓋整段 episode | held-out 12 類任務平均 68%
 - Q3 | 凍結後的視覺編碼器可量化，世界模型在推論時只前向一次 | 11ms/step，閉環 28Hz
@@ -35,8 +35,8 @@ contact: chrislin@nvidia.com
 | 方法 | 達標示範數 | 未見任務 | 長時序 | 延遲 | 穩定度 |
 | --- | --- | --- | --- | --- | --- |
 | Baseline BC | 4200 | 31% | 8% | 7ms | 71% |
-| Diffusion Policy | 1750 | 41% | 19% | 23ms | 84% |
-| WAM-v1 | *510 | *68% | *34% | *11ms | *92% |
+| Diffusion baseline | 1750 | 41% | 19% | 23ms | 84% |
+| Meridian-1 | *510 | *68% | *34% | *11ms | *92% |
 ```chart
 type: line
 data: data/curves.csv
@@ -45,7 +45,7 @@ unit: "%"
 xlabel: 環境互動步數
 note: "20 個 held-in 任務的成功率"
 ```
-~ ManiSkill-20 · 3 seeds · ±1σ · A100×8 · rollouts=100/task · 「長時序」為 >200 步任務子集。
+~ TaskSuite-20 · 3 seeds · ±1σ · A100×8 · rollouts=100/task · 「長時序」為 >200 步任務子集。
 
 <!-- E01 section index=01 -->
 # 樣本效率
@@ -60,7 +60,7 @@ note: "20 個 held-in 任務的成功率"
 ~ 除了 backbone 以外所有超參數在三個方法之間完全相同；差異僅來自架構本身。
 
 <!-- E11 curves solves=Q1 source="runs/2026-08/curves.csv" -->
-# 同樣的資料量，WAM-v1 收斂到 78%
+# 同樣的資料量，Meridian-1 收斂到 78%
 ## 陰影為 3 個 seed 的 ±1σ
 ```chart
 type: line
@@ -68,10 +68,10 @@ data: data/curves.csv
 band: std
 unit: "%"
 xlabel: 環境互動步數
-baseline: {value: 56, label: "Diffusion Policy 收斂點"}
+baseline: {value: 56, label: "Diffusion baseline 收斂點"}
 note: "success rate on 20 held-in tasks · rollouts=100/task"
 ```
-~ ManiSkill-20 · 3 seeds · ±1σ · A100×8 · 每點為 100 次 rollout 的成功率。
+~ TaskSuite-20 · 3 seeds · ±1σ · A100×8 · 每點為 100 次 rollout 的成功率。
 
 <!-- E17 panels solves=Q1 -->
 # 資料規模律與時序衰減
@@ -100,7 +100,7 @@ note: "同一組權重，未做 per-horizon 微調"
 # 達標成本降到不到三分之一
 ```chart
 type: bar
-labels: [Baseline BC, Diffusion Policy, WAM-v1]
+labels: [Baseline BC, Diffusion baseline, Meridian-1]
 values: [4200, 1750, 510]
 highlight: 2
 delta: pct
@@ -120,7 +120,7 @@ note: "demos required to reach 60% mean success"
 
 <!-- E14 architecture solves=Q1 -->
 # 效率來自哪裡
-![WAM-v1 三段式架構：凍結視覺編碼器、共享世界模型、動作解碼器](figures/arch.png)
+![Meridian-1 三段式架構：凍結視覺編碼器、共享世界模型、動作解碼器](figures/arch.png)
 共享的世界模型讓動作解碼器不必重新學習物理。
 視覺編碼器凍結，只微調 adapter，可訓練參數量降到 11%。
 示範資料以 4:1 混入模擬 rollout，緩解真實資料稀缺。
@@ -218,5 +218,5 @@ note: "n=384 failed rollouts, 人工歸因，兩人獨立標註"
 
 <!-- E16 -->
 # 謝謝
-- 完整實驗紀錄與 run id 見內部 wiki
-- chrislin@nvidia.com
+- 完整實驗紀錄與 run id 見內部文件
+- you@example.com
