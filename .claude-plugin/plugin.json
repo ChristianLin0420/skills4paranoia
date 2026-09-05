@@ -1,12 +1,12 @@
 {
-  "name": "christianlin-skills",
+  "name": "skills4paranoia",
   "version": "0.1.0",
   "description": "Agent skills organised by topic. Research-grade deck authoring, and a VLA/WAM/RL code review that hunts the silent failures — precision, DDP, checkpoint loading, evaluation state leakage.",
   "author": {
     "name": "Bor-Jiun Lin",
     "url": "https://github.com/ChristianLin0420"
   },
-  "repository": "https://github.com/ChristianLin0420/agent-skills",
+  "repository": "https://github.com/ChristianLin0420/skills4paranoia",
   "license": "MIT",
   "keywords": [
     "skills",

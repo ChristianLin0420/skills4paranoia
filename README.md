@@ -1,6 +1,10 @@
-# agent-skills
+# skills4paranoia
 
 Agent skills，依主題分層。純 markdown 規格，沒有要安裝的相依套件。
+
+名字不是玩笑。這裡每一個 skill 做的都是同一件事：**強迫你證明那件你跳過的事**。
+
+簡報 skill 不准你留下掛不到任何問題的頁；code review skill 專找不會拋錯、只會讓數字低幾個百分點的靜默失敗；實驗設計 skill 不准你在跑之前沒定義好什麼結果算失敗。這些紀律你本來就知道，只是趕的時候會跳過 —— 這個 repo 把它們變成擋得住的檢查。
 
 ```
 skills/
@@ -21,37 +25,37 @@ skills/
 ### Claude Code（受管、自動更新）
 
 ```bash
-claude plugin marketplace add ChristianLin0420/agent-skills
-claude plugin install christianlin-skills
+claude plugin marketplace add ChristianLin0420/skills4paranoia
+claude plugin install skills4paranoia
 ```
 
 或在 session 裡：
 
 ```
-/plugin marketplace add ChristianLin0420/agent-skills
-/plugin install christianlin-skills
+/plugin marketplace add ChristianLin0420/skills4paranoia
+/plugin install skills4paranoia
 ```
 
 ### Codex 或其他 agent（可編輯的副本）
 
 ```bash
-npx skills@latest add ChristianLin0420/agent-skills
+npx skills@latest add ChristianLin0420/skills4paranoia
 ```
 
 安裝程式會問你要裝哪幾個 skill、裝到哪個 agent。想只裝一個：
 
 ```bash
-npx skills@latest add ChristianLin0420/agent-skills --skill research-deck --agent claude-code
+npx skills@latest add ChristianLin0420/skills4paranoia --skill research-deck --agent claude-code
 ```
 
 ### 手動
 
 ```bash
-git clone https://github.com/ChristianLin0420/agent-skills
-cp -R agent-skills/skills/work/* ~/.claude/skills/
+git clone https://github.com/ChristianLin0420/skills4paranoia
+cp -R skills4paranoia/skills/*/* ~/.claude/skills/
 ```
 
-只給單一專案用就複製到專案的 `.claude/skills/`。
+`skills/*/*` 會把所有 topic 底下的 skill 都攤平複製過去 —— agent 的 skill 目錄本身不分 topic，分層只存在於這個 repo 裡。只給單一專案用就複製到專案的 `.claude/skills/`。
 
 ## 主題
 

@@ -1,12 +1,19 @@
 {
-  "name": "christianlin-skills",
+  "name": "skills4paranoia",
   "version": "0.1.0",
   "private": true,
-  "description": "Agent skills organised by topic",
+  "description": "Agent skills that enforce the disciplines people skip",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ChristianLin0420/agent-skills"
+    "url": "https://github.com/ChristianLin0420/skills4paranoia"
   },
   "license": "MIT",
-  "keywords": ["claude-code", "codex", "agent-skills"]
+  "keywords": [
+    "claude-code",
+    "codex",
+    "agent-skills",
+    "research",
+    "code-review",
+    "presentation"
+  ]
 }

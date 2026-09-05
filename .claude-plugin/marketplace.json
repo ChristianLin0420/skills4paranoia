@@ -4,14 +4,20 @@
     "name": "Bor-Jiun Lin",
     "url": "https://github.com/ChristianLin0420"
   },
-  "description": "Bor-Jiun Lin's agent skills, organised by topic.",
+  "description": "Bor-Jiun Lin's agent skills. Institutionalised paranoia: every skill enforces a discipline that is easy to skip.",
   "plugins": [
     {
-      "name": "christianlin-skills",
+      "name": "skills4paranoia",
       "source": "./",
-      "description": "Research-grade deck authoring: problem/solution/results structure, low-saturation light design system, research figure specs.",
+      "description": "Research-grade deck authoring and a VLA/WAM/RL code review that hunts silent failures. Each skill makes you prove the thing you skipped.",
       "category": "productivity",
-      "keywords": ["presentation", "keynote", "pptx", "research", "design-system"]
+      "keywords": [
+        "presentation",
+        "keynote",
+        "pptx",
+        "research",
+        "design-system"
+      ]
     }
   ]
 }
