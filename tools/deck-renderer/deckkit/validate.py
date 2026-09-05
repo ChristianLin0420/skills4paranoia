@@ -15,7 +15,8 @@ MAX_PROBLEMS = 4
 # Structural pages carry no argument of their own, so they address no problem.
 NO_CLAIM_NEEDED = {"E01", "E16"}
 NEEDS_CHART = ("E06", "E07", "E11", "E12")
-NEEDS_FOOTNOTE = ("E06", "E07", "E11", "E12", "E17", "E19")
+NEEDS_FOOTNOTE = ("E06", "E07", "E11", "E12", "E17", "E19", "E20", "E21")
+NEEDS_IMAGE = {"E20": 1, "E21": 2, "E14": 1, "E15": 1}
 
 
 def check(deck):
@@ -103,6 +104,10 @@ def check(deck):
             issues.append(("ERROR", s["line"], "E17 需要 2–4 個 ```chart 區塊"))
         if s["layout"] == "E18" and not s["bullets"]:
             issues.append(("ERROR", s["line"], "E18 需要至少一組設定（`- 群組 | 鍵=值 | …`）"))
+        want_img = NEEDS_IMAGE.get(s["layout"])
+        if want_img and len(s["images"]) < want_img:
+            issues.append(("ERROR", s["line"],
+                           "%s 需要 %d 張圖（用 ![說明](path) 指定）" % (s["layout"], want_img)))
         if s["layout"] in ("E10", "E19") and not s["table"]:
             issues.append(("ERROR", s["line"], "%s 需要一個表格" % s["layout"]))
         if s["layout"] in NEEDS_FOOTNOTE and not s["footnote"]:

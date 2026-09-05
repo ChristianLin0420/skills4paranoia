@@ -19,6 +19,7 @@ ALIASES = {
     "timeline": "E09", "table": "E10", "curves": "E11", "matrix": "E12",
     "filmstrip": "E13", "architecture": "E14", "image-full": "E15", "closing": "E16",
     "panels": "E17", "setup": "E18", "ablation": "E19",
+    "figure": "E20", "figure-pair": "E21",
 }
 NAMES = {v: k for k, v in ALIASES.items()}
 EVIDENCE_IDS = [i for i in NAMES if i.startswith("E")]

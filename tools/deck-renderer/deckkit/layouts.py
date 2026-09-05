@@ -507,6 +507,45 @@ def E18(slide, ctx):
     return ops
 
 
+def E20(slide, ctx):
+    """A figure the user supplied, placed as-is under the deck's own chrome.
+
+    Used when the figure cannot be regenerated from data — architecture
+    diagrams, photographs, screenshots. Statistical plots should be redrawn
+    from their source numbers instead so the styling matches the rest.
+    """
+    th, st = ctx["th"], ctx["s"]
+    ops, y = titled(slide, ctx, claim_tag(slide))
+    im = slide["images"][0] if slide["images"] else {"path": "figure.png", "caption": ""}
+    cap = im.get("caption") or ""
+    ih = BODY_BOT - y - (17 if cap else 0)
+    ops += picture(im["path"], ctx["base_dir"], MX, y, CW, ih, th, st)
+    if cap:
+        ops.append(text(MX, y + ih + 4, CW, 14, cap, TYPE["meta"], th["ink3"], wrap=False))
+    ops += foot(ctx, slide)
+    return ops
+
+
+def E21(slide, ctx):
+    """Two supplied figures side by side, each with its own caption."""
+    th, st = ctx["th"], ctx["s"]
+    ops, y = titled(slide, ctx, claim_tag(slide))
+    imgs = slide["images"][:2] or [{"path": "left.png", "caption": ""},
+                                   {"path": "right.png", "caption": ""}]
+    gap = 24.0
+    cw = (CW - gap * (len(imgs) - 1)) / len(imgs)
+    cap_h = 28 if any(i.get("caption") for i in imgs) else 0
+    ih = BODY_BOT - y - cap_h
+    for i, im in enumerate(imgs):
+        cx = MX + i * (cw + gap)
+        ops += picture(im["path"], ctx["base_dir"], cx, y, cw, ih, th, st)
+        if im.get("caption"):
+            ops.append(text(cx, y + ih + 5, cw, 24, im["caption"], TYPE["meta"],
+                            th["ink3"], leading=1.4))
+    ops += foot(ctx, slide)
+    return ops
+
+
 def E13(slide, ctx):
     th, s = ctx["th"], ctx["s"]
     ops, y = titled(slide, ctx, claim_tag(slide))
@@ -576,7 +615,7 @@ REGISTRY = {"F0": F0, "P1": P1, "P2": P2, "P3": P3, "D": D,
             "E01": E01, "E02": E02, "E03": E03, "E04": E04, "E06": E06,
             "E07": E07, "E08": E08, "E09": E09, "E10": E10, "E11": E11, "E12": E12,
             "E13": E13, "E14": E14, "E15": E15, "E16": E16, "E17": E17, "E18": E18,
-            "E19": E19}
+            "E19": E19, "E20": E20, "E21": E21}
 
 
 def render_slide(slide, ctx):

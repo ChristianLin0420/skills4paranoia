@@ -171,6 +171,11 @@ note: "n=384 failed rollouts, hand-labelled by two annotators"
 ![t=160](figures/roll4.png)
 ~ One of the 34% that succeed. Failures typically release the object after t=80.
 
+<!-- E20 figure solves=Q2 source="On-robot capture, not simulation" -->
+# The failures share one moment: the frame where the second subgoal is handed over
+![Four failed rollouts overlaid, boxes marking where the object is released](figures/failure_grid.png)
+~ Four representative cases drawn from 384 failures. Screen capture from on-robot video — no underlying numbers exist, so it is placed as-is rather than redrawn.
+
 <!-- E02 solves=Q2 -->
 # Generalisation is not memorisation: held-out success sits only 14 points below in-distribution
 > Same weights throughout, with no per-task finetuning.
