@@ -1,0 +1,1530 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>vitra &mdash; data flow</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500&display=swap">
+<style>
+:root{
+ --bg:#F1F2F3;--surface:#FAFBFB;--ink:#14171A;--ink2:#5F656B;--ink3:#8A9096;
+ --rule:#DCE0E3;--rule-soft:#E8EBED;--accent:#3A6183;--accent-deep:#27435C;
+ --accent-soft:#DBE4EB;--accent-wash:#EAF0F4;--warn:#8C4A3C;--warn-soft:#EFE3E0;
+ --model:#54547A;--model-soft:#E6E6EE;
+ --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;--mono:'IBM Plex Mono',Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.62 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,27vw,392px);min-height:100vh}
+main{padding:30px 34px 80px;min-width:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+h1{font-size:22px;font-weight:500;letter-spacing:-.01em;margin:0 0 3px}
+.sub{font-size:12.5px;color:var(--ink2);margin:0 0 16px;font-family:var(--mono)}
+.sub b{color:var(--ink);font-weight:500}
+
+.banner{border:1px solid var(--warn);background:var(--warn-soft);padding:11px 15px;margin:0 0 16px;
+        font-size:13.5px;display:flex;gap:11px;align-items:flex-start;line-height:1.55}
+.banner .t{font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;background:var(--warn);
+           padding:2px 7px;white-space:nowrap;margin-top:2px;letter-spacing:.04em}
+.ok{border-color:var(--accent);background:var(--accent-wash)}
+.ok .t{background:var(--accent)}
+
+/* ── controls ─────────────────────────────────────────────────────────── */
+.bar{display:flex;gap:7px;align-items:center;margin:0 0 6px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.seg button{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 15px;border:0;
+            background:var(--bg);color:var(--ink2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button.on{background:var(--accent);color:#fff}
+.bar input{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 11px;width:210px;
+           border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink)}
+.bar input::placeholder{color:var(--ink3)}
+.ghost{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 12px;border:1px solid var(--rule);
+       border-radius:3px;background:var(--bg);color:var(--ink2);cursor:pointer}
+.ghost.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep)}
+.count{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.legend{display:flex;gap:16px;margin:0 0 22px;font-size:11.5px;color:var(--ink3);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.sw{width:12px;height:12px;border-radius:2px;border:1px solid var(--rule);background:var(--surface);flex:0 0 auto}
+.sw.inf{border-style:dashed;border-color:var(--ink3)}
+.sw.w{border-color:var(--warn);background:var(--warn-soft)}
+
+/* ── graph ────────────────────────────────────────────────────────────── */
+.graph{position:relative;padding:0 82px}   /* the side gutters skip-edges route through */
+svg.wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:5}
+.wires path{fill:none;stroke:var(--rule);stroke-width:1.25}
+.wires path.lit{stroke:var(--accent);stroke-width:1.75}
+.wires path.half{stroke:var(--accent);opacity:.5}
+.wires text.half,.wires circle.half,.wires rect.half{opacity:.5}
+.wires path.dim{opacity:.13}
+.wires path.grad{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 3}
+.wires circle{fill:var(--ink3);r:2.6}
+.wires circle.lit{fill:var(--accent)}
+.wires circle.dim{opacity:.13}
+.wires text{font-family:var(--mono);font-size:10.5px;fill:var(--ink2)}
+.wires text.dim{opacity:.13}
+.wires .lbl-bg{fill:var(--bg)}
+
+/* three levels of block: a group is a phase, a stage is a step, a card is a node */
+.grp{position:relative;z-index:1;border:1px solid var(--rule);border-radius:6px;
+     background:rgba(255,255,255,.5);padding:15px 20px 8px;margin:0 0 30px}
+.grp>header{display:flex;align-items:baseline;gap:11px;margin:0 0 4px;
+            padding-bottom:9px;border-bottom:1px solid var(--rule-soft)}
+.grp h3{font-size:12px;font-weight:600;letter-spacing:.11em;color:var(--accent-deep);margin:0}
+.grp .gn{font-size:11.5px;color:var(--ink3);margin:0}
+.grp .gcount{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--ink3)}
+
+.lanehead{display:grid;gap:18px;margin:12px 0 2px;padding-left:96px}
+.lanehead span{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;color:var(--ink3);
+               border-bottom:1px solid var(--rule-soft);padding-bottom:4px}
+
+.stg{display:grid;grid-template-columns:84px minmax(0,1fr);gap:12px;margin:16px 0 34px}
+.slab{font-size:10.5px;letter-spacing:.1em;color:var(--ink3);text-align:right;padding-top:10px;
+      line-height:1.35}
+.cells{display:grid;gap:18px}
+.cell{display:flex;gap:14px;min-width:0}
+.cell.chain{flex-direction:column}
+.cell.fan{flex-direction:row;align-items:stretch}
+.cell.fan>.node{flex:1 1 0}
+.wide{grid-column:1/-1}
+.free{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.free>.node{flex:0 1 300px}
+
+.node{position:relative;flex:1 1 0;min-width:0;border:1px solid var(--rule);background:var(--surface);
+      padding:9px 11px 10px;cursor:pointer;border-radius:3px;
+      transition:border-color .12s,opacity .12s,box-shadow .12s}
+.node:hover{border-color:var(--accent)}
+.node.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.node.inferred{border-style:dashed;border-color:var(--ink3)}
+.node.watch{border-color:var(--warn)}
+.node.watch.sel{box-shadow:inset 0 0 0 1px var(--warn)}
+.node.off{opacity:.2}
+.node.dim{opacity:.16}
+.node.half{opacity:.55}
+.node.hit{border-color:var(--accent);background:var(--accent-wash)}
+.node.gtrains{border-color:var(--accent);background:var(--accent-wash);box-shadow:inset 0 0 0 1px var(--accent)}
+.node.gstop{border-color:var(--warn);border-style:dashed}
+.node.gout{opacity:.14}
+.gmark{position:absolute;bottom:-1px;right:-1px;font-family:var(--mono);font-size:9.5px;
+       padding:1px 4px;border-radius:2px 0 2px 0;letter-spacing:.03em}
+.gmark.t{background:var(--accent);color:#fff}
+.gmark.f{background:var(--rule-soft);color:var(--ink2)}
+.gmark.s{background:var(--warn);color:#fff}
+.node .k{font-size:10.5px;letter-spacing:.06em;color:var(--ink3);font-family:var(--mono)}
+.node .n{font-size:14.5px;font-weight:500;margin:2px 0 3px;line-height:1.35;word-break:break-word}
+.node.bar{border-color:var(--ink3);background:#F6F7F8}
+.node.bar .n{font-size:15.5px}
+.node.bar .row2{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+.node.bar .row2 .m{flex:1 1 260px}
+.node .m{font-size:11.5px;color:var(--ink2);font-family:var(--mono);word-break:break-word;line-height:1.45}
+.node .tags{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
+b.mdl{font-weight:600;color:var(--model)}
+.trap b.mdl{color:#4A3F63}
+.tag{font-family:var(--mono);font-size:10px;padding:1.5px 6px;border-radius:2px;background:var(--rule-soft);color:var(--ink2)}
+.tag.frozen{background:var(--accent-soft);color:var(--accent-deep)}
+.tag.only{background:#E7E3DC;color:#6A5F4E}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.bang{position:absolute;top:-1px;right:-1px;width:0;height:0;
+      border-top:13px solid var(--warn);border-left:13px solid transparent}
+
+/* ── panel ────────────────────────────────────────────────────────────── */
+aside{border-left:1px solid var(--rule);background:var(--surface);position:sticky;top:0;
+      height:100vh;overflow-y:auto;padding:30px 22px 40px}
+aside h2{font-size:11px;letter-spacing:.1em;color:var(--ink2);margin:0 0 11px;padding-bottom:7px;
+         border-bottom:1px solid var(--rule);font-weight:500}
+.empty{font-size:13.5px;color:var(--ink3);line-height:1.65}
+.empty kbd{font-family:var(--mono);font-size:10.5px;background:var(--rule-soft);padding:1px 5px;border-radius:2px;color:var(--ink2)}
+.pn{font-size:17px;font-weight:500;line-height:1.32;margin:0 0 4px}
+.pk{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.07em;margin:0 0 15px}
+.src{font-family:var(--mono);font-size:12px;color:var(--accent-deep);background:var(--accent-wash);
+     display:block;padding:7px 9px;border-radius:2px;word-break:break-all;line-height:1.45}
+dl{margin:0;display:grid;grid-template-columns:74px minmax(0,1fr);gap:7px 12px;font-size:13.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.two .h{margin-bottom:6px}
+dt{color:var(--ink3);font-size:11.5px;padding-top:3px}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+dd.mono{font-family:var(--mono);font-size:12px;line-height:1.5}
+.conf{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:2px}
+.conf.verified{background:var(--accent-soft);color:var(--accent-deep)}
+.conf.static{background:var(--rule-soft);color:var(--ink2)}
+.conf.inferred{background:var(--warn-soft);color:var(--warn)}
+.blk{margin-top:13px;padding-top:11px;border-top:1px solid var(--rule-soft);font-size:13px;color:var(--ink2);line-height:1.65}
+.blk .h{font-size:10.5px;letter-spacing:.09em;color:var(--ink3);margin-bottom:5px;font-family:var(--mono)}
+.blk code{font-family:var(--mono);font-size:12px;background:var(--rule-soft);padding:0 3px;border-radius:2px}
+.trap{border-left:2px solid var(--warn);background:var(--warn-soft);padding:10px 12px;margin-top:14px;
+      font-size:13px;line-height:1.6;color:#5E3228}
+.trap .h{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--warn);margin-bottom:4px}
+.hop{font-family:var(--mono);font-size:11.5px;color:var(--accent);cursor:pointer;display:block;
+     padding:2px 0;text-decoration:none}
+.hop:hover{text-decoration:underline}
+ul.notes{margin:0;padding-left:15px}
+ul.notes li{margin-bottom:8px}
+
+footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-size:11.5px;
+       color:var(--ink3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+<main>
+  <h1 id="title"></h1>
+  <p class="sub" id="meta"></p>
+  <div id="banner"></div>
+
+  <div class="bar">
+    <div class="seg">
+      <button id="b-train" class="on">train</button>
+      <button id="b-eval">eval</button>
+      <button id="b-both">both</button>
+    </div>
+    <button class="ghost" id="b-diff">train &#8644; eval diff</button>
+    <input id="q" placeholder="/  filter nodes" autocomplete="off">
+    <span class="count" id="count"></span>
+  </div>
+  <div class="legend">
+    <span><i class="sw"></i>observed or read from source</span>
+    <span><i class="sw inf"></i>inferred &mdash; unverified</span>
+    <span><i class="sw w"></i>worth a second look</span>
+    <span>click a node to pin its path &middot; click the background to clear</span>
+    <span>click a loss term to see what learns from it</span>
+  </div>
+
+  <div class="graph" id="graph"><svg class="wires" id="wires"></svg></div>
+</main>
+
+<aside>
+  <h2 id="ptitle">DETAIL</h2>
+  <div id="panel"></div>
+</aside>
+
+<footer>
+  <span>codebase-onboarding &middot; data flow and model components</span>
+  <span class="mono" id="foot"></span>
+</footer>
+</div>
+
+<script>
+// ═══ Replace MAP. Nothing below it needs editing. ═══════════════════════════
+const MAP = {
+ "repo": "VITRA @ b355172",
+ "entry": "scripts/train.py (train) · scripts/inference_human_prediction.py (eval)",
+ "framework": "pytorch · FSDP · bf16 around the vision tower only",
+ "verified": false,
+ "verifiedNote": "Built by reading source at commit b355172, with no verification run: no GPU, no VITRA-1M data and no torch in the environment where this was produced. <b>Statically audited:</b> all 137 <code>file:line</code> citations on this map were read back against the cloned source (19 were wrong and are fixed), the graph was checked for cycles, dead edges and nodes isolated on a path (2 modelling errors found and fixed), and the inferential claims were re-derived in isolation. That is not a forward pass — shapes and dtypes remain unconfirmed — but every citation now points where it says it does.",
+ "note": "A third architecture family beside the other two examples: openvla predicts actions as discrete language tokens, openpi regresses a flow-matching velocity field, and VITRA runs a DDPM diffusion policy conditioned on <b>one</b> hidden state pulled out of the VLM. The action is a 192-dim two-hand pose, of which only 0&#8211;102 is used.",
+ "terms": [
+  "PaliGemma",
+  "SigLIP",
+  "Gemma",
+  "DiT-B",
+  "DiT",
+  "DDIM",
+  "DDPM",
+  "Ego4D",
+  "EgoExo4D",
+  "EPIC",
+  "SSv2",
+  "TeleData",
+  "FSDP"
+ ],
+ "lanes": [
+  {
+   "id": "vision",
+   "label": "vision"
+  },
+  {
+   "id": "language",
+   "label": "language"
+  },
+  {
+   "id": "state",
+   "label": "state"
+  },
+  {
+   "id": "action",
+   "label": "action"
+  }
+ ],
+ "stages": [
+  "SOURCE",
+  "AUGMENT",
+  "NORMALISE",
+  "PAD",
+  "PROCESS",
+  "BATCH",
+  "EMBED",
+  "ASSEMBLE",
+  "VISION",
+  "SPLICE",
+  "LLM",
+  "EXTRACT",
+  "REPEAT",
+  "NOISE",
+  "CONDITION",
+  "DIT",
+  "LOSS",
+  "INFER"
+ ],
+ "groups": [
+  {
+   "label": "DATA PIPELINE",
+   "note": "runs in the loader — per-source statistics, then one unified 192-dim vector",
+   "stages": [
+    "SOURCE",
+    "AUGMENT",
+    "NORMALISE",
+    "PAD",
+    "PROCESS",
+    "BATCH"
+   ]
+  },
+  {
+   "label": "VLM INPUT",
+   "note": "text, state, field of view and a learned cognition token, then everything is left-shifted",
+   "stages": [
+    "EMBED",
+    "ASSEMBLE",
+    "VISION",
+    "SPLICE"
+   ]
+  },
+  {
+   "label": "BACKBONE",
+   "note": "3B PaliGemma — and the action pathway reads exactly one position out of it",
+   "stages": [
+    "LLM",
+    "EXTRACT"
+   ]
+  },
+  {
+   "label": "ACTION MODEL",
+   "note": "DDPM over a two-hand pose, conditioned on that single vector",
+   "stages": [
+    "REPEAT",
+    "NOISE",
+    "CONDITION",
+    "DIT"
+   ]
+  },
+  {
+   "label": "OBJECTIVE",
+   "note": "noise prediction, masked, split into four weighted components",
+   "stages": [
+    "LOSS"
+   ]
+  },
+  {
+   "label": "INFERENCE ONLY",
+   "note": "DDIM with guidance — none of these three numbers appear in training",
+   "stages": [
+    "INFER"
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "id": "mix",
+   "stage": "SOURCE",
+   "span": true,
+   "kind": "data",
+   "name": "MultipleWeightedDataset",
+   "meta": "Ego4D · EgoExo4D · EPIC · SSv2 · TeleData, sampled by weight",
+   "file": "vitra/datasets/dataset.py:281",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "A weighted mixture of egocentric video sources named in HAND_MIXTURES. Each source ships its own hand annotations and its own statistics file.",
+   "notes": [
+    "The whole premise of the paper: unscripted human hand video is reshaped into the same format as robot VLA data, so the hand is treated as the end effector."
+   ]
+  },
+  {
+   "id": "augment",
+   "stage": "AUGMENT",
+   "lane": "action",
+   "kind": "transform",
+   "name": "flip · set-none · state masking",
+   "meta": "train only",
+   "file": "vitra/datasets/dataset.py:96",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "Mirror augmentation (flip_augmentation), randomly blanking a hand (set_none_ratio), and dropping the proprioceptive state with probability state_mask_prob = 0.1.",
+   "watch": "Mirroring an egocentric hand is not an image flip: the image, the 6-D wrist pose and the per-joint angles must all be mirrored consistently, and left and right hands swap slots in the 192-dim vector. The image half and the action half live in different files (augment_utils.py against the dataset), so a change to one does not force a change to the other.",
+   "notes": [
+    "state_mask_prob means one in ten training samples has no state — that is what teaches the model to run without proprioception at inference."
+   ]
+  },
+  {
+   "id": "stats",
+   "stage": "NORMALISE",
+   "lane": "action",
+   "kind": "transform",
+   "name": "per-source Gaussian normaliser",
+   "meta": "left and right hand normalised separately",
+   "file": "vitra/datasets/human_dataset.py:769",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "Actions and state are z-scored using mean/std loaded from a statistics JSON chosen by source dataset — ego4d, egoexo4d, epic, ssv2 and teledata each have their own.",
+   "watch": "A missing statistics file does not raise. dataset.py:82 prints `Warning: statistics file ... does not exist` and sets the path to None, so a mixture with one mis-pathed source trains on unnormalised actions for that source and nothing stops it. The warning goes to stdout from a dataloader worker, where it is easy to miss.",
+   "notes": [
+    "dataset.py:49 asserts action_type == 'angle', use_rel == False and rel_mode == 'step' — the shipped statistics are only valid for that one representation.",
+    "Inference re-applies the same normalisation and its inverse; the statistics travel with the checkpoint, not with the code.",
+    "On the inference path this is where the map starts: the observation comes from a video file rather than the training mixture, so this node has no predecessor there."
+   ]
+  },
+  {
+   "id": "pad",
+   "stage": "PAD",
+   "lane": "action",
+   "kind": "transform",
+   "name": "pad to the unified vector",
+   "meta": "action → 192, state → 212, both with masks",
+   "file": "vitra/datasets/human_dataset.py:774",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "Every source is padded into one fixed layout so a mixture can be batched: left hand 0–51, right hand 51–102.",
+   "watch": "ActionFeature marks 102–192 as PADDING_FEATURES with the comment `not used now` (dataset_utils.py:22). Ninety of the 192 channels are dead weight carried through the diffusion model, the loss mask and every checkpoint. They are free to reuse — and equally, anything you put there will be silently ignored by the loss, whose components only cover 0–102.",
+   "notes": [
+    "The mask is not bookkeeping: it is concatenated onto the diffusion input as extra channels and it divides the loss."
+   ]
+  },
+  {
+   "id": "proc",
+   "stage": "PROCESS",
+   "lane": "vision",
+   "kind": "transform",
+   "name": "PaliGemma processor",
+   "meta": "→ pixel_values (B,3,224,224) f32",
+   "file": "vitra/datasets/dataset.py:145",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "The stock HuggingFace PaliGemma processor handles resizing and normalisation, and emits the image-token placeholders in input_ids.",
+   "notes": [
+    "target_image_height defaults to 224 (dataset.py:31) and must agree with the checkpoint's processor config.",
+    "Camera field of view is carried alongside as a 2-vector and encoded separately — see the FOV encoder."
+   ]
+  },
+  {
+   "id": "prompt",
+   "stage": "PROCESS",
+   "lane": "language",
+   "kind": "transform",
+   "name": "tokenise the instruction",
+   "meta": "→ input_ids (B, L)",
+   "file": "vitra/datasets/dataset.py:145",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "The same processor call tokenises the task string.",
+   "notes": []
+  },
+  {
+   "id": "coll",
+   "stage": "BATCH",
+   "span": true,
+   "kind": "data",
+   "name": "PaddedCollatorForHandPrediction",
+   "meta": "input_ids · pixel_values · fov · action · state · masks",
+   "file": "vitra/utils/data_utils.py:167",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "Pads input_ids and stacks everything else. attention_mask is derived by comparing against pad_token_id.",
+   "watch": "padding_side defaults to 'right' (materialize.py:17) — and the model then moves every real token back to the LEFT at prepare_vlm_input_embeddings. Two opposite conventions, one after the other, in different files. Changing the collator's side alone will not do what it looks like it does.",
+   "notes": []
+  },
+  {
+   "id": "wemb",
+   "stage": "EMBED",
+   "lane": "language",
+   "kind": "module",
+   "name": "word embeddings",
+   "meta": "(B, L) → (B, L, 2304)",
+   "file": "vitra/models/vla/vitra_paligemma.py:269",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "PaliGemma's own token embedding.",
+   "notes": []
+  },
+  {
+   "id": "stenc",
+   "stage": "EMBED",
+   "lane": "state",
+   "kind": "module",
+   "name": "state encoder (VLM route)",
+   "meta": "state ⊕ mask → one token",
+   "file": "vitra/models/vla/vitra_paligemma.py:106",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "inferred",
+   "grad": "trains",
+   "detail": "An MLP over the state concatenated with its own mask, producing a single extra token for the LLM. Only built when use_state == 'VLM'.",
+   "watch": "There are two mutually exclusive places the state can enter: here, as an extra VLM token, or inside the diffusion model as a DiT conditioning input. The constructor default is 'DiT' (vitra_paligemma.py:27), so on the default path this encoder does not exist and this node is not on the graph at all.",
+   "notes": [
+    "The state is multiplied by its mask before encoding (vitra_paligemma.py:287), so a masked state is a zero vector rather than a skipped token — the token is always there."
+   ]
+  },
+  {
+   "id": "fovenc",
+   "stage": "EMBED",
+   "lane": "vision",
+   "kind": "module",
+   "name": "FOV encoder",
+   "meta": "(fov_x, fov_y) → one token",
+   "file": "vitra/models/vla/vitra_paligemma.py:96",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "A two-layer MLP turning the camera's field of view into a token. In-the-wild video comes from many cameras, so the model is told the intrinsics rather than asked to infer them.",
+   "notes": []
+  },
+  {
+   "id": "cog",
+   "stage": "EMBED",
+   "lane": "action",
+   "kind": "module",
+   "name": "cognition token",
+   "meta": "one learned parameter, appended last",
+   "file": "vitra/models/vla/vitra_paligemma.py:86",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "A single learned embedding, initialised from the word embedding at cognition_token_id (default 10, 'an unused token ID'). This is the whole interface between the VLM and the action model.",
+   "watch": "untied_cognition_token defaults to True, so this parameter is a clone that no longer moves with the word embedding it came from. If it were left tied, freezing the word embedding would freeze the action model's only conditioning input — which is exactly what the `only_head_and_token` freeze option would do.",
+   "notes": [
+    "The same cognition_token_id is also used as a filler in input_ids for the state and FOV positions (vitra_paligemma.py:311), purely as a placeholder — the embeddings at those positions are overwritten."
+   ]
+  },
+  {
+   "id": "assemble",
+   "stage": "ASSEMBLE",
+   "span": true,
+   "kind": "transform",
+   "name": "concatenate, then left-shift",
+   "meta": "[text ⊕ state ⊕ fov ⊕ cognition] → left-aligned",
+   "file": "vitra/models/vla/vitra_paligemma.py:308",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "flows",
+   "detail": "The extra tokens are appended after the text, then move_masked_to_left at vitra_paligemma.py:315 compacts the real tokens so padding sits on the left.",
+   "watch": "This is what makes the cognition token the last attended position, which is the only reason extract_cognition_token finds it. Append anything after the cognition token here — a second camera token, a goal token — and the action model silently starts reading that instead. Nothing checks which token it got.",
+   "notes": [
+    "position_ids are cache_position + 1 because PaliGemma positions are 1-indexed (vitra_paligemma.py:323)."
+   ]
+  },
+  {
+   "id": "vt",
+   "stage": "VISION",
+   "lane": "vision",
+   "kind": "module",
+   "name": "SigLIP vision tower",
+   "meta": "pixel_values → image features",
+   "file": "vitra/models/vla/vitra_paligemma.py:326",
+   "params": "frozen",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "flows",
+   "detail": "PaliGemma's vision tower, called through get_image_features.",
+   "watch": "This one call is the only thing wrapped in autocast: `torch.autocast('cuda', bfloat16, enabled=self.use_bf16)` at vitra_paligemma.py:326. The rest of the forward — the LLM, the DiT, the loss — runs outside it. Reading `use_bf16` in the config and assuming the model trains in bf16 gets the memory arithmetic wrong.",
+   "notes": [
+    "Whether this tower is frozen depends on freeze_option; see the backbone node for how that setting resolves."
+   ]
+  },
+  {
+   "id": "splice",
+   "stage": "SPLICE",
+   "span": true,
+   "kind": "transform",
+   "name": "scatter image features into place",
+   "meta": "at every input_ids == image_token_index",
+   "file": "vitra/models/vla/vitra_paligemma.py:329",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "flows",
+   "detail": "Image features are written into the embedding sequence wherever the processor left an image placeholder token.",
+   "notes": []
+  },
+  {
+   "id": "llm",
+   "stage": "LLM",
+   "span": true,
+   "kind": "module",
+   "name": "PaliGemma language model",
+   "meta": "→ hidden states (B, S, 2304)",
+   "file": "vitra/models/vla/vitra_paligemma.py:19",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "The 3B backbone. Which parts of it train is decided by trainable_params_setup.",
+   "watch": "trainable_params_setup (vitra_paligemma.py:134) is three separate `if` statements, each calling `.get('freeze_option', <a different default>)` — 'full_finetune' at :138, 'only_head_and_token' at :143, 'freeze_vision_encoder' at :148. With the key set they behave as intended, because only the matching branch fires. With the key ABSENT all three fire in order, each overwriting the last, and the model lands on 'freeze_vision_encoder' — the first branch's `requires_grad_(True)` is undone twice on the way. Confirm freeze_option is actually present in your config before reading the parameter count as a choice you made.",
+   "notes": [
+    "config.use_cache is set False here (vitra_paligemma.py:136).",
+    "The trainer also has an llm_freeze_step option (scripts/train.py:205), so the trainable set can change partway through a run."
+   ]
+  },
+  {
+   "id": "extract",
+   "stage": "EXTRACT",
+   "span": true,
+   "kind": "transform",
+   "name": "take the last attended position",
+   "meta": "(B, S, 2304) → (B, 1, 2304)",
+   "file": "vitra/models/vla/vitra_paligemma.py:251",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "flows",
+   "detail": "Finds the final unmasked index by cumsum over the attention mask and gathers that one hidden state. Everything the action model knows arrives through this vector.",
+   "watch": "A whole 3B backbone is compressed to one 2304-dim vector. That is the design, not a bug — but it means any bug in the attention mask, the left-shift, or the token ordering shows up as a plausible-looking action rather than an error. It is the highest-leverage single line in the repository to verify with a hook.",
+   "notes": []
+  },
+  {
+   "id": "repeat",
+   "stage": "REPEAT",
+   "span": true,
+   "kind": "transform",
+   "name": "tile for repeated diffusion steps",
+   "meta": "B → B × repeated_diffusion_steps",
+   "file": "vitra/models/vla/vitra_paligemma.py:213",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "flows",
+   "detail": "The conditioning vector, the action labels and the masks are each repeated so one VLM forward supplies several diffusion timesteps.",
+   "watch": "The action model's effective batch is B × repeated_diffusion_steps, not B. One VLM forward is amortised over several noise draws, which is cheap and correct — but the number you set as batch_size is not the number the DiT and the loss see, and neither is the number the loss averages over.",
+   "notes": []
+  },
+  {
+   "id": "qsample",
+   "stage": "NOISE",
+   "lane": "action",
+   "kind": "transform",
+   "name": "q_sample, then append the mask",
+   "meta": "x_t ⊕ mask → (B, T, 384)",
+   "file": "vitra/models/action_model/diffusion_policy.py:82",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "grad": "flows",
+   "detail": "Standard DDPM forward process at a uniformly drawn timestep, on a squaredcos_cap_v2 schedule. The noisy action is zeroed outside the mask and the mask is then concatenated as extra channels.",
+   "watch": "`x_t = x_t * x_mask` then `torch.cat([x_t, x_mask], dim=2)` at diffusion_policy.py:83-84 doubles the channel count. The DiT's input width is therefore twice the action dimension, and the mask is an input feature rather than only a loss weight. Change the action layout and three things move together: the width, the mask channels, and the loss component indices.",
+   "notes": [
+    "The timestep is drawn uniformly over num_timesteps (diffusion_policy.py:79) — no importance sampling, despite a timestep_sampler module being present in the tree."
+   ]
+  },
+  {
+   "id": "xT",
+   "stage": "NOISE",
+   "lane": "action",
+   "kind": "data",
+   "name": "start from noise",
+   "meta": "x_T ~ N(0, I)",
+   "file": "vitra/models/action_model/diffusion_policy.py:135",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "At inference there is no ground-truth action: sampling starts from noise and runs the reverse process.",
+   "notes": []
+  },
+  {
+   "id": "zemb",
+   "stage": "CONDITION",
+   "lane": "language",
+   "kind": "module",
+   "name": "condition embedder (CFG)",
+   "meta": "cognition vector → DiT condition",
+   "file": "vitra/models/action_model/dit.py:134",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "Projects the cognition vector into the DiT width, with class_dropout_prob = 0.1 — the classifier-free-guidance dropout that makes cfg_scale meaningful at sampling.",
+   "watch": "Its dropout is keyed on the `train` flag passed into forward, not on module.training. A refactor that routes conditioning through this embedder in eval mode without setting that flag drops the condition on 10% of samples at inference, which reads as an unstable policy rather than a bug.",
+   "notes": [
+    "Drawn in the language lane because it carries the fused vision-and-language context, not language alone."
+   ]
+  },
+  {
+   "id": "stemb",
+   "stage": "CONDITION",
+   "lane": "state",
+   "kind": "module",
+   "name": "state embedder (DiT route)",
+   "meta": "state ⊕ mask → DiT width",
+   "file": "vitra/models/action_model/dit.py:87",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "The default state route. Takes 2 × state_size because the mask is concatenated, same convention as the action input.",
+   "notes": []
+  },
+  {
+   "id": "temb",
+   "stage": "CONDITION",
+   "lane": "action",
+   "kind": "module",
+   "name": "timestep embedder",
+   "meta": "sinusoidal 256 → DiT width",
+   "file": "vitra/models/action_model/dit.py:34",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "Standard sinusoidal timestep embedding followed by an MLP.",
+   "notes": []
+  },
+  {
+   "id": "dit",
+   "stage": "DIT",
+   "span": true,
+   "kind": "module",
+   "name": "DiT-B with masked attention",
+   "meta": "→ predicted noise (B, T, 192)",
+   "file": "vitra/models/action_model/dit.py:222",
+   "params": "trained",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "trains",
+   "detail": "A diffusion transformer over the action chunk, predicting ε. Attention is masked so padded action dimensions cannot leak, and the blocks use qk-norm with RmsNorm.",
+   "notes": [
+    "The action model is always set trainable (vitra_paligemma.py:154), whatever freeze_option says about the VLM.",
+    "The blocks are DiTBlock (dit.py:168) over MaskAttention (dit.py:103), a qk-normed attention that respects the action mask."
+   ]
+  },
+  {
+   "id": "mse",
+   "stage": "LOSS",
+   "kind": "loss",
+   "name": "masked L2 on ε, per component",
+   "meta": "left/right × 6D pose and joints",
+   "file": "vitra/models/action_model/diffusion_policy.py:92",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "Squared error between predicted and true noise, masked, then split into four named components: left and right, 6-D wrist pose and 45 joint angles, each weight 1.0.",
+   "watch": "The four components carry equal weight, but they are not equal sizes: a 6-dimensional wrist pose is weighted the same as 45 joint angles, because each component is first averaged over its own dimensions and only then combined by how many SAMPLES contain it (diffusion_policy.py:104-118). Per dimension, the wrist pose is therefore weighted about seven times more heavily than a finger joint. That is a real modelling decision and it is invisible in the weight column, which reads 1.0 across the board.",
+   "notes": [
+    "If no component is present in the batch the loss falls back to `square_delta[0,0,0]` (diffusion_policy.py:111) — a single scalar element, to keep the graph connected rather than to mean anything."
+   ]
+  },
+  {
+   "id": "ddim",
+   "stage": "INFER",
+   "kind": "transform",
+   "name": "DDIM sampling with guidance",
+   "meta": "10 steps · cfg_scale 5.0 · 4 samples",
+   "file": "scripts/inference_human_prediction.py:234",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "Reverse diffusion with classifier-free guidance, drawing several action chunks per observation to show the spread.",
+   "watch": "Ten DDIM steps, a guidance scale of 5.0 and four samples appear nowhere in training — the model is never told how it will be integrated. All three change the policy without changing a weight, so they belong in the experiment record beside the checkpoint.",
+   "notes": []
+  },
+  {
+   "id": "unnorm",
+   "stage": "INFER",
+   "kind": "transform",
+   "name": "unnormalise to hand pose",
+   "meta": "→ 51 dims per hand over T steps",
+   "file": "scripts/inference_human_prediction.py:569",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "grad": "blocked",
+   "detail": "Inverts the per-source normalisation and splits the unified vector back into left and right hand trajectories. The 90 padding dimensions are sliced off first — <code>norm_action[:, :, :102]</code> at inference_human_prediction.py:568 — which is the same 102 boundary the loss components stop at.",
+   "watch": "The inverse has to use the statistics of the source the checkpoint was trained on. There is one statistics file per dataset and the mixture may have used several — pick the wrong one and the hand moves smoothly to the wrong place.",
+   "notes": []
+  }
+ ],
+ "edges": [
+  {
+   "from": "mix",
+   "to": "augment",
+   "label": "hand pose + state",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "augment",
+   "to": "stats",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "stats",
+   "to": "pad",
+   "label": "z-scored"
+  },
+  {
+   "from": "mix",
+   "to": "proc",
+   "label": "egocentric frame"
+  },
+  {
+   "from": "mix",
+   "to": "prompt",
+   "label": "task string"
+  },
+  {
+   "from": "pad",
+   "to": "coll",
+   "label": "action (T,192) · mask"
+  },
+  {
+   "from": "proc",
+   "to": "coll",
+   "label": "(3,224,224) f32"
+  },
+  {
+   "from": "prompt",
+   "to": "coll",
+   "label": "input_ids"
+  },
+  {
+   "from": "coll",
+   "to": "wemb",
+   "label": "input_ids (B,L)"
+  },
+  {
+   "from": "coll",
+   "to": "stenc",
+   "label": "state ⊕ mask"
+  },
+  {
+   "from": "coll",
+   "to": "fovenc",
+   "label": "fov (B,2)"
+  },
+  {
+   "from": "coll",
+   "to": "vt",
+   "label": "pixel_values"
+  },
+  {
+   "from": "wemb",
+   "to": "assemble"
+  },
+  {
+   "from": "stenc",
+   "to": "assemble"
+  },
+  {
+   "from": "fovenc",
+   "to": "assemble"
+  },
+  {
+   "from": "cog",
+   "to": "assemble"
+  },
+  {
+   "from": "assemble",
+   "to": "splice",
+   "label": "(B, S, 2304)"
+  },
+  {
+   "from": "vt",
+   "to": "splice",
+   "label": "image features"
+  },
+  {
+   "from": "splice",
+   "to": "llm",
+   "label": "inputs_embeds"
+  },
+  {
+   "from": "llm",
+   "to": "extract",
+   "label": "hidden states"
+  },
+  {
+   "from": "extract",
+   "to": "repeat",
+   "label": "(B, 1, 2304)"
+  },
+  {
+   "from": "coll",
+   "to": "repeat",
+   "label": "action + masks — never enters the VLM",
+   "at": "action"
+  },
+  {
+   "from": "repeat",
+   "to": "zemb",
+   "label": "(B·r, 1, 2304)"
+  },
+  {
+   "from": "repeat",
+   "to": "qsample",
+   "label": "action (B·r, T, 192)",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "repeat",
+   "to": "xT",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "repeat",
+   "to": "stemb",
+   "label": "state"
+  },
+  {
+   "from": "qsample",
+   "to": "temb",
+   "label": "timestep",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "xT",
+   "to": "temb",
+   "label": "timestep",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "qsample",
+   "to": "dit",
+   "label": "x_t ⊕ mask (B·r,T,384)",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "xT",
+   "to": "dit",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "zemb",
+   "to": "dit"
+  },
+  {
+   "from": "stemb",
+   "to": "dit"
+  },
+  {
+   "from": "temb",
+   "to": "dit"
+  },
+  {
+   "from": "dit",
+   "to": "mse",
+   "label": "ε̂ (B·r, T, 192)",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "dit",
+   "to": "ddim",
+   "label": "ε̂",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "ddim",
+   "to": "unnorm",
+   "label": "normalised action"
+  }
+ ]
+};
+// ═══════════════════════════════════════════════════════════════════════════
+
+const $ = s => document.querySelector(s);
+// Architecture names carry most of the orientation value on a first read, so they
+// get their own weight and colour wherever they appear.
+const TERMS = (MAP.terms || []).slice().sort((a, b) => b.length - a.length);
+const RX = TERMS.length
+  ? new RegExp("(" + TERMS.map(t => t.replace(/[.*+?^${}()|[\]\\\/-]/g, "\\$&")).join("|") + ")", "g")
+  : null;
+const mark = html => !RX ? html : String(html).split(/(<[^>]*>)/)
+  .map(seg => seg[0] === "<" ? seg : seg.replace(RX, '<b class="mdl">$1</b>')).join("");
+const N = Object.fromEntries(MAP.nodes.map(n => [n.id, n]));
+const NS = "http://www.w3.org/2000/svg";
+let path = "train", sel = null, hover = null, query = "", diff = false, gradSel = null;
+// A hover is a glance; a click is a decision. Clearing the highlight on mouseleave
+// meant you could never look away from the graph to read the panel it just opened.
+const traced = () => hover || sel;
+
+const onPath = x => path === "both" || !x.paths || x.paths.includes(path);
+const up   = id => MAP.edges.filter(e => e.to === id).map(e => e.from);
+const down = id => MAP.edges.filter(e => e.from === id).map(e => e.to);
+
+// Up- and downstream are not the same question. What feeds a node is what you have
+// to trust to believe it; what it feeds is a consequence. Selecting lights the first
+// at full strength and the second at half.
+function cone(id) {
+  const walk = step => {
+    const seen = new Set(), q = [id];
+    while (q.length) for (const nb of step(q.pop())) if (!seen.has(nb)) { seen.add(nb); q.push(nb); }
+    return seen;
+  };
+  return {self: id, up: walk(up), down: walk(down)};
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+$("#title").textContent = "Data flow — " + MAP.repo.split(" @ ")[0];
+$("#meta").innerHTML = "<b>" + MAP.repo + "</b>&nbsp;&nbsp; entry: " + MAP.entry +
+                       (MAP.framework ? "&nbsp;&nbsp; " + MAP.framework : "");
+$("#foot").textContent = MAP.repo;
+if (MAP.note) $("#banner").insertAdjacentHTML("afterend",
+  '<p style="margin:-8px 0 16px;font-size:11.5px;color:var(--ink2);line-height:1.6;' +
+  'border-left:2px solid var(--rule);padding-left:11px">' + MAP.note + '</p>');
+$("#banner").innerHTML = MAP.verified
+  ? '<div class="banner ok"><span class="t">VERIFIED</span><p style="margin:0">' + MAP.verifiedNote + '</p></div>'
+  : '<div class="banner"><span class="t">NOT VERIFIED</span><p style="margin:0">' +
+    (MAP.verifiedNote || "This map has not been checked against a real forward pass.") +
+    ' Edges and shapes are read from source and may be wrong. An unverified map is a plausible fiction, and you will trust it — treat every dashed node as a question, not an answer.</p></div>';
+
+/* ── graph ──────────────────────────────────────────────────────────────── */
+// Lanes replace the old crossing-reduction heuristic. Ordering nodes inside a row
+// by a barycentre gave columns no persistent meaning, so an edge from the action
+// stream to the loss could travel the full width of the graph — 27 crossing pairs
+// over 34 edges, with the longest edge longer than the graph was tall. A lane is a
+// stream that keeps the same column all the way down, so most edges become short
+// vertical hops and merges are the only thing left to draw.
+function topo(ids) {
+  const inSet = new Set(ids), succ = {}, indeg = {};
+  ids.forEach(i => { succ[i] = []; indeg[i] = 0; });
+  for (const e of MAP.edges)
+    if (inSet.has(e.from) && inSet.has(e.to) && e.from !== e.to) { succ[e.from].push(e.to); indeg[e.to]++; }
+  const ready = ids.filter(i => !indeg[i]), out = [];
+  while (ready.length) {
+    const x = ready.shift(); out.push(x);
+    for (const y of succ[x]) if (--indeg[y] === 0) ready.push(y);
+  }
+  return out.length === ids.length ? out : ids;
+}
+const linked = ids => MAP.edges.some(e => ids.includes(e.from) && ids.includes(e.to));
+
+// Lane widths follow how crowded each lane actually gets, so the busy stream is
+// not squeezed into the same column width as one that carries a single node.
+function laneWeights() {
+  const L = MAP.lanes || [];
+  return L.map(l => {
+    let w = 1;
+    for (const st of MAP.stages) {
+      const ids = MAP.nodes.filter(n => n.stage === st && n.lane === l.id).map(n => n.id);
+      if (ids.length > 1 && !linked(ids)) w = Math.max(w, ids.length);
+    }
+    return w;
+  });
+}
+
+function render() {
+  const q = query.trim().toLowerCase();
+  const hits = new Set(q ? MAP.nodes.filter(n =>
+    (n.name + " " + n.meta + " " + n.file + " " + n.detail + " " + (n.watch || "")).toLowerCase().includes(q)
+  ).map(n => n.id) : []);
+  const c = traced() ? cone(traced()) : null;
+  const gr = gradSel ? gradReach(gradSel) : null;
+  const lanes = MAP.lanes || [];
+  const cols = laneWeights().map(w => w + "fr").join(" ");
+
+  const card = n => {
+    const g = !gr || n.id === gradSel ? ""
+      : gr.trains.has(n.id) ? "gtrains" : gr.stops.has(n.id) ? "gstop"
+      : gr.flows.has(n.id) ? "gflows" : "gout";
+    const cls = ["node", n.span ? "bar" : "", n.conf === "inferred" ? "inferred" : "",
+      n.watch ? "watch" : "", onPath(n) ? "" : "off", sel === n.id ? "sel" : "",
+      !c ? "" : (c.self === n.id || c.up.has(n.id)) ? "" : c.down.has(n.id) ? "half" : "dim",
+      hits.has(n.id) ? "hit" : "", g].filter(Boolean).join(" ");
+    const gmark = g === "gtrains" ? '<i class="gmark t">&part; trains</i>'
+      : g === "gflows" ? '<i class="gmark f">&part; through</i>'
+      : g === "gstop" ? '<i class="gmark s">&part; stops</i>' : '';
+    const tags = [
+      n.params === "frozen"  ? '<span class="tag frozen">frozen</span>' : "",
+      n.params === "lora"    ? '<span class="tag frozen">LoRA</span>' : "",
+      n.params === "trained" ? '<span class="tag">trained</span>' : "",
+      n.params === "quantised" ? '<span class="tag warn">4-bit</span>' : "",
+      n.paths && n.paths.length === 1 ? '<span class="tag only">' + n.paths[0] + ' only</span>' : ""
+    ].join("");
+    const inner = n.span
+      ? '<div class="row2"><div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) +
+        '</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div>'
+      : '<div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) + '</div>' +
+        (tags ? '<div class="tags">' + tags + '</div>' : '');
+    return '<div class="' + cls + '" data-id="' + n.id + '">' + (n.watch ? '<i class="bang"></i>' : '') +
+           gmark + '<div class="k">' + n.kind.toUpperCase() + '</div>' + inner + '</div>';
+  };
+
+  // Nodes sharing a cell are a chain when an edge joins them and a fan when not —
+  // the difference between "one after another" and "at the same time".
+  const cell = ids => !ids.length ? '<div class="cell"></div>'
+    : '<div class="cell ' + (linked(ids) ? "chain" : "fan") + '">' +
+      topo(ids).map(i => card(N[i])).join("") + '</div>';
+
+  const stage = st => {
+    const ns = MAP.nodes.filter(n => n.stage === st);
+    if (!ns.length) return "";
+    const spans = ns.filter(n => n.span);
+    const laned = ns.filter(n => !n.span && n.lane);
+    const free  = ns.filter(n => !n.span && !n.lane);
+    let body = "";
+    if (spans.length)
+      body += '<div class="cells" style="grid-template-columns:1fr">' + cell(spans.map(n => n.id)) + '</div>';
+    if (laned.length)
+      body += '<div class="cells" style="grid-template-columns:' + cols + '">' +
+              lanes.map(l => cell(laned.filter(n => n.lane === l.id).map(n => n.id))).join("") + '</div>';
+    if (free.length)
+      body += '<div class="free">' + topo(free.map(n => n.id)).map(i => card(N[i])).join("") + '</div>';
+    return '<div class="stg"><div class="slab">' + st + '</div><div>' + body + '</div></div>';
+  };
+
+  const groups = (MAP.groups && MAP.groups.length) ? MAP.groups : [{ label: "", stages: MAP.stages }];
+  const html = groups.map(gp => {
+    const inner = gp.stages.map(stage).join("");
+    if (!inner) return "";
+    const cnt = MAP.nodes.filter(x => gp.stages.includes(x.stage) && onPath(x)).length;
+    const usesLanes = lanes.length && gp.stages.some(st => MAP.nodes.some(x => x.stage === st && x.lane));
+    return '<section class="grp">' +
+      (gp.label ? '<header><h3>' + gp.label + '</h3>' + (gp.note ? '<p class="gn">' + gp.note + '</p>' : '') +
+                  '<span class="gcount">' + cnt + ' on this path</span></header>' : '') +
+      (usesLanes ? '<div class="lanehead" style="grid-template-columns:' + cols + '">' +
+                   lanes.map(l => '<span>' + l.label + '</span>').join("") + '</div>' : '') +
+      inner + '</section>';
+  }).join("");
+
+  $("#graph").innerHTML = '<svg class="wires" id="wires"></svg>' + html;
+  $("#count").textContent = MAP.nodes.filter(onPath).length + " nodes \u00b7 " +
+    MAP.nodes.filter(n => n.conf === "verified").length + " verified \u00b7 " +
+    MAP.nodes.filter(n => n.watch).length + " flagged";
+
+  document.querySelectorAll(".node").forEach(el => {
+    el.onclick = () => pick(el.dataset.id);
+    // paint(), not render(): rebuilding the DOM on mouseenter destroys the very
+    // element the click is landing on, and the click then never fires at all.
+    el.onmouseenter = () => { hover = el.dataset.id; paint(); };
+    el.onmouseleave = () => { hover = null; paint(); };
+  });
+  requestAnimationFrame(paint);
+}
+
+// Trace highlighting touches classes only — no DOM rebuild.
+function paint() {
+  const c = traced() ? cone(traced()) : null;
+  document.querySelectorAll(".node").forEach(el => {
+    const i = el.dataset.id;
+    const upstream = !c || c.self === i || c.up.has(i);
+    el.classList.toggle("half", !!c && !upstream && c.down.has(i));
+    el.classList.toggle("dim",  !!c && !upstream && !c.down.has(i));
+  });
+  wires();
+}
+
+/* ── gradient reach ─────────────────────────────────────────────────────── */
+// Walking upstream from a loss is NOT the same as tracing the data path. Gradient
+// stops at the autograd boundary — the dataloader, a detach, a host round-trip —
+// and a node the gradient passes through is not a node that learns from it.
+function gradReach(id) {
+  const trains = new Set(), flows = new Set(), stops = new Set(), edges = new Set();
+  if (gradOf(N[id]) === "metric") return {trains, flows, stops, edges, metric: true};
+  const seen = new Set([id]), q = [id];
+  while (q.length) {
+    const cur = q.pop();
+    for (const e of MAP.edges) {
+      if (e.to !== cur || !onPath(e)) continue;
+      edges.add(e.from + ">" + e.to);
+      if (seen.has(e.from)) continue;
+      seen.add(e.from);
+      const g = gradOf(N[e.from]);
+      if (g === "blocked") { stops.add(e.from); continue; }   // boundary: do not walk past it
+      (g === "trains" ? trains : flows).add(e.from);
+      q.push(e.from);
+    }
+  }
+  return {trains, flows, stops, edges, metric: false};
+}
+// Absent an explicit mark, data is outside the graph and everything else is inside it.
+const gradOf = n => n.grad || (n.kind === "data" ? "blocked" : "flows");
+
+/* ── SVG connectors, measured after layout ──────────────────────────────── */
+function wires() {
+  const g = $("#graph"), svg = $("#wires");
+  if (!g || !svg) return;
+  const gb = g.getBoundingClientRect(), W = gb.width;
+  svg.setAttribute("width", W); svg.setAttribute("height", gb.height);
+  const box = id => {
+    const el = g.querySelector('[data-id="' + id + '"]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {id: id, x: r.left - gb.left + r.width / 2, top: r.top - gb.top, bot: r.bottom - gb.top,
+            l: r.left - gb.left, r: r.right - gb.left, mid: r.top - gb.top + r.height / 2};
+  };
+  // Every routing decision below is geometric rather than stage-based. A stage with
+  // more than a few nodes wraps onto a second visual line, and then "same stage"
+  // stops meaning "side by side" — which is how the wrapped rows ended up with
+  // horizontal arrows drawn diagonally across their own cards.
+  const boxes = MAP.nodes.map(n => box(n.id)).filter(Boolean);
+  const sideBySide = (a, b) => Math.min(a.bot, b.bot) - Math.max(a.top, b.top) > 10;
+  // Only detour when something is actually in the way. Testing "is any card between
+  // these two rows" sent every edge to the gutter the moment lanes existed, because
+  // a card in a different lane is between them vertically and blocks nothing.
+  const rowBetween = (a, b) => boxes.some(c =>
+    c.top > a.bot + 2 && c.bot < b.top - 2 &&
+    c.r > Math.min(a.x, b.x) - 10 && c.l < Math.max(a.x, b.x) + 10);
+  const cardBetween = (a, b) => boxes.some(c =>
+    sideBySide(c, a) && c.l > Math.min(a.r, b.r) - 2 && c.r < Math.max(a.l, b.l) + 2);
+
+  const c  = traced() ? cone(traced()) : null;
+  const gr = gradSel ? gradReach(gradSel) : null;
+  const side = e => {                       // which half of the cone this edge sits on
+    if (!c) return null;
+    const inUp = x => c.up.has(x) || x === c.self, inDn = x => c.down.has(x) || x === c.self;
+    if (inUp(e.from) && inUp(e.to)) return "lit";
+    if (inDn(e.from) && inDn(e.to)) return "half";
+    return "out";
+  };
+  let out = "", dots = "", laneL = 0, laneR = 0;
+
+  // Labels get placed against what is already on the canvas rather than at a fixed
+  // offset. A fixed stagger pushed the second label sharing a gap straight into the
+  // card below it, which is the thing the gap existed to avoid.
+  const placed = [];
+  const clash = r => placed.some(q => !(r.x2 < q.x1 || r.x1 > q.x2 || r.y2 < q.y1 || r.y1 > q.y2))
+    || boxes.some(c => !(r.x2 < c.l || r.x1 > c.r || r.y2 < c.top || r.y1 > c.bot));
+  const place = (cx, cy, w, h) => {
+    for (const dx of [0, w + 10, -(w + 10), 2 * (w + 12), -2 * (w + 12)]) {
+      const r = {x1: cx + dx - w / 2, x2: cx + dx + w / 2, y1: cy - h / 2, y2: cy + h / 2};
+      if (!clash(r)) { placed.push(r); return cx + dx; }
+    }
+    return null;
+  };
+
+  // A full-width bar is not a point. Anchoring its edges at its centre pulls every
+  // lane into one fan; anchoring them under the lane they come from keeps them
+  // vertical, which is most of the reason the lanes are there at all.
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Where a lane's column sits, read off the first stage that actually uses lanes.
+  // An edge between two bars has no lane of its own to follow, so `at: "action"`
+  // lets it borrow one — which is how a long carry stays a straight line down an
+  // empty column instead of a detour round the outside.
+  const laneCol = {};
+  (MAP.lanes || []).forEach((l, i) => {
+    const row = [...g.querySelectorAll('.cells')].find(c => c.children.length === MAP.lanes.length);
+    const cell = row && row.children[i];
+    if (cell) { const r = cell.getBoundingClientRect(); laneCol[l.id] = r.left - gb.left + r.width / 2; }
+  });
+  const anchor = (self, other, at) =>
+    !N[self.id] || !N[self.id].span ? self.x
+    : clamp(at && laneCol[at] !== undefined ? laneCol[at] : other.x, self.l + 20, self.r - 20);
+
+  for (const e of MAP.edges) {
+    const a0 = box(e.from), b0 = box(e.to);
+    if (!a0 || !b0) continue;
+    const a = Object.assign({}, a0, {id: e.from}), b = Object.assign({}, b0, {id: e.to});
+    a.x = anchor(a, b0, e.at); b.x = anchor(b, a0, e.at);
+    const live = onPath(e) && onPath(N[e.from]) && onPath(N[e.to]);
+    const sd = side(e);
+    const inGrad = gr ? gr.edges.has(e.from + ">" + e.to) : null;
+    const cls = [
+      !live || sd === "out" || inGrad === false ? "dim" : "",
+      sd === "lit" ? "lit" : "", sd === "half" ? "half" : "", inGrad === true ? "grad" : ""
+    ].filter(Boolean).join(" ");
+    const mk = cls.includes("dim") ? "-dim" : cls.includes("lit") ? "-lit"
+             : cls.includes("grad") ? "-grad" : cls.includes("half") ? "-half" : "";
+
+    // A skip edge crosses whole rows of cards. Routed straight it would run
+    // underneath them and surface with no visible origin, so it goes out to a
+    // side gutter instead, where nothing is drawn.
+    const skip = rowBetween(a, b);   // a and b already carry their anchored x
+    const same = sideBySide(a, b);
+    let lx, ly;
+    if (same) {
+      // Side by side, not stacked. Drawing these bottom-to-top like a cross-stage
+      // edge sends them backwards through both cards, which is where the "lines
+      // start underneath a block" reading comes from.
+      const fwd = b.l > a.r - 2 && !cardBetween(a, b);
+      if (fwd) {
+        out += '<path class="' + cls + '" d="M' + a.r + ' ' + a.mid + ' L' + b.l + ' ' + b.mid +
+               '" marker-end="url(#ah' + mk + ')"/>';
+        lx = (a.r + b.l) / 2; ly = a.mid;
+        dots += '<circle class="' + cls + '" cx="' + a.r + '" cy="' + a.mid + '"/>';
+      } else {
+        const yb = Math.max(a.bot, b.bot) + 26;      // dip clear of the line, then back up
+        out += '<path class="' + cls + '" d="M' + a.x + ' ' + a.bot + ' C' + a.x + ' ' + yb + ' ' +
+               b.x + ' ' + yb + ' ' + b.x + ' ' + b.bot + '" marker-end="url(#ah' + mk + ')"/>';
+        lx = (a.x + b.x) / 2; ly = yb - 2;
+        dots += '<circle class="' + cls + '" cx="' + a.x + '" cy="' + a.bot + '"/>';
+      }
+      if (e.label) {
+        const w = e.label.length * 5.4 + 8;
+        const rect = '<rect class="lbl-bg' + (cls ? " " + cls : "") + '" x="' + (lx - w / 2) + '" y="' + (ly - 9) +
+                     '" width="' + w + '" height="12" rx="2"/>' +
+                     '<text class="' + cls + '" x="' + lx + '" y="' + ly + '" text-anchor="middle">' +
+                     e.label + '</text>';
+        out += fwd ? '<g transform="rotate(-90 ' + lx + ' ' + a.mid + ')">' +
+                     rect.replace('y="' + (ly - 9) + '"', 'y="' + (a.mid - 9) + '"')
+                         .replace('y="' + ly + '"', 'y="' + a.mid + '"') + '</g>'
+                   : rect;
+      }
+      continue;
+    }
+    if (skip) {
+      const left = (a.x + b.x) / 2 < W / 2;
+      const lane = left ? laneL++ : laneR++;
+      const gx = left ? 24 + lane * 15 : W - 24 - lane * 15;
+      const y1 = a.bot + 26, y2 = b.top - 26;
+      out += '<path class="' + cls + '" d="' +
+        ['M' + a.x + ' ' + a.bot, 'C' + a.x + ' ' + (a.bot + 14) + ' ' + gx + ' ' + (y1 - 14) + ' ' + gx + ' ' + y1,
+         'L' + gx + ' ' + y2,
+         'C' + gx + ' ' + (y2 + 14) + ' ' + b.x + ' ' + (b.top - 14) + ' ' + b.x + ' ' + b.top].join(' ') +
+        '" marker-end="url(#ah' + mk + ')"/>';
+      lx = gx; ly = (y1 + y2) / 2;
+      if (e.label)
+        out += '<g transform="rotate(-90 ' + lx + ' ' + ly + ')">' +
+               '<rect class="lbl-bg' + (cls ? " " + cls : "") + '" x="' + (lx - e.label.length * 2.7 - 4) +
+               '" y="' + (ly - 6) + '" width="' + (e.label.length * 5.4 + 8) + '" height="12" rx="2"/>' +
+               '<text class="' + cls + '" x="' + lx + '" y="' + (ly + 3) + '" text-anchor="middle">' +
+               e.label + '</text></g>';
+    } else {
+      const dy = Math.max(18, (b.top - a.bot) * 0.55);
+      out += '<path class="' + cls + '" d="M' + a.x + ' ' + a.bot + ' C' + a.x + ' ' + (a.bot + dy) +
+             ' ' + b.x + ' ' + (b.top - dy) + ' ' + b.x + ' ' + b.top + '" marker-end="url(#ah' + mk + ')"/>';
+      if (e.label) {
+        const w = e.label.length * 5.4 + 8;
+        const cy = (a.bot + b.top) / 2;             // centre of the gap, not a fixed drop
+        const x = place((a.x + b.x) / 2, cy, w, 13);
+        if (x !== null) {
+          out += '<rect class="lbl-bg' + (cls ? " " + cls : "") + '" x="' + (x - w / 2) + '" y="' + (cy - 6.5) +
+                 '" width="' + w + '" height="13" rx="2"/>' +
+                 '<text class="' + cls + '" x="' + x + '" y="' + (cy + 3.5) + '" text-anchor="middle">' +
+                 e.label + '</text>';
+        }
+      }
+    }
+    // a dot on the source edge, so it is unambiguous which card a wire leaves
+    dots += '<circle class="' + cls + '" cx="' + a.x + '" cy="' + a.bot + '"/>';
+  }
+
+  const head = (id, fill, o) => '<marker id="' + id + '" viewBox="0 0 10 10" refX="9" refY="5" ' +
+    'markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 Z" fill="' + fill +
+    '" opacity="' + o + '"/></marker>';
+  svg.innerHTML = '<defs>' + head("ah", "var(--ink3)", 1) + head("ah-lit", "var(--accent)", 1) +
+    head("ah-grad", "var(--accent)", 1) + head("ah-half", "var(--accent)", .5) +
+    head("ah-dim", "var(--ink3)", .13) + '</defs>' + out + dots;
+}
+
+/* ── detail panel ───────────────────────────────────────────────────────── */
+const EMPTY = '<p class="empty">Click a node for its source line, the tensor it emits, and what about it is easy ' +
+  'to get wrong. Its path stays lit until you click the background.<br><br>' +
+  'Click a <b>loss</b> term to see which components update from it, and where gradient stops.<br><br>' +
+  '<kbd>/</kbd> filter &nbsp; <kbd>Esc</kbd> clear</p>';
+
+function pick(id) {
+  sel = id; location.hash = id; diff = false; $("#b-diff").classList.remove("on");
+  gradSel = N[id] && N[id].kind === "loss" ? id : null;   // a loss is the only thing you can back-propagate from
+  render(); panel();
+}
+
+function panel() {
+  const n = N[sel];
+  $("#ptitle").textContent = "DETAIL";
+  if (!n) { $("#panel").innerHTML = EMPTY; return; }
+  const col = (ids, dir) => '<div><div class="h">' + dir + '</div>' + (ids.length
+    ? ids.map(i => '<a class="hop" href="#' + i + '" data-hop="' + i + '">' +
+        (dir === "UPSTREAM" ? "\u2191 " : "\u2193 ") + mark(N[i] ? N[i].name : i) + '</a>').join("")
+    : '<span style="font-size:11.5px;color:var(--ink3)">\u2014</span>') + '</div>';
+
+  $("#panel").innerHTML =
+    '<div class="pn">' + mark(n.name) + '</div>' +
+    '<div class="pk">' + n.kind.toUpperCase() + '  \u00b7  ' + n.stage + '</div>' +
+
+    '<div class="blk" style="border-top:none;padding-top:0"><div class="h">DEFINED AT</div>' +
+    '<code class="src">' + n.file + '</code></div>' +
+
+    '<div class="blk"><div class="h">SIGNAL</div><dl>' +
+    '<dt>emits</dt><dd class="mono">' + mark(n.meta) + '</dd>' +
+    '<dt>on path</dt><dd class="mono">' + (n.paths || ["train", "eval"]).join(", ") + '</dd>' +
+    (n.params ? '<dt>params</dt><dd class="mono">' + n.params + '</dd>' : '') +
+    (n.grad ? '<dt>gradient</dt><dd class="mono">' + n.grad + '</dd>' : '') +
+    '<dt>evidence</dt><dd><span class="conf ' + n.conf + '">' + n.conf + '</span></dd></dl></div>' +
+
+    '<div class="blk"><div class="h">WHAT IT DOES</div>' + mark(n.detail) + '</div>' +
+
+    (n.watch ? '<div class="trap"><div class="h">WORTH A SECOND LOOK</div>' + mark(n.watch) + '</div>' : '') +
+
+    (n.notes && n.notes.length
+      ? '<div class="blk"><div class="h">NOTES</div><ul class="notes"><li>' +
+        n.notes.map(mark).join('</li><li>') + '</li></ul></div>' : '') +
+
+    gradBlock(n) +
+
+    '<div class="blk"><div class="two">' + col(up(n.id), "UPSTREAM") + col(down(n.id), "DOWNSTREAM") + '</div></div>';
+
+  document.querySelectorAll("[data-hop]").forEach(a =>
+    a.onclick = ev => { ev.preventDefault(); pick(a.dataset.hop); });
+}
+
+function gradBlock(n) {
+  if (n.kind !== "loss") return "";
+  const gr = gradReach(n.id);
+  const link = id => '<a class="hop" href="#' + id + '" data-hop="' + id + '">' + mark(N[id].name) + '</a>';
+  if (gr.metric)
+    return '<div class="trap"><div class="h">&part; NO GRADIENT</div>This term is monitoring only — nothing ' +
+           'calls backward on it, so no component learns from it. It can move independently of the loss that ' +
+           'does train the model, and the two disagreeing is information rather than a bug.</div>';
+  const T = [...gr.trains], F = [...gr.flows], S = [...gr.stops];
+  return '<div class="blk"><div class="h">&part; GRADIENT REACH</div>' +
+    '<b style="font-weight:500;color:var(--ink)">' + T.length + ' components update from this term.</b>' +
+    (T.length ? '<ul class="notes" style="margin-top:6px">' + T.map(i =>
+       '<li>' + link(i) + (N[i].params ? ' <span class="tag' +
+       (N[i].params === "trained" ? '' : ' frozen') + '">' + N[i].params + '</span>' : '') + '</li>').join("") +
+       '</ul>' : '') +
+    (F.length ? '<div style="margin-top:9px;font-size:11px;color:var(--ink3)">Gradient passes through these ' +
+       'without updating anything of their own:</div><ul class="notes" style="margin-top:4px">' +
+       F.map(i => '<li>' + link(i) + '</li>').join("") + '</ul>' : '') +
+    (S.length ? '<div style="margin-top:9px;font-size:11px;color:var(--warn)">It stops here — past this point ' +
+       'the pipeline is outside the differentiable graph:</div><ul class="notes" style="margin-top:4px">' +
+       S.map(i => '<li>' + link(i) + '</li>').join("") + '</ul>' : '') +
+    '</div>';
+}
+
+/* ── train ⇄ eval diff ──────────────────────────────────────────────────── */
+function showDiff() {
+  const nm = id => mark(N[id] ? N[id].name : id);
+  const only = p => MAP.nodes.filter(n => n.paths && n.paths.length === 1 && n.paths[0] === p);
+  const eonly = p => MAP.edges.filter(e => e.paths && e.paths.length === 1 && e.paths[0] === p);
+  const list = (items, f) => items.length
+    ? '<ul class="notes">' + items.map(f).join("") + '</ul>' : '<p class="empty">Nothing.</p>';
+  $("#ptitle").textContent = "TRAIN ⇄ EVAL";
+  $("#panel").innerHTML =
+    '<div class="blk" style="border-top:none;padding-top:0">Everything below runs on one path and not the other. ' +
+    'This is the list that decides whether a checkpoint behaves at inference the way it did in training.</div>' +
+    '<div class="blk"><div class="h">TRAIN ONLY</div>' +
+    list(only("train"), n => '<li><a class="hop" href="#' + n.id + '" data-hop="' + n.id + '">' + n.name +
+      '</a> <span class="mono" style="font-size:10.5px;color:var(--ink3)">' + n.file + '</span></li>') +
+    (eonly("train").length ? '<div style="margin-top:9px;font-size:11px;color:var(--ink3)">and these connections:</div>' +
+      list(eonly("train"), e => '<li style="font-size:11.5px">' + nm(e.from) + ' → ' + nm(e.to) + '</li>') : '') +
+    '</div><div class="blk"><div class="h">EVAL ONLY</div>' +
+    list(only("eval"), n => '<li><a class="hop" href="#' + n.id + '" data-hop="' + n.id + '">' + n.name +
+      '</a> <span class="mono" style="font-size:10.5px;color:var(--ink3)">' + n.file + '</span></li>') +
+    (eonly("eval").length ? '<div style="margin-top:9px;font-size:11px;color:var(--ink3)">and these connections:</div>' +
+      list(eonly("eval"), e => '<li style="font-size:11.5px">' + nm(e.from) + ' → ' + nm(e.to) + '</li>') : '') +
+    '</div>' +
+    (MAP.nodes.some(n => n.watch)
+      ? '<div class="blk"><div class="h">FLAGGED ON BOTH PATHS</div><ul class="notes">' +
+        MAP.nodes.filter(n => n.watch && (!n.paths || n.paths.length > 1)).map(n =>
+          '<li><a class="hop" href="#' + n.id + '" data-hop="' + n.id + '">' + n.name + '</a></li>').join("") +
+        '</ul></div>' : '');
+  document.querySelectorAll("[data-hop]").forEach(a =>
+    a.onclick = ev => { ev.preventDefault(); pick(a.dataset.hop); });
+}
+
+/* ── controls ───────────────────────────────────────────────────────────── */
+function setPath(p) {
+  path = p;
+  ["train", "eval", "both"].forEach(k => $("#b-" + k).classList.toggle("on", k === p));
+  render();
+}
+$("#b-train").onclick = () => setPath("train");
+$("#b-eval").onclick  = () => setPath("eval");
+$("#b-both").onclick  = () => setPath("both");
+$("#b-diff").onclick  = () => { diff = !diff; $("#b-diff").classList.toggle("on", diff);
+                                diff ? showDiff() : panel(); };
+$("#q").oninput = e => { query = e.target.value; render(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== $("#q")) { e.preventDefault(); $("#q").focus(); }
+  if (e.key === "Escape") { $("#q").value = ""; query = ""; sel = null; hover = null; diff = false; gradSel = null;
+                            $("#b-diff").classList.remove("on"); render(); panel(); $("#q").blur(); }
+});
+$("#graph").addEventListener("click", ev => {
+  if (ev.target.closest(".node")) return;
+  sel = null; hover = null; gradSel = null; location.hash = "";
+  render(); panel();
+});
+addEventListener("resize", () => requestAnimationFrame(paint));
+addEventListener("hashchange", () => { const h = location.hash.slice(1); if (N[h] && h !== sel) pick(h); });
+
+const h0 = location.hash.slice(1);
+if (N[h0]) { sel = h0; gradSel = N[h0].kind === "loss" ? h0 : null; }
+render(); panel();
+</script>

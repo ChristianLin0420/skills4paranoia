@@ -13,6 +13,7 @@ skills/
     research-deck/
     deck-design-system/
     research-figures/
+    codebase-onboarding/
   research/                 ← topic: doing the research itself
     experiment-prereg/
     vla-code-review/
@@ -81,6 +82,7 @@ Communication and record-keeping. These survive a change of role.
 | [`research-deck`](skills/work/research-deck) | Structure and process: problem → solution → results, and how evidence attaches |
 | [`deck-design-system`](skills/work/deck-design-system) | Appearance: palette, type scale, grid, per-layout geometry |
 | [`research-figures`](skills/work/research-figures) | Figures: curves with error bands, matrices, ablation tables, reference lines, conditions footnotes |
+| [`codebase-onboarding`](skills/work/codebase-onboarding) | Maps the data path through an unfamiliar model repo, with shapes on every edge, and verifies it against a real forward pass. Worked examples for [openvla](skills/work/codebase-onboarding/examples/openvla.html), [openpi](skills/work/codebase-onboarding/examples/openpi.html) and [VITRA](skills/work/codebase-onboarding/examples/vitra.html) |
 
 **[See six sample pages](skills/work/research-deck/examples/preview)** — the front three, and three evidence pages showing the density this aims at.
 

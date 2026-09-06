@@ -17,6 +17,8 @@
     "vla",
     "reinforcement-learning",
     "presentation",
+    "codebase-onboarding",
+    "visualization",
     "design-system"
   ],
   "skills": [
@@ -24,6 +26,7 @@
     "./skills/work/research-deck",
     "./skills/work/deck-design-system",
     "./skills/work/research-figures",
+    "./skills/work/codebase-onboarding",
     "./skills/research/experiment-prereg",
     "./skills/research/vla-code-review"
   ]

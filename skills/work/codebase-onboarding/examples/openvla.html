@@ -1,0 +1,1495 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>openvla &mdash; data flow</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500&display=swap">
+<style>
+:root{
+ --bg:#F1F2F3;--surface:#FAFBFB;--ink:#14171A;--ink2:#5F656B;--ink3:#8A9096;
+ --rule:#DCE0E3;--rule-soft:#E8EBED;--accent:#3A6183;--accent-deep:#27435C;
+ --accent-soft:#DBE4EB;--accent-wash:#EAF0F4;--warn:#8C4A3C;--warn-soft:#EFE3E0;
+ --model:#54547A;--model-soft:#E6E6EE;
+ --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;--mono:'IBM Plex Mono',Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.62 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,27vw,392px);min-height:100vh}
+main{padding:30px 34px 80px;min-width:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+h1{font-size:22px;font-weight:500;letter-spacing:-.01em;margin:0 0 3px}
+.sub{font-size:12.5px;color:var(--ink2);margin:0 0 16px;font-family:var(--mono)}
+.sub b{color:var(--ink);font-weight:500}
+
+.banner{border:1px solid var(--warn);background:var(--warn-soft);padding:11px 15px;margin:0 0 16px;
+        font-size:13.5px;display:flex;gap:11px;align-items:flex-start;line-height:1.55}
+.banner .t{font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;background:var(--warn);
+           padding:2px 7px;white-space:nowrap;margin-top:2px;letter-spacing:.04em}
+.ok{border-color:var(--accent);background:var(--accent-wash)}
+.ok .t{background:var(--accent)}
+
+/* ── controls ─────────────────────────────────────────────────────────── */
+.bar{display:flex;gap:7px;align-items:center;margin:0 0 6px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.seg button{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 15px;border:0;
+            background:var(--bg);color:var(--ink2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button.on{background:var(--accent);color:#fff}
+.bar input{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 11px;width:210px;
+           border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink)}
+.bar input::placeholder{color:var(--ink3)}
+.ghost{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 12px;border:1px solid var(--rule);
+       border-radius:3px;background:var(--bg);color:var(--ink2);cursor:pointer}
+.ghost.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep)}
+.count{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.legend{display:flex;gap:16px;margin:0 0 22px;font-size:11.5px;color:var(--ink3);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.sw{width:12px;height:12px;border-radius:2px;border:1px solid var(--rule);background:var(--surface);flex:0 0 auto}
+.sw.inf{border-style:dashed;border-color:var(--ink3)}
+.sw.w{border-color:var(--warn);background:var(--warn-soft)}
+
+/* ── graph ────────────────────────────────────────────────────────────── */
+.graph{position:relative;padding:0 82px}   /* the side gutters skip-edges route through */
+svg.wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:5}
+.wires path{fill:none;stroke:var(--rule);stroke-width:1.25}
+.wires path.lit{stroke:var(--accent);stroke-width:1.75}
+.wires path.half{stroke:var(--accent);opacity:.5}
+.wires text.half,.wires circle.half,.wires rect.half{opacity:.5}
+.wires path.dim{opacity:.13}
+.wires path.grad{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 3}
+.wires circle{fill:var(--ink3);r:2.6}
+.wires circle.lit{fill:var(--accent)}
+.wires circle.dim{opacity:.13}
+.wires text{font-family:var(--mono);font-size:10.5px;fill:var(--ink2)}
+.wires text.dim{opacity:.13}
+.wires .lbl-bg{fill:var(--bg)}
+
+/* three levels of block: a group is a phase, a stage is a step, a card is a node */
+.grp{position:relative;z-index:1;border:1px solid var(--rule);border-radius:6px;
+     background:rgba(255,255,255,.5);padding:15px 20px 8px;margin:0 0 30px}
+.grp>header{display:flex;align-items:baseline;gap:11px;margin:0 0 4px;
+            padding-bottom:9px;border-bottom:1px solid var(--rule-soft)}
+.grp h3{font-size:12px;font-weight:600;letter-spacing:.11em;color:var(--accent-deep);margin:0}
+.grp .gn{font-size:11.5px;color:var(--ink3);margin:0}
+.grp .gcount{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--ink3)}
+
+.lanehead{display:grid;gap:18px;margin:12px 0 2px;padding-left:96px}
+.lanehead span{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;color:var(--ink3);
+               border-bottom:1px solid var(--rule-soft);padding-bottom:4px}
+
+.stg{display:grid;grid-template-columns:84px minmax(0,1fr);gap:12px;margin:16px 0 34px}
+.slab{font-size:10.5px;letter-spacing:.1em;color:var(--ink3);text-align:right;padding-top:10px;
+      line-height:1.35}
+.cells{display:grid;gap:18px}
+.cell{display:flex;gap:14px;min-width:0}
+.cell.chain{flex-direction:column}
+.cell.fan{flex-direction:row;align-items:stretch}
+.cell.fan>.node{flex:1 1 0}
+.wide{grid-column:1/-1}
+.free{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.free>.node{flex:0 1 300px}
+
+.node{position:relative;flex:1 1 0;min-width:0;border:1px solid var(--rule);background:var(--surface);
+      padding:9px 11px 10px;cursor:pointer;border-radius:3px;
+      transition:border-color .12s,opacity .12s,box-shadow .12s}
+.node:hover{border-color:var(--accent)}
+.node.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.node.inferred{border-style:dashed;border-color:var(--ink3)}
+.node.watch{border-color:var(--warn)}
+.node.watch.sel{box-shadow:inset 0 0 0 1px var(--warn)}
+.node.off{opacity:.2}
+.node.dim{opacity:.16}
+.node.half{opacity:.55}
+.node.hit{border-color:var(--accent);background:var(--accent-wash)}
+.node.gtrains{border-color:var(--accent);background:var(--accent-wash);box-shadow:inset 0 0 0 1px var(--accent)}
+.node.gstop{border-color:var(--warn);border-style:dashed}
+.node.gout{opacity:.14}
+.gmark{position:absolute;bottom:-1px;right:-1px;font-family:var(--mono);font-size:9.5px;
+       padding:1px 4px;border-radius:2px 0 2px 0;letter-spacing:.03em}
+.gmark.t{background:var(--accent);color:#fff}
+.gmark.f{background:var(--rule-soft);color:var(--ink2)}
+.gmark.s{background:var(--warn);color:#fff}
+.node .k{font-size:10.5px;letter-spacing:.06em;color:var(--ink3);font-family:var(--mono)}
+.node .n{font-size:14.5px;font-weight:500;margin:2px 0 3px;line-height:1.35;word-break:break-word}
+.node.bar{border-color:var(--ink3);background:#F6F7F8}
+.node.bar .n{font-size:15.5px}
+.node.bar .row2{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+.node.bar .row2 .m{flex:1 1 260px}
+.node .m{font-size:11.5px;color:var(--ink2);font-family:var(--mono);word-break:break-word;line-height:1.45}
+.node .tags{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
+b.mdl{font-weight:600;color:var(--model)}
+.trap b.mdl{color:#4A3F63}
+.tag{font-family:var(--mono);font-size:10px;padding:1.5px 6px;border-radius:2px;background:var(--rule-soft);color:var(--ink2)}
+.tag.frozen{background:var(--accent-soft);color:var(--accent-deep)}
+.tag.only{background:#E7E3DC;color:#6A5F4E}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.bang{position:absolute;top:-1px;right:-1px;width:0;height:0;
+      border-top:13px solid var(--warn);border-left:13px solid transparent}
+
+/* ── panel ────────────────────────────────────────────────────────────── */
+aside{border-left:1px solid var(--rule);background:var(--surface);position:sticky;top:0;
+      height:100vh;overflow-y:auto;padding:30px 22px 40px}
+aside h2{font-size:11px;letter-spacing:.1em;color:var(--ink2);margin:0 0 11px;padding-bottom:7px;
+         border-bottom:1px solid var(--rule);font-weight:500}
+.empty{font-size:13.5px;color:var(--ink3);line-height:1.65}
+.empty kbd{font-family:var(--mono);font-size:10.5px;background:var(--rule-soft);padding:1px 5px;border-radius:2px;color:var(--ink2)}
+.pn{font-size:17px;font-weight:500;line-height:1.32;margin:0 0 4px}
+.pk{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.07em;margin:0 0 15px}
+.src{font-family:var(--mono);font-size:12px;color:var(--accent-deep);background:var(--accent-wash);
+     display:block;padding:7px 9px;border-radius:2px;word-break:break-all;line-height:1.45}
+dl{margin:0;display:grid;grid-template-columns:74px minmax(0,1fr);gap:7px 12px;font-size:13.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.two .h{margin-bottom:6px}
+dt{color:var(--ink3);font-size:11.5px;padding-top:3px}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+dd.mono{font-family:var(--mono);font-size:12px;line-height:1.5}
+.conf{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:2px}
+.conf.verified{background:var(--accent-soft);color:var(--accent-deep)}
+.conf.static{background:var(--rule-soft);color:var(--ink2)}
+.conf.inferred{background:var(--warn-soft);color:var(--warn)}
+.blk{margin-top:13px;padding-top:11px;border-top:1px solid var(--rule-soft);font-size:13px;color:var(--ink2);line-height:1.65}
+.blk .h{font-size:10.5px;letter-spacing:.09em;color:var(--ink3);margin-bottom:5px;font-family:var(--mono)}
+.blk code{font-family:var(--mono);font-size:12px;background:var(--rule-soft);padding:0 3px;border-radius:2px}
+.trap{border-left:2px solid var(--warn);background:var(--warn-soft);padding:10px 12px;margin-top:14px;
+      font-size:13px;line-height:1.6;color:#5E3228}
+.trap .h{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--warn);margin-bottom:4px}
+.hop{font-family:var(--mono);font-size:11.5px;color:var(--accent);cursor:pointer;display:block;
+     padding:2px 0;text-decoration:none}
+.hop:hover{text-decoration:underline}
+ul.notes{margin:0;padding-left:15px}
+ul.notes li{margin-bottom:8px}
+
+footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-size:11.5px;
+       color:var(--ink3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+<main>
+  <h1 id="title"></h1>
+  <p class="sub" id="meta"></p>
+  <div id="banner"></div>
+
+  <div class="bar">
+    <div class="seg">
+      <button id="b-train" class="on">train</button>
+      <button id="b-eval">eval</button>
+      <button id="b-both">both</button>
+    </div>
+    <button class="ghost" id="b-diff">train &#8644; eval diff</button>
+    <input id="q" placeholder="/  filter nodes" autocomplete="off">
+    <span class="count" id="count"></span>
+  </div>
+  <div class="legend">
+    <span><i class="sw"></i>observed or read from source</span>
+    <span><i class="sw inf"></i>inferred &mdash; unverified</span>
+    <span><i class="sw w"></i>worth a second look</span>
+    <span>click a node to pin its path &middot; click the background to clear</span>
+    <span>click a loss term to see what learns from it</span>
+  </div>
+
+  <div class="graph" id="graph"><svg class="wires" id="wires"></svg></div>
+</main>
+
+<aside>
+  <h2 id="ptitle">DETAIL</h2>
+  <div id="panel"></div>
+</aside>
+
+<footer>
+  <span>codebase-onboarding &middot; data flow and model components</span>
+  <span class="mono" id="foot"></span>
+</footer>
+</div>
+
+<script>
+// ═══ Replace MAP. Nothing below it needs editing. ═══════════════════════════
+const MAP = {
+ "repo": "openvla @ c8f03f4",
+ "entry": "vla-scripts/finetune.py (train) · OpenVLAForActionPrediction.predict_action (eval)",
+ "framework": "pytorch · bf16 · LoRA r32 · DDP",
+ "verified": false,
+ "verifiedNote": "Built by reading source at commit c8f03f4 — no GPU, no RLDS data and no torch in the environment where it was produced, so no forward pass was run. <b>Statically audited:</b> all 137 <code>file:line</code> citations on this map were read back against the cloned source (19 were wrong and are fixed), the graph was checked for cycles, dead edges and nodes isolated on a path (2 modelling errors found and fixed), and the inferential claims were re-derived in isolation. That is not a forward pass — shapes and dtypes remain unconfirmed — but every citation now points where it says it does.",
+ "stages": [
+  "SOURCE",
+  "NORMALISE",
+  "TOKENISE",
+  "AUGMENT",
+  "ASSEMBLE",
+  "LABEL",
+  "BATCH",
+  "CAST",
+  "SPLIT",
+  "ENCODE",
+  "FUSE",
+  "PROJECT",
+  "SPLICE",
+  "BACKBONE",
+  "LOSS",
+  "DECODE"
+ ],
+ "nodes": [
+  {
+   "id": "rlds",
+   "stage": "SOURCE",
+   "kind": "data",
+   "name": "RLDSDataset",
+   "meta": "interleaved Open X-Embodiment TFDS shards",
+   "file": "prismatic/vla/datasets/datasets.py:70",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "An IterableDataset over interleaved TFDS shards. There is no __getitem__ — sampling, interleaving and shuffling all happen inside RLDS.",
+   "notes": [
+    "shuffle_buffer_size defaults to 100_000 (finetune.py:93), which dominates host RAM at this batch size.",
+    "The eval path does not start here: at inference the observation comes from the robot or the simulator."
+   ],
+   "grad": "blocked",
+   "span": true
+  },
+  {
+   "id": "qnorm",
+   "stage": "NORMALISE",
+   "kind": "transform",
+   "name": "normalise actions to Q99 bounds",
+   "meta": "per-dimension q01/q99 → [−1, 1]",
+   "file": "prismatic/vla/datasets/datasets.py:99",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "Actions are mapped onto their 1st–99th percentile range per dimension, computed by RLDS over the dataset.",
+   "watch": "This clips, and then the action tokenizer clips again to [-1,1] at action_tokenizer.py:40. A dimension whose real range is wider than Q99 loses its tails twice and piles up in the end bins — visible as a model that will not command large motions.",
+   "notes": [
+    "The matching denormalisation at inference lives in a different file and reads a different copy of the statistics — see the unnormalise node on the eval path."
+   ],
+   "grad": "blocked",
+   "lane": "action"
+  },
+  {
+   "id": "resize",
+   "stage": "NORMALISE",
+   "kind": "transform",
+   "name": "resize to the model's resolution",
+   "meta": "→ 224 × 224, taken from config.image_sizes",
+   "file": "prismatic/vla/datasets/datasets.py:109",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Resolution is not a constant: finetune.py:219 passes vla.module.config.image_sizes, so it follows the loaded checkpoint rather than any local config.",
+   "notes": [],
+   "grad": "blocked",
+   "lane": "vision"
+  },
+  {
+   "id": "crop",
+   "stage": "AUGMENT",
+   "kind": "transform",
+   "name": "random resized crop",
+   "meta": "scale 0.9, ratio 1.0 — a jittered 90% crop",
+   "file": "prismatic/vla/datasets/datasets.py:124",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "The one geometric augmentation, on when image_aug=True (default, finetune.py:92). Fixed scale and ratio, so it is a jittered 90% crop rather than a scale augmentation.",
+   "notes": [],
+   "grad": "blocked",
+   "lane": "vision"
+  },
+  {
+   "id": "imgtf",
+   "stage": "ASSEMBLE",
+   "kind": "transform",
+   "name": "normalise twice, stack the channels",
+   "meta": "→ (6, 224, 224) f32, one 3-channel copy per tower",
+   "file": "prismatic/extern/hf/processing_prismatic.py:59",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Produces a six-channel tensor: the same image normalised twice and stacked, one copy for each vision tower.",
+   "watch": "PrismaticImageProcessor holds a LIST of means and stds, one per backbone (processing_prismatic.py:60-61). DINOv2 and SigLIP want different statistics. Collapse them to a single mean/std — the obvious refactor — and one of the two towers silently receives out-of-distribution input.",
+   "notes": [
+    "`image_resize_strategy` defaults to 'letterbox' (configuration_prismatic.py:82), which pads rather than crops to square."
+   ],
+   "grad": "blocked",
+   "lane": "vision"
+  },
+  {
+   "id": "atok",
+   "stage": "TOKENISE",
+   "kind": "transform",
+   "name": "ActionTokenizer — actions as text",
+   "meta": "clip → 256 bins → the last 256 vocab ids",
+   "file": "prismatic/vla/action_tokenizer.py:38",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "Continuous actions become language tokens: clip to [-1,1], np.digitize into 256 bins, then map onto the final 256 ids of the vocabulary.",
+   "watch": "np.digitize returns indices in [1, 256], but 256 bin edges bound only 255 intervals. The file documents the off-by-one at action_tokenizer.py:53 and works around it on decode by clipping to [0, 254]. Training and inference each do half of this arithmetic, in different files — change `bins` and both must move.",
+   "notes": [
+    "action_token_begin_idx = vocab_size - (n_bins + 1) (action_tokenizer.py:36) assumes the last 256 tokens are yours to overwrite. Extending the tokenizer vocabulary invalidates it."
+   ],
+   "grad": "blocked",
+   "lane": "action"
+  },
+  {
+   "id": "prompt",
+   "stage": "ASSEMBLE",
+   "kind": "transform",
+   "name": "build the prompt and tokenise",
+   "meta": "instruction + action string → input_ids (L,)",
+   "file": "prismatic/vla/datasets/datasets.py:54",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Builds the chat-formatted prompt and tokenises it. The action tokens are appended as the assistant turn, so the action really is predicted as text.",
+   "notes": [
+    "Prompt builder differs by LLM backbone: PurePromptBuilder for Llama-2, VicunaV15ChatPromptBuilder for Vicuna (finetune.py:213)."
+   ],
+   "grad": "blocked",
+   "lane": "language"
+  },
+  {
+   "id": "lab",
+   "stage": "LABEL",
+   "kind": "transform",
+   "name": "build masked labels",
+   "meta": "IGNORE_INDEX = −100 on everything but the action",
+   "file": "prismatic/vla/datasets/datasets.py:63",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "A copy of input_ids with everything before the action tokens masked out, so the loss only sees the action.",
+   "watch": "The label shift is NOT applied here. The comment at datasets.py:58 is explicit that HF's forward shifts internally. Adding a shift here — the natural thing to do when porting this to a non-HF trainer — would double it and quietly train the model to predict the wrong token.",
+   "notes": [
+    "labels[-1] is additionally masked for the non-Vicuna builder (datasets.py:65)."
+   ],
+   "grad": "blocked",
+   "lane": "language"
+  },
+  {
+   "id": "space",
+   "stage": "LABEL",
+   "kind": "transform",
+   "name": "append the SentencePiece space token",
+   "meta": "id 29871, inference path only",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:512",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "predict_action appends SentencePiece's space token to input_ids when it is missing, before generating.",
+   "watch": "This exists only on the inference path. A caller that assembles input_ids by hand — a custom server, a batching wrapper — and skips it feeds the model a prompt that differs from every prompt it was trained on, by one token, with no error.",
+   "notes": [],
+   "grad": "blocked",
+   "lane": "language"
+  },
+  {
+   "id": "coll",
+   "stage": "BATCH",
+   "kind": "data",
+   "name": "pad and collate the batch",
+   "meta": "input_ids · labels · pixel_values · attention_mask",
+   "file": "prismatic/util/data_utils.py:95",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "Right-pads input_ids with pad_token_id and labels with IGNORE_INDEX, then derives attention_mask by comparing against pad_token_id.",
+   "watch": "padding_side is asserted to be 'right' at data_utils.py:111, and the comment scopes that to training. Right padding with a causal decoder is correct for teacher forcing and wrong for generation; the inference path sidesteps it by building its own inputs rather than reusing this collator.",
+   "notes": [
+    "pixel_values_dtype is float32 here (data_utils.py:99); the cast to bfloat16 happens later, in the training loop."
+   ],
+   "grad": "blocked",
+   "span": true
+  },
+  {
+   "id": "cast",
+   "stage": "CAST",
+   "kind": "transform",
+   "name": "cast to bf16 and enter autocast",
+   "meta": "pixel_values f32 → bf16",
+   "file": "vla-scripts/finetune.py:254",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "pixel_values is cast to bfloat16 explicitly (finetune.py:258) and the forward runs inside torch.autocast('cuda', bfloat16).",
+   "watch": "The model was already loaded in bfloat16 at finetune.py:160, so this autocast is close to a no-op today. It is load-bearing only in the negative sense: change the load dtype to fp32 or fp16 and this line silently keeps the forward in bf16 anyway.",
+   "notes": [
+    "input_ids and attention_mask are moved to the device; `labels` is passed without .to(device_id) (finetune.py:259). It works because HF's LlamaForCausalLM moves shift_labels onto the logits' device itself — worth knowing before porting the loop."
+   ],
+   "grad": "flows",
+   "span": true
+  },
+  {
+   "id": "split",
+   "stage": "SPLIT",
+   "kind": "transform",
+   "name": "split the channel-stacked image",
+   "meta": "(B, 6, 224, 224) → two (B, 3, 224, 224), one per tower",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:120",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "The fused backbone unstacks the channel-stacked image and sends one copy to each tower.",
+   "notes": [
+    "Only reached when use_fused_vision_backbone is true; the single-tower branch at :117 returns straight from the featurizer."
+   ],
+   "grad": "flows",
+   "lane": "vision"
+  },
+  {
+   "id": "dino",
+   "stage": "ENCODE",
+   "kind": "module",
+   "name": "DINOv2 ViT-L/14 (reg4)",
+   "meta": "second-to-last block → (B, 256, 1024)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:78",
+   "params": "lora",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "The alpha featurizer. timm model vit_large_patch14_reg4_dinov2.lvd142m at 224px.",
+   "watch": "featurizer.forward is monkeypatched at modeling_prismatic.py:85 to get_intermediate_layers(n={len(blocks) - 2}) — the features come from the SECOND-TO-LAST block, not the final one. Swap in another timm model, or load this one through the normal timm path, and the projector receives different features with no shape change to warn you.",
+   "notes": [
+    "Base weights are pretrained, but target_modules='all-linear' means LoRA adapters land here too — this tower is not untouched during fine-tuning."
+   ],
+   "grad": "trains",
+   "lane": "vision"
+  },
+  {
+   "id": "siglip",
+   "stage": "ENCODE",
+   "kind": "module",
+   "name": "SigLIP SO400M/14",
+   "meta": "second-to-last block → (B, 256, 1152)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:92",
+   "params": "lora",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "The beta featurizer of the fused backbone, carrying the same second-to-last-block patch at :99.",
+   "notes": [
+    "1024 + 1152 = 2176, which is the vision_dim the projector is built against (modeling_prismatic.py:102)."
+   ],
+   "grad": "trains",
+   "lane": "vision"
+  },
+  {
+   "id": "catv",
+   "stage": "FUSE",
+   "kind": "transform",
+   "name": "concatenate the two towers",
+   "meta": "(B, 256, 1024) ⊕ (B, 256, 1152) → (B, 256, 2176)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:123",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Concatenation is on dim=2, the feature axis — the two towers' patches are fused per position, not sequenced.",
+   "notes": [],
+   "grad": "flows",
+   "lane": "vision"
+  },
+  {
+   "id": "proj",
+   "stage": "PROJECT",
+   "kind": "module",
+   "name": "project vision into the LLM's width",
+   "meta": "MLP 2176 → 4096, keeps 256 positions",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:241",
+   "params": "lora",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "An MLP into the LLM's embedding width. The fused and unfused branches use different MLP shapes (:134).",
+   "notes": [],
+   "grad": "trains",
+   "lane": "vision"
+  },
+  {
+   "id": "emb",
+   "stage": "ENCODE",
+   "kind": "module",
+   "name": "embed input_ids",
+   "meta": "(B, L) → (B, L, 4096)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:380",
+   "params": "frozen",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "The LLM's own token embedding, applied to input_ids.",
+   "notes": [
+    "nn.Embedding, so target_modules='all-linear' does NOT reach it — unlike every Linear in the model, this stays plain frozen base weights.",
+    "Gradient still flows through it to nothing: there is no trainable parameter upstream of the embedding."
+   ],
+   "grad": "flows",
+   "lane": "language"
+  },
+  {
+   "id": "mm",
+   "stage": "SPLICE",
+   "kind": "transform",
+   "name": "splice the patches in after <BOS>",
+   "meta": "→ (B, 1 + 256 + L−1, 4096)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:383",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Patch embeddings are inserted at position 1 — after BOS, before the text — and the attention mask and labels are spliced to match.",
+   "watch": "Inserted, not appended. That offset is exactly why the training loop slices logits at [:, num_patches : -1] (finetune.py:270) using patch_embed.num_patches. Change the number of visual tokens — a different backbone, a pooling layer, a second camera — and that slice must move with it. Nothing raises if it does not; the accuracy metric just quietly reads the wrong positions.",
+   "notes": [],
+   "grad": "flows",
+   "span": true
+  },
+  {
+   "id": "llm",
+   "stage": "BACKBONE",
+   "kind": "module",
+   "name": "Llama-2 7B / Vicuna v1.5",
+   "meta": "logits (B, S, 32064)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:248",
+   "params": "lora",
+   "paths": [
+    "train",
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "The backbone that does the actual prediction. Loaded in bfloat16, wrapped in PEFT, then in DDP.",
+   "watch": "target_modules='all-linear' (finetune.py:178) puts LoRA on every linear layer in the whole model — vision towers and projector included, not just the LLM. And lora_alpha = min(rank, 16) (finetune.py:176), so at the default rank 32 the scaling is alpha/r = 0.5, not 1: raising the rank lowers the effective adapter gain.",
+   "notes": [
+    "DDP is constructed with find_unused_parameters=True (finetune.py:185), which is the flag that hides a genuinely disconnected parameter behind a small slowdown.",
+    "The optimiser is AdamW at a constant learning rate — the comment at finetune.py:187 says so explicitly. There is no warmup and no decay."
+   ],
+   "grad": "trains",
+   "span": true
+  },
+  {
+   "id": "gen",
+   "stage": "BACKBONE",
+   "kind": "module",
+   "name": "autoregressive decode",
+   "meta": "max_new_tokens = action_dim (7)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:518",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Autoregressive decoding of exactly action_dim tokens through the same language model, one token per action dimension.",
+   "notes": [
+    "Cached generation asserts batch size 1 (modeling_prismatic.py:326). Batched inference does not go through this path.",
+    "Drawn downstream of the backbone rather than beside it: generate() calls the same weights in a loop, it is not a second model."
+   ],
+   "span": true
+  },
+  {
+   "id": "ce",
+   "stage": "LOSS",
+   "kind": "loss",
+   "name": "cross-entropy on the action tokens",
+   "meta": "output.loss — the only gradient in the loop",
+   "file": "vla-scripts/finetune.py:261",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "The only term with a gradient. Computed inside the HF model from the masked labels.",
+   "notes": [
+    "Divided by grad_accumulation_steps before backward (finetune.py:264)."
+   ]
+  },
+  {
+   "id": "acc",
+   "stage": "LOSS",
+   "kind": "loss",
+   "name": "action token accuracy",
+   "meta": "exact-match rate over action positions — metric",
+   "file": "vla-scripts/finetune.py:277",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "Fraction of action-token positions predicted exactly, masked to positions above action_token_begin_idx.",
+   "notes": [],
+   "grad": "metric"
+  },
+  {
+   "id": "l1",
+   "stage": "LOSS",
+   "kind": "loss",
+   "name": "L1 on the decoded actions",
+   "meta": "prediction vs ground truth in physical units — metric",
+   "file": "vla-scripts/finetune.py:286",
+   "paths": [
+    "train"
+   ],
+   "conf": "static",
+   "detail": "Decodes both prediction and ground truth back to continuous actions and takes L1.",
+   "watch": "This is the number that resembles real action error, and it is a metric — no gradient flows through it. The gradient comes from token cross-entropy, which is blind to how far apart two bins are. A run can improve CE while L1 stalls, and the two curves disagreeing is information, not a bug.",
+   "notes": [],
+   "grad": "metric"
+  },
+  {
+   "id": "dec",
+   "stage": "DECODE",
+   "kind": "transform",
+   "name": "map token ids back to bin centres",
+   "meta": "clip(vocab − id − 1, 0, 254) → normalised action",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:523",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Turns generated token ids back into normalised actions by indexing the 255 bin centres.",
+   "watch": "This is the other half of the digitize off-by-one. Training bins with np.digitize (indices 1…256); inference subtracts one and clips into [0, 254] to index 255 centres. The two are only consistent by hand — no shared constant ties them together.",
+   "notes": [],
+   "grad": "blocked"
+  },
+  {
+   "id": "unnorm",
+   "stage": "DECODE",
+   "kind": "transform",
+   "name": "unnormalise to physical units",
+   "meta": "q01/q99 per dimension → action (7,)",
+   "file": "prismatic/extern/hf/modeling_prismatic.py:530",
+   "paths": [
+    "eval"
+   ],
+   "conf": "static",
+   "detail": "Maps [-1,1] back to physical units using per-dimension q01/q99, with a mask that lets some dimensions pass through unscaled.",
+   "watch": "The statistics come from config.norm_stats keyed by unnorm_key — that is, from the checkpoint — while training read its own from RLDS and finetune.py saved a separate dataset_statistics.json. Three copies of the same numbers. Pass the wrong unnorm_key and every action is plausible and wrongly scaled, with nothing raised.",
+   "notes": [
+    "The mask (modeling_prismatic.py:528) defaults to all-true; datasets that mark a dimension unnormalised rely on it being carried through the checkpoint."
+   ],
+   "grad": "blocked"
+  }
+ ],
+ "edges": [
+  {
+   "from": "rlds",
+   "to": "qnorm",
+   "label": "action (7,) raw",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "rlds",
+   "to": "resize",
+   "label": "rgb uint8",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "qnorm",
+   "to": "atok",
+   "label": "action in [-1,1]",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "resize",
+   "to": "crop",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "crop",
+   "to": "imgtf",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "resize",
+   "to": "imgtf",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "imgtf",
+   "to": "coll",
+   "label": "(6,224,224) f32",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "imgtf",
+   "to": "split",
+   "label": "(B,6,224,224)",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "atok",
+   "to": "prompt",
+   "label": "action tokens",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "prompt",
+   "to": "lab",
+   "label": "input_ids (L,)",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "prompt",
+   "to": "space",
+   "label": "input_ids",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "lab",
+   "to": "coll",
+   "label": "labels (L,)",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "coll",
+   "to": "cast",
+   "label": "batch",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "cast",
+   "to": "split",
+   "label": "(B,6,224,224) bf16",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "split",
+   "to": "dino",
+   "label": "(B,3,224,224)"
+  },
+  {
+   "from": "split",
+   "to": "siglip",
+   "label": "(B,3,224,224)"
+  },
+  {
+   "from": "dino",
+   "to": "catv",
+   "label": "(B,256,1024)"
+  },
+  {
+   "from": "siglip",
+   "to": "catv",
+   "label": "(B,256,1152)"
+  },
+  {
+   "from": "catv",
+   "to": "proj",
+   "label": "(B,256,2176)"
+  },
+  {
+   "from": "proj",
+   "to": "mm",
+   "label": "(B,256,4096)"
+  },
+  {
+   "from": "cast",
+   "to": "emb",
+   "label": "input_ids (B,L)",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "space",
+   "to": "emb",
+   "label": "input_ids (1,L)",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "emb",
+   "to": "mm",
+   "label": "(B,L,4096)"
+  },
+  {
+   "from": "mm",
+   "to": "llm",
+   "label": "(B,257+L−1,4096)"
+  },
+  {
+   "from": "llm",
+   "to": "gen",
+   "label": "same weights, autoregressive",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "llm",
+   "to": "ce",
+   "label": "logits + labels",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "llm",
+   "to": "acc",
+   "label": "logits[:, 256:−1]",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "acc",
+   "to": "l1",
+   "label": "decoded actions",
+   "paths": [
+    "train"
+   ]
+  },
+  {
+   "from": "gen",
+   "to": "dec",
+   "label": "token ids (7,)",
+   "paths": [
+    "eval"
+   ]
+  },
+  {
+   "from": "dec",
+   "to": "unnorm",
+   "label": "normalised action",
+   "paths": [
+    "eval"
+   ]
+  }
+ ],
+ "note": "25 nodes across two entry points — 21 on the train path, above the 8&#8211;16 guideline. Nothing was collapsed because 13 of them carry a trap a collapsed node would hide. Use the path filter, the search box and <b>train &#8644; eval diff</b> rather than reading it top to bottom.",
+ "terms": [
+  "Open X-Embodiment",
+  "Llama-2 7B",
+  "Vicuna v1.5",
+  "DINOv2",
+  "SigLIP",
+  "ViT-L/14",
+  "SO400M/14",
+  "PrismaticProjector",
+  "Prismatic",
+  "ActionTokenizer",
+  "RLDS",
+  "SentencePiece"
+ ],
+ "lanes": [
+  {
+   "id": "vision",
+   "label": "vision"
+  },
+  {
+   "id": "language",
+   "label": "language"
+  },
+  {
+   "id": "action",
+   "label": "action"
+  }
+ ],
+ "groups": [
+  {
+   "label": "DATA PIPELINE",
+   "note": "runs in the loader — nothing here is reachable by the loss",
+   "stages": [
+    "SOURCE",
+    "NORMALISE",
+    "TOKENISE",
+    "AUGMENT",
+    "ASSEMBLE",
+    "LABEL",
+    "BATCH",
+    "CAST"
+   ]
+  },
+  {
+   "label": "ENCODERS",
+   "note": "two vision towers on one channel-stacked image, plus the token embedding",
+   "stages": [
+    "SPLIT",
+    "ENCODE",
+    "FUSE",
+    "PROJECT"
+   ]
+  },
+  {
+   "label": "LANGUAGE BACKBONE",
+   "note": "the action is predicted as text",
+   "stages": [
+    "SPLICE",
+    "BACKBONE"
+   ]
+  },
+  {
+   "label": "OBJECTIVE",
+   "note": "one gradient, two metrics",
+   "stages": [
+    "LOSS"
+   ]
+  },
+  {
+   "label": "INFERENCE ONLY",
+   "note": "a different file — finetune.py has no eval loop at all",
+   "stages": [
+    "DECODE"
+   ]
+  }
+ ]
+};
+// ═══════════════════════════════════════════════════════════════════════════
+
+const $ = s => document.querySelector(s);
+// Architecture names carry most of the orientation value on a first read, so they
+// get their own weight and colour wherever they appear.
+const TERMS = (MAP.terms || []).slice().sort((a, b) => b.length - a.length);
+const RX = TERMS.length
+  ? new RegExp("(" + TERMS.map(t => t.replace(/[.*+?^${}()|[\]\\\/-]/g, "\\$&")).join("|") + ")", "g")
+  : null;
+const mark = html => !RX ? html : String(html).split(/(<[^>]*>)/)
+  .map(seg => seg[0] === "<" ? seg : seg.replace(RX, '<b class="mdl">$1</b>')).join("");
+const N = Object.fromEntries(MAP.nodes.map(n => [n.id, n]));
+const NS = "http://www.w3.org/2000/svg";
+let path = "train", sel = null, hover = null, query = "", diff = false, gradSel = null;
+// A hover is a glance; a click is a decision. Clearing the highlight on mouseleave
+// meant you could never look away from the graph to read the panel it just opened.
+const traced = () => hover || sel;
+
+const onPath = x => path === "both" || !x.paths || x.paths.includes(path);
+const up   = id => MAP.edges.filter(e => e.to === id).map(e => e.from);
+const down = id => MAP.edges.filter(e => e.from === id).map(e => e.to);
+
+// Up- and downstream are not the same question. What feeds a node is what you have
+// to trust to believe it; what it feeds is a consequence. Selecting lights the first
+// at full strength and the second at half.
+function cone(id) {
+  const walk = step => {
+    const seen = new Set(), q = [id];
+    while (q.length) for (const nb of step(q.pop())) if (!seen.has(nb)) { seen.add(nb); q.push(nb); }
+    return seen;
+  };
+  return {self: id, up: walk(up), down: walk(down)};
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+$("#title").textContent = "Data flow — " + MAP.repo.split(" @ ")[0];
+$("#meta").innerHTML = "<b>" + MAP.repo + "</b>&nbsp;&nbsp; entry: " + MAP.entry +
+                       (MAP.framework ? "&nbsp;&nbsp; " + MAP.framework : "");
+$("#foot").textContent = MAP.repo;
+if (MAP.note) $("#banner").insertAdjacentHTML("afterend",
+  '<p style="margin:-8px 0 16px;font-size:11.5px;color:var(--ink2);line-height:1.6;' +
+  'border-left:2px solid var(--rule);padding-left:11px">' + MAP.note + '</p>');
+$("#banner").innerHTML = MAP.verified
+  ? '<div class="banner ok"><span class="t">VERIFIED</span><p style="margin:0">' + MAP.verifiedNote + '</p></div>'
+  : '<div class="banner"><span class="t">NOT VERIFIED</span><p style="margin:0">' +
+    (MAP.verifiedNote || "This map has not been checked against a real forward pass.") +
+    ' Edges and shapes are read from source and may be wrong. An unverified map is a plausible fiction, and you will trust it — treat every dashed node as a question, not an answer.</p></div>';
+
+/* ── graph ──────────────────────────────────────────────────────────────── */
+// Lanes replace the old crossing-reduction heuristic. Ordering nodes inside a row
+// by a barycentre gave columns no persistent meaning, so an edge from the action
+// stream to the loss could travel the full width of the graph — 27 crossing pairs
+// over 34 edges, with the longest edge longer than the graph was tall. A lane is a
+// stream that keeps the same column all the way down, so most edges become short
+// vertical hops and merges are the only thing left to draw.
+function topo(ids) {
+  const inSet = new Set(ids), succ = {}, indeg = {};
+  ids.forEach(i => { succ[i] = []; indeg[i] = 0; });
+  for (const e of MAP.edges)
+    if (inSet.has(e.from) && inSet.has(e.to) && e.from !== e.to) { succ[e.from].push(e.to); indeg[e.to]++; }
+  const ready = ids.filter(i => !indeg[i]), out = [];
+  while (ready.length) {
+    const x = ready.shift(); out.push(x);
+    for (const y of succ[x]) if (--indeg[y] === 0) ready.push(y);
+  }
+  return out.length === ids.length ? out : ids;
+}
+const linked = ids => MAP.edges.some(e => ids.includes(e.from) && ids.includes(e.to));
+
+// Lane widths follow how crowded each lane actually gets, so the busy stream is
+// not squeezed into the same column width as one that carries a single node.
+function laneWeights() {
+  const L = MAP.lanes || [];
+  return L.map(l => {
+    let w = 1;
+    for (const st of MAP.stages) {
+      const ids = MAP.nodes.filter(n => n.stage === st && n.lane === l.id).map(n => n.id);
+      if (ids.length > 1 && !linked(ids)) w = Math.max(w, ids.length);
+    }
+    return w;
+  });
+}
+
+function render() {
+  const q = query.trim().toLowerCase();
+  const hits = new Set(q ? MAP.nodes.filter(n =>
+    (n.name + " " + n.meta + " " + n.file + " " + n.detail + " " + (n.watch || "")).toLowerCase().includes(q)
+  ).map(n => n.id) : []);
+  const c = traced() ? cone(traced()) : null;
+  const gr = gradSel ? gradReach(gradSel) : null;
+  const lanes = MAP.lanes || [];
+  const cols = laneWeights().map(w => w + "fr").join(" ");
+
+  const card = n => {
+    const g = !gr || n.id === gradSel ? ""
+      : gr.trains.has(n.id) ? "gtrains" : gr.stops.has(n.id) ? "gstop"
+      : gr.flows.has(n.id) ? "gflows" : "gout";
+    const cls = ["node", n.span ? "bar" : "", n.conf === "inferred" ? "inferred" : "",
+      n.watch ? "watch" : "", onPath(n) ? "" : "off", sel === n.id ? "sel" : "",
+      !c ? "" : (c.self === n.id || c.up.has(n.id)) ? "" : c.down.has(n.id) ? "half" : "dim",
+      hits.has(n.id) ? "hit" : "", g].filter(Boolean).join(" ");
+    const gmark = g === "gtrains" ? '<i class="gmark t">&part; trains</i>'
+      : g === "gflows" ? '<i class="gmark f">&part; through</i>'
+      : g === "gstop" ? '<i class="gmark s">&part; stops</i>' : '';
+    const tags = [
+      n.params === "frozen"  ? '<span class="tag frozen">frozen</span>' : "",
+      n.params === "lora"    ? '<span class="tag frozen">LoRA</span>' : "",
+      n.params === "trained" ? '<span class="tag">trained</span>' : "",
+      n.params === "quantised" ? '<span class="tag warn">4-bit</span>' : "",
+      n.paths && n.paths.length === 1 ? '<span class="tag only">' + n.paths[0] + ' only</span>' : ""
+    ].join("");
+    const inner = n.span
+      ? '<div class="row2"><div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) +
+        '</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div>'
+      : '<div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) + '</div>' +
+        (tags ? '<div class="tags">' + tags + '</div>' : '');
+    return '<div class="' + cls + '" data-id="' + n.id + '">' + (n.watch ? '<i class="bang"></i>' : '') +
+           gmark + '<div class="k">' + n.kind.toUpperCase() + '</div>' + inner + '</div>';
+  };
+
+  // Nodes sharing a cell are a chain when an edge joins them and a fan when not —
+  // the difference between "one after another" and "at the same time".
+  const cell = ids => !ids.length ? '<div class="cell"></div>'
+    : '<div class="cell ' + (linked(ids) ? "chain" : "fan") + '">' +
+      topo(ids).map(i => card(N[i])).join("") + '</div>';
+
+  const stage = st => {
+    const ns = MAP.nodes.filter(n => n.stage === st);
+    if (!ns.length) return "";
+    const spans = ns.filter(n => n.span);
+    const laned = ns.filter(n => !n.span && n.lane);
+    const free  = ns.filter(n => !n.span && !n.lane);
+    let body = "";
+    if (spans.length)
+      body += '<div class="cells" style="grid-template-columns:1fr">' + cell(spans.map(n => n.id)) + '</div>';
+    if (laned.length)
+      body += '<div class="cells" style="grid-template-columns:' + cols + '">' +
+              lanes.map(l => cell(laned.filter(n => n.lane === l.id).map(n => n.id))).join("") + '</div>';
+    if (free.length)
+      body += '<div class="free">' + topo(free.map(n => n.id)).map(i => card(N[i])).join("") + '</div>';
+    return '<div class="stg"><div class="slab">' + st + '</div><div>' + body + '</div></div>';
+  };
+
+  const groups = (MAP.groups && MAP.groups.length) ? MAP.groups : [{ label: "", stages: MAP.stages }];
+  const html = groups.map(gp => {
+    const inner = gp.stages.map(stage).join("");
+    if (!inner) return "";
+    const cnt = MAP.nodes.filter(x => gp.stages.includes(x.stage) && onPath(x)).length;
+    const usesLanes = lanes.length && gp.stages.some(st => MAP.nodes.some(x => x.stage === st && x.lane));
+    return '<section class="grp">' +
+      (gp.label ? '<header><h3>' + gp.label + '</h3>' + (gp.note ? '<p class="gn">' + gp.note + '</p>' : '') +
+                  '<span class="gcount">' + cnt + ' on this path</span></header>' : '') +
+      (usesLanes ? '<div class="lanehead" style="grid-template-columns:' + cols + '">' +
+                   lanes.map(l => '<span>' + l.label + '</span>').join("") + '</div>' : '') +
+      inner + '</section>';
+  }).join("");
+
+  $("#graph").innerHTML = '<svg class="wires" id="wires"></svg>' + html;
+  $("#count").textContent = MAP.nodes.filter(onPath).length + " nodes \u00b7 " +
+    MAP.nodes.filter(n => n.conf === "verified").length + " verified \u00b7 " +
+    MAP.nodes.filter(n => n.watch).length + " flagged";
+
+  document.querySelectorAll(".node").forEach(el => {
+    el.onclick = () => pick(el.dataset.id);
+    // paint(), not render(): rebuilding the DOM on mouseenter destroys the very
+    // element the click is landing on, and the click then never fires at all.
+    el.onmouseenter = () => { hover = el.dataset.id; paint(); };
+    el.onmouseleave = () => { hover = null; paint(); };
+  });
+  requestAnimationFrame(paint);
+}
+
+// Trace highlighting touches classes only — no DOM rebuild.
+function paint() {
+  const c = traced() ? cone(traced()) : null;
+  document.querySelectorAll(".node").forEach(el => {
+    const i = el.dataset.id;
+    const upstream = !c || c.self === i || c.up.has(i);
+    el.classList.toggle("half", !!c && !upstream && c.down.has(i));
+    el.classList.toggle("dim",  !!c && !upstream && !c.down.has(i));
+  });
+  wires();
+}
+
+/* ── gradient reach ─────────────────────────────────────────────────────── */
+// Walking upstream from a loss is NOT the same as tracing the data path. Gradient
+// stops at the autograd boundary — the dataloader, a detach, a host round-trip —
+// and a node the gradient passes through is not a node that learns from it.
+function gradReach(id) {
+  const trains = new Set(), flows = new Set(), stops = new Set(), edges = new Set();
+  if (gradOf(N[id]) === "metric") return {trains, flows, stops, edges, metric: true};
+  const seen = new Set([id]), q = [id];
+  while (q.length) {
+    const cur = q.pop();
+    for (const e of MAP.edges) {
+      if (e.to !== cur || !onPath(e)) continue;
+      edges.add(e.from + ">" + e.to);
+      if (seen.has(e.from)) continue;
+      seen.add(e.from);
+      const g = gradOf(N[e.from]);
+      if (g === "blocked") { stops.add(e.from); continue; }   // boundary: do not walk past it
+      (g === "trains" ? trains : flows).add(e.from);
+      q.push(e.from);
+    }
+  }
+  return {trains, flows, stops, edges, metric: false};
+}
+// Absent an explicit mark, data is outside the graph and everything else is inside it.
+const gradOf = n => n.grad || (n.kind === "data" ? "blocked" : "flows");
+
+/* ── SVG connectors, measured after layout ──────────────────────────────── */
+function wires() {
+  const g = $("#graph"), svg = $("#wires");
+  if (!g || !svg) return;
+  const gb = g.getBoundingClientRect(), W = gb.width;
+  svg.setAttribute("width", W); svg.setAttribute("height", gb.height);
+  const box = id => {
+    const el = g.querySelector('[data-id="' + id + '"]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {id: id, x: r.left - gb.left + r.width / 2, top: r.top - gb.top, bot: r.bottom - gb.top,
+            l: r.left - gb.left, r: r.right - gb.left, mid: r.top - gb.top + r.height / 2};
+  };
+  // Every routing decision below is geometric rather than stage-based. A stage with
+  // more than a few nodes wraps onto a second visual line, and then "same stage"
+  // stops meaning "side by side" — which is how the wrapped rows ended up with
+  // horizontal arrows drawn diagonally across their own cards.
+  const boxes = MAP.nodes.map(n => box(n.id)).filter(Boolean);
+  const sideBySide = (a, b) => Math.min(a.bot, b.bot) - Math.max(a.top, b.top) > 10;
+  // Only detour when something is actually in the way. Testing "is any card between
+  // these two rows" sent every edge to the gutter the moment lanes existed, because
+  // a card in a different lane is between them vertically and blocks nothing.
+  const rowBetween = (a, b) => boxes.some(c =>
+    c.top > a.bot + 2 && c.bot < b.top - 2 &&
+    c.r > Math.min(a.x, b.x) - 10 && c.l < Math.max(a.x, b.x) + 10);
+  const cardBetween = (a, b) => boxes.some(c =>
+    sideBySide(c, a) && c.l > Math.min(a.r, b.r) - 2 && c.r < Math.max(a.l, b.l) + 2);
+
+  const c  = traced() ? cone(traced()) : null;
+  const gr = gradSel ? gradReach(gradSel) : null;
+  const side = e => {                       // which half of the cone this edge sits on
+    if (!c) return null;
+    const inUp = x => c.up.has(x) || x === c.self, inDn = x => c.down.has(x) || x === c.self;
+    if (inUp(e.from) && inUp(e.to)) return "lit";
+    if (inDn(e.from) && inDn(e.to)) return "half";
+    return "out";
+  };
+  let out = "", dots = "", laneL = 0, laneR = 0;
+
+  // Labels get placed against what is already on the canvas rather than at a fixed
+  // offset. A fixed stagger pushed the second label sharing a gap straight into the
+  // card below it, which is the thing the gap existed to avoid.
+  const placed = [];
+  const clash = r => placed.some(q => !(r.x2 < q.x1 || r.x1 > q.x2 || r.y2 < q.y1 || r.y1 > q.y2))
+    || boxes.some(c => !(r.x2 < c.l || r.x1 > c.r || r.y2 < c.top || r.y1 > c.bot));
+  const place = (cx, cy, w, h) => {
+    for (const dx of [0, w + 10, -(w + 10), 2 * (w + 12), -2 * (w + 12)]) {
+      const r = {x1: cx + dx - w / 2, x2: cx + dx + w / 2, y1: cy - h / 2, y2: cy + h / 2};
+      if (!clash(r)) { placed.push(r); return cx + dx; }
+    }
+    return null;
+  };
+
+  // A full-width bar is not a point. Anchoring its edges at its centre pulls every
+  // lane into one fan; anchoring them under the lane they come from keeps them
+  // vertical, which is most of the reason the lanes are there at all.
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Where a lane's column sits, read off the first stage that actually uses lanes.
+  // An edge between two bars has no lane of its own to follow, so `at: "action"`
+  // lets it borrow one — which is how a long carry stays a straight line down an
+  // empty column instead of a detour round the outside.
+  const laneCol = {};
+  (MAP.lanes || []).forEach((l, i) => {
+    const row = [...g.querySelectorAll('.cells')].find(c => c.children.length === MAP.lanes.length);
+    const cell = row && row.children[i];
+    if (cell) { const r = cell.getBoundingClientRect(); laneCol[l.id] = r.left - gb.left + r.width / 2; }
+  });
+  const anchor = (self, other, at) =>
+    !N[self.id] || !N[self.id].span ? self.x
+    : clamp(at && laneCol[at] !== undefined ? laneCol[at] : other.x, self.l + 20, self.r - 20);
+
+  for (const e of MAP.edges) {
+    const a0 = box(e.from), b0 = box(e.to);
+    if (!a0 || !b0) continue;
+    const a = Object.assign({}, a0, {id: e.from}), b = Object.assign({}, b0, {id: e.to});
+    a.x = anchor(a, b0, e.at); b.x = anchor(b, a0, e.at);
+    const live = onPath(e) && onPath(N[e.from]) && onPath(N[e.to]);
+    const sd = side(e);
+    const inGrad = gr ? gr.edges.has(e.from + ">" + e.to) : null;
+    const cls = [
+      !live || sd === "out" || inGrad === false ? "dim" : "",
+      sd === "lit" ? "lit" : "", sd === "half" ? "half" : "", inGrad === true ? "grad" : ""
+    ].filter(Boolean).join(" ");
+    const mk = cls.includes("dim") ? "-dim" : cls.includes("lit") ? "-lit"
+             : cls.includes("grad") ? "-grad" : cls.includes("half") ? "-half" : "";
+
+    // A skip edge crosses whole rows of cards. Routed straight it would run
+    // underneath them and surface with no visible origin, so it goes out to a
+    // side gutter instead, where nothing is drawn.
+    const skip = rowBetween(a, b);   // a and b already carry their anchored x
+    const same = sideBySide(a, b);
+    let lx, ly;
+    if (same) {
+      // Side by side, not stacked. Drawing these bottom-to-top like a cross-stage
+      // edge sends them backwards through both cards, which is where the "lines
+      // start underneath a block" reading comes from.
+      const fwd = b.l > a.r - 2 && !cardBetween(a, b);
+      if (fwd) {
+        out += '<path class="' + cls + '" d="M' + a.r + ' ' + a.mid + ' L' + b.l + ' ' + b.mid +
+               '" marker-end="url(#ah' + mk + ')"/>';
+        lx = (a.r + b.l) / 2; ly = a.mid;
+        dots += '<circle class="' + cls + '" cx="' + a.r + '" cy="' + a.mid + '"/>';
+      } else {
+        const yb = Math.max(a.bot, b.bot) + 26;      // dip clear of the line, then back up
+        out += '<path class="' + cls + '" d="M' + a.x + ' ' + a.bot + ' C' + a.x + ' ' + yb + ' ' +
+               b.x + ' ' + yb + ' ' + b.x + ' ' + b.bot + '" marker-end="url(#ah' + mk + ')"/>';
+        lx = (a.x + b.x) / 2; ly = yb - 2;
+        dots += '<circle class="' + cls + '" cx="' + a.x + '" cy="' + a.bot + '"/>';
+      }
+      if (e.label) {
+        const w = e.label.length * 5.4 + 8;
+        const rect = '<rect class="lbl-bg' + (cls ? " " + cls : "") + '" x="' + (lx - w / 2) + '" y="' + (ly - 9) +
+                     '" width="' + w + '" height="12" rx="2"/>' +
+                     '<text class="' + cls + '" x="' + lx + '" y="' + ly + '" text-anchor="middle">' +
+                     e.label + '</text>';
+        out += fwd ? '<g transform="rotate(-90 ' + lx + ' ' + a.mid + ')">' +
+                     rect.replace('y="' + (ly - 9) + '"', 'y="' + (a.mid - 9) + '"')
+                         .replace('y="' + ly + '"', 'y="' + a.mid + '"') + '</g>'
+                   : rect;
+      }
+      continue;
+    }
+    if (skip) {
+      const left = (a.x + b.x) / 2 < W / 2;
+      const lane = left ? laneL++ : laneR++;
+      const gx = left ? 24 + lane * 15 : W - 24 - lane * 15;
+      const y1 = a.bot + 26, y2 = b.top - 26;
+      out += '<path class="' + cls + '" d="' +
+        ['M' + a.x + ' ' + a.bot, 'C' + a.x + ' ' + (a.bot + 14) + ' ' + gx + ' ' + (y1 - 14) + ' ' + gx + ' ' + y1,
+         'L' + gx + ' ' + y2,
+         'C' + gx + ' ' + (y2 + 14) + ' ' + b.x + ' ' + (b.top - 14) + ' ' + b.x + ' ' + b.top].join(' ') +
+        '" marker-end="url(#ah' + mk + ')"/>';
+      lx = gx; ly = (y1 + y2) / 2;
+      if (e.label)
+        out += '<g transform="rotate(-90 ' + lx + ' ' + ly + ')">' +
+               '<rect class="lbl-bg' + (cls ? " " + cls : "") + '" x="' + (lx - e.label.length * 2.7 - 4) +
+               '" y="' + (ly - 6) + '" width="' + (e.label.length * 5.4 + 8) + '" height="12" rx="2"/>' +
+               '<text class="' + cls + '" x="' + lx + '" y="' + (ly + 3) + '" text-anchor="middle">' +
+               e.label + '</text></g>';
+    } else {
+      const dy = Math.max(18, (b.top - a.bot) * 0.55);
+      out += '<path class="' + cls + '" d="M' + a.x + ' ' + a.bot + ' C' + a.x + ' ' + (a.bot + dy) +
+             ' ' + b.x + ' ' + (b.top - dy) + ' ' + b.x + ' ' + b.top + '" marker-end="url(#ah' + mk + ')"/>';
+      if (e.label) {
+        const w = e.label.length * 5.4 + 8;
+        const cy = (a.bot + b.top) / 2;             // centre of the gap, not a fixed drop
+        const x = place((a.x + b.x) / 2, cy, w, 13);
+        if (x !== null) {
+          out += '<rect class="lbl-bg' + (cls ? " " + cls : "") + '" x="' + (x - w / 2) + '" y="' + (cy - 6.5) +
+                 '" width="' + w + '" height="13" rx="2"/>' +
+                 '<text class="' + cls + '" x="' + x + '" y="' + (cy + 3.5) + '" text-anchor="middle">' +
+                 e.label + '</text>';
+        }
+      }
+    }
+    // a dot on the source edge, so it is unambiguous which card a wire leaves
+    dots += '<circle class="' + cls + '" cx="' + a.x + '" cy="' + a.bot + '"/>';
+  }
+
+  const head = (id, fill, o) => '<marker id="' + id + '" viewBox="0 0 10 10" refX="9" refY="5" ' +
+    'markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 Z" fill="' + fill +
+    '" opacity="' + o + '"/></marker>';
+  svg.innerHTML = '<defs>' + head("ah", "var(--ink3)", 1) + head("ah-lit", "var(--accent)", 1) +
+    head("ah-grad", "var(--accent)", 1) + head("ah-half", "var(--accent)", .5) +
+    head("ah-dim", "var(--ink3)", .13) + '</defs>' + out + dots;
+}
+
+/* ── detail panel ───────────────────────────────────────────────────────── */
+const EMPTY = '<p class="empty">Click a node for its source line, the tensor it emits, and what about it is easy ' +
+  'to get wrong. Its path stays lit until you click the background.<br><br>' +
+  'Click a <b>loss</b> term to see which components update from it, and where gradient stops.<br><br>' +
+  '<kbd>/</kbd> filter &nbsp; <kbd>Esc</kbd> clear</p>';
+
+function pick(id) {
+  sel = id; location.hash = id; diff = false; $("#b-diff").classList.remove("on");
+  gradSel = N[id] && N[id].kind === "loss" ? id : null;   // a loss is the only thing you can back-propagate from
+  render(); panel();
+}
+
+function panel() {
+  const n = N[sel];
+  $("#ptitle").textContent = "DETAIL";
+  if (!n) { $("#panel").innerHTML = EMPTY; return; }
+  const col = (ids, dir) => '<div><div class="h">' + dir + '</div>' + (ids.length
+    ? ids.map(i => '<a class="hop" href="#' + i + '" data-hop="' + i + '">' +
+        (dir === "UPSTREAM" ? "\u2191 " : "\u2193 ") + mark(N[i] ? N[i].name : i) + '</a>').join("")
+    : '<span style="font-size:11.5px;color:var(--ink3)">\u2014</span>') + '</div>';
+
+  $("#panel").innerHTML =
+    '<div class="pn">' + mark(n.name) + '</div>' +
+    '<div class="pk">' + n.kind.toUpperCase() + '  \u00b7  ' + n.stage + '</div>' +
+
+    '<div class="blk" style="border-top:none;padding-top:0"><div class="h">DEFINED AT</div>' +
+    '<code class="src">' + n.file + '</code></div>' +
+
+    '<div class="blk"><div class="h">SIGNAL</div><dl>' +
+    '<dt>emits</dt><dd class="mono">' + mark(n.meta) + '</dd>' +
+    '<dt>on path</dt><dd class="mono">' + (n.paths || ["train", "eval"]).join(", ") + '</dd>' +
+    (n.params ? '<dt>params</dt><dd class="mono">' + n.params + '</dd>' : '') +
+    (n.grad ? '<dt>gradient</dt><dd class="mono">' + n.grad + '</dd>' : '') +
+    '<dt>evidence</dt><dd><span class="conf ' + n.conf + '">' + n.conf + '</span></dd></dl></div>' +
+
+    '<div class="blk"><div class="h">WHAT IT DOES</div>' + mark(n.detail) + '</div>' +
+
+    (n.watch ? '<div class="trap"><div class="h">WORTH A SECOND LOOK</div>' + mark(n.watch) + '</div>' : '') +
+
+    (n.notes && n.notes.length
+      ? '<div class="blk"><div class="h">NOTES</div><ul class="notes"><li>' +
+        n.notes.map(mark).join('</li><li>') + '</li></ul></div>' : '') +
+
+    gradBlock(n) +
+
+    '<div class="blk"><div class="two">' + col(up(n.id), "UPSTREAM") + col(down(n.id), "DOWNSTREAM") + '</div></div>';
+
+  document.querySelectorAll("[data-hop]").forEach(a =>
+    a.onclick = ev => { ev.preventDefault(); pick(a.dataset.hop); });
+}
+
+function gradBlock(n) {
+  if (n.kind !== "loss") return "";
+  const gr = gradReach(n.id);
+  const link = id => '<a class="hop" href="#' + id + '" data-hop="' + id + '">' + mark(N[id].name) + '</a>';
+  if (gr.metric)
+    return '<div class="trap"><div class="h">&part; NO GRADIENT</div>This term is monitoring only — nothing ' +
+           'calls backward on it, so no component learns from it. It can move independently of the loss that ' +
+           'does train the model, and the two disagreeing is information rather than a bug.</div>';
+  const T = [...gr.trains], F = [...gr.flows], S = [...gr.stops];
+  return '<div class="blk"><div class="h">&part; GRADIENT REACH</div>' +
+    '<b style="font-weight:500;color:var(--ink)">' + T.length + ' components update from this term.</b>' +
+    (T.length ? '<ul class="notes" style="margin-top:6px">' + T.map(i =>
+       '<li>' + link(i) + (N[i].params ? ' <span class="tag' +
+       (N[i].params === "trained" ? '' : ' frozen') + '">' + N[i].params + '</span>' : '') + '</li>').join("") +
+       '</ul>' : '') +
+    (F.length ? '<div style="margin-top:9px;font-size:11px;color:var(--ink3)">Gradient passes through these ' +
+       'without updating anything of their own:</div><ul class="notes" style="margin-top:4px">' +
+       F.map(i => '<li>' + link(i) + '</li>').join("") + '</ul>' : '') +
+    (S.length ? '<div style="margin-top:9px;font-size:11px;color:var(--warn)">It stops here — past this point ' +
+       'the pipeline is outside the differentiable graph:</div><ul class="notes" style="margin-top:4px">' +
+       S.map(i => '<li>' + link(i) + '</li>').join("") + '</ul>' : '') +
+    '</div>';
+}
+
+/* ── train ⇄ eval diff ──────────────────────────────────────────────────── */
+function showDiff() {
+  const nm = id => mark(N[id] ? N[id].name : id);
+  const only = p => MAP.nodes.filter(n => n.paths && n.paths.length === 1 && n.paths[0] === p);
+  const eonly = p => MAP.edges.filter(e => e.paths && e.paths.length === 1 && e.paths[0] === p);
+  const list = (items, f) => items.length
+    ? '<ul class="notes">' + items.map(f).join("") + '</ul>' : '<p class="empty">Nothing.</p>';
+  $("#ptitle").textContent = "TRAIN ⇄ EVAL";
+  $("#panel").innerHTML =
+    '<div class="blk" style="border-top:none;padding-top:0">Everything below runs on one path and not the other. ' +
+    'This is the list that decides whether a checkpoint behaves at inference the way it did in training.</div>' +
+    '<div class="blk"><div class="h">TRAIN ONLY</div>' +
+    list(only("train"), n => '<li><a class="hop" href="#' + n.id + '" data-hop="' + n.id + '">' + n.name +
+      '</a> <span class="mono" style="font-size:10.5px;color:var(--ink3)">' + n.file + '</span></li>') +
+    (eonly("train").length ? '<div style="margin-top:9px;font-size:11px;color:var(--ink3)">and these connections:</div>' +
+      list(eonly("train"), e => '<li style="font-size:11.5px">' + nm(e.from) + ' → ' + nm(e.to) + '</li>') : '') +
+    '</div><div class="blk"><div class="h">EVAL ONLY</div>' +
+    list(only("eval"), n => '<li><a class="hop" href="#' + n.id + '" data-hop="' + n.id + '">' + n.name +
+      '</a> <span class="mono" style="font-size:10.5px;color:var(--ink3)">' + n.file + '</span></li>') +
+    (eonly("eval").length ? '<div style="margin-top:9px;font-size:11px;color:var(--ink3)">and these connections:</div>' +
+      list(eonly("eval"), e => '<li style="font-size:11.5px">' + nm(e.from) + ' → ' + nm(e.to) + '</li>') : '') +
+    '</div>' +
+    (MAP.nodes.some(n => n.watch)
+      ? '<div class="blk"><div class="h">FLAGGED ON BOTH PATHS</div><ul class="notes">' +
+        MAP.nodes.filter(n => n.watch && (!n.paths || n.paths.length > 1)).map(n =>
+          '<li><a class="hop" href="#' + n.id + '" data-hop="' + n.id + '">' + n.name + '</a></li>').join("") +
+        '</ul></div>' : '');
+  document.querySelectorAll("[data-hop]").forEach(a =>
+    a.onclick = ev => { ev.preventDefault(); pick(a.dataset.hop); });
+}
+
+/* ── controls ───────────────────────────────────────────────────────────── */
+function setPath(p) {
+  path = p;
+  ["train", "eval", "both"].forEach(k => $("#b-" + k).classList.toggle("on", k === p));
+  render();
+}
+$("#b-train").onclick = () => setPath("train");
+$("#b-eval").onclick  = () => setPath("eval");
+$("#b-both").onclick  = () => setPath("both");
+$("#b-diff").onclick  = () => { diff = !diff; $("#b-diff").classList.toggle("on", diff);
+                                diff ? showDiff() : panel(); };
+$("#q").oninput = e => { query = e.target.value; render(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== $("#q")) { e.preventDefault(); $("#q").focus(); }
+  if (e.key === "Escape") { $("#q").value = ""; query = ""; sel = null; hover = null; diff = false; gradSel = null;
+                            $("#b-diff").classList.remove("on"); render(); panel(); $("#q").blur(); }
+});
+$("#graph").addEventListener("click", ev => {
+  if (ev.target.closest(".node")) return;
+  sel = null; hover = null; gradSel = null; location.hash = "";
+  render(); panel();
+});
+addEventListener("resize", () => requestAnimationFrame(paint));
+addEventListener("hashchange", () => { const h = location.hash.slice(1); if (N[h] && h !== sel) pick(h); });
+
+const h0 = location.hash.slice(1);
+if (N[h0]) { sel = h0; gradSel = N[h0].kind === "loss" ? h0 : null; }
+render(); panel();
+</script>
