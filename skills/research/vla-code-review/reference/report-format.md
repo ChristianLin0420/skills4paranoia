@@ -1,69 +1,69 @@
-# 報告格式
+# Report format
 
-`templates/report.html` 是可直接改的模板。這份是規格，說明每一區為什麼存在。
+`templates/report.html` is ready to adapt. This is the specification, and why each region exists.
 
-## 版面順序
+## Order of regions
 
-由上而下，順序不可換 —— 它對應的是讀者的決策順序。
+Top to bottom, not interchangeable — it matches the reader's decision order.
 
-| 區塊 | 回答什麼問題 |
+| Region | Answers |
 |---|---|
-| 標題與環境 | 這是誰的 code、哪個 commit、什麼硬體 |
-| **判決** | 我現在能不能開跑 |
-| 四格計數 | 問題有多嚴重、多大量 |
-| Tier 0 閘門表 | 十個致命項各自過了沒 |
-| 發現（依嚴重度） | 每個問題是什麼、怎麼確認、怎麼修 |
-| 覆蓋矩陣 | 你到底查了多少 |
-| 靜態查不到的 | 哪些還沒被涵蓋 |
+| Title and environment | Whose code, which commit, what hardware |
+| **Verdict** | Can I launch right now |
+| Four tallies | How bad, and how much |
+| Tier 0 gate table | Which of the ten fatal items passed |
+| Findings, by severity | What each problem is, how to confirm it, how to fix it |
+| Coverage matrix | How much you actually checked |
+| Beyond static review | What is still uncovered |
 
-## 判決
+## The verdict
 
-一句人話，放在最上面，用邊框與底色標出來。
+One sentence in plain language, at the top, in a bordered and tinted block.
 
-寫「不要開跑，因為多卡的梯度沒同步而且 checkpoint 可能沒載進去，這批實驗的結論不可用」，不要寫「發現 7 個問題，其中 2 個嚴重」。計數在下一區，這裡要的是判斷。
+Write "do not launch: the multi-GPU gradients are not synchronised and the checkpoint may not have loaded, so the conclusions from this batch are unusable", not "7 issues found, 2 serious". The counts are the next region; this one is a judgement.
 
-三種判決：`不要開跑`（有阻斷）、`可以跑但先看這幾項`（有高）、`通過`（只有中與觀察）。
+Three verdicts: `do not launch` (any blocker), `launch, but read these first` (any high), `clear` (only medium and watch).
 
-## 環境列
+## The environment row
 
-commit、GPU 型號與 compute capability、框架版本、審查時間。等寬字。
+Commit, GPU model and compute capability, framework version, review time. Monospaced.
 
-**這四項不是裝飾。** 精度相容性、kernel 可用性、TF32 預設值全都跟它們有關，而且報告會被貼到別的地方，脫離脈絡之後這四項是唯一能還原當時情況的線索。
+**These four are not decoration.** Precision compatibility, kernel availability and TF32 defaults all depend on them, and the report gets pasted elsewhere — out of context, these four are the only way to reconstruct the situation.
 
-## 四格計數
+## The four tallies
 
-阻斷 / 高 / 中 / 通過。數字用等寬大字，上方一條 2pt 色條：阻斷用磚紅、高用重點藍、其餘用灰。
+Blocker / high / medium / pass. Monospaced numerals, a 2pt colour bar above each: brick for blocker, accent for high, grey for the rest.
 
-不要加「不適用」那格。不適用是覆蓋矩陣的事，放在這裡會稀釋嚴重度的視覺權重。
+Do not add an N/A tally. N/A belongs in the coverage matrix, and putting it here dilutes the visual weight of severity.
 
-## Tier 0 閘門表
+## The Tier 0 gate table
 
-獨立成表，因為它回答的是「能不能按下 launch」，性質跟其他發現不同。每列：編號、檢查、結果、位置。未通過的用磚紅加粗，通過與不適用都用灰 —— **不要把通過做成綠色**，那會讓視線被最不重要的資訊吸走。
+Its own table, because it answers "can I press launch", which is a different question from the other findings. Per row: number, check, result, location. Failures in brick and medium weight; passes and N/A both grey — **do not make passes green**, that draws the eye to the least important information.
 
-## 發現卡片
+## Finding cards
 
-左側 3pt 色條標嚴重度。標頭一列：嚴重度標籤、檢查編號、標題、`file:line`。內文是定義列表：症狀、成因、怎麼確認、修法。底部一條分隔線後放同型案例連結。
+A 3pt colour bar on the left for severity. Header row: severity tag, check number, title, `file:line`. Body is a definition list: symptom, cause, how to confirm, fix. A rule, then the precedent link.
 
-標題寫**現象**不寫**規則**。寫「多卡訓練時 action head 的梯度沒有跨 rank 同步」，不要寫「違反 DDP 使用規範」。
+**Titles state the phenomenon, not the rule.** Write "action-head gradients are not synchronised across ranks in multi-GPU training", not "violates DDP usage guidelines".
 
-`file:line` 用等寬字、重點色，讓人一眼找到。
+`file:line` monospaced and in the accent colour, so it is findable at a glance.
 
-## 覆蓋矩陣
+## The coverage matrix
 
-十一類 × 檢查數 / 通過 / 發現 / 不適用。零值用淺灰，不要用 0 以外的符號。
+Eleven categories by checked / pass / found / N/A. Zeros in pale grey, no symbol other than 0.
 
-這區的作用是**讓人看出你沒查什麼**。如果某一類的檢查數明顯偏低，那是報告的弱點，要能被看見。
+The purpose of this region is **to make visible what you did not check**. If some category's checked count is conspicuously low, that is a weakness in the report and it should be seen.
 
-## 靜態查不到的部分
+## Beyond static review
 
-放最後，用重點色左邊條標出來。逐項列出需要實際跑一次才能確認的檢查，並說明為什麼。
+Last, with an accent bar on the left. List each check that needs an actual run, and why.
 
-**這區不能省。** 沒查和查過沒事是兩回事，空白會被當成通過。
+**This region cannot be dropped.** Not checked and checked-clean are different things, and a blank reads as a pass.
 
-## 視覺規格
+## Visual specification
 
-沿用 `deck-design-system`：底 `#F1F2F3`、墨 `#14171A`、次要 `#5F656B`、註記 `#8A9096`、細線 `#DCE0E3`、重點 `#3A6183`。嚴重度另加一個磚紅 `#8C4A3C`，只用在阻斷。
+Follows `deck-design-system`: bg `#F1F2F3`, ink `#14171A`, secondary `#5F656B`, footnote `#8A9096`, hairline `#DCE0E3`, accent `#3A6183`. Severity adds one brick `#8C4A3C`, used only for blockers.
 
-字體 IBM Plex Sans + Noto Sans TC，所有數字、路徑、行號、指令用 IBM Plex Mono。
+IBM Plex Sans plus Noto Sans TC; every number, path, line number and command in IBM Plex Mono.
 
-不用綠色。通過是預期狀態，不需要視覺獎勵；把顏色留給要人動作的東西。
+No green. Passing is the expected state and needs no visual reward; save colour for the things that need someone to act.

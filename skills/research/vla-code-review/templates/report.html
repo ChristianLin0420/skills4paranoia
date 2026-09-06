@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>VLA code review — 報告格式</title>
+<title>VLA code review — report template</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -86,162 +86,162 @@ footer{margin-top:48px;padding-top:14px;border-top:1px solid var(--rule);
 
 <div class="wrap">
 
-<h1>Meridian-1 · 訓練與評估程式碼審查</h1>
-<p class="sub">依 <span class="mono">vla-code-review</span> 清單逐項檢查。只查工程層的靜默錯誤，不評論方法。</p>
+<h1>Meridian-1 — training and evaluation code review</h1>
+<p class="sub">Worked item by item against the <span class="mono">vla-code-review</span> checklist. Engineering-level silent failures only; no comment on the method.</p>
 
 <dl class="meta">
   <div><dt>REPO / COMMIT</dt><dd>meridian-1 @ 4f2ac91</dd></div>
-  <div><dt>執行環境</dt><dd>A100-80G ×8 · SM80</dd></div>
-  <div><dt>框架</dt><dd>torch 2.4.1 · cu121</dd></div>
-  <div><dt>審查時間</dt><dd>2026-09-05 14:20</dd></div>
+  <div><dt>HARDWARE</dt><dd>A100-80G ×8 · SM80</dd></div>
+  <div><dt>FRAMEWORK</dt><dd>torch 2.4.1 · cu121</dd></div>
+  <div><dt>REVIEWED</dt><dd>2026-09-05 14:20</dd></div>
 </dl>
 
 <div class="verdict">
-  <span class="tag">不要開跑</span>
-  <p>Tier 0 有兩項未通過。多卡訓練時 action head 的梯度沒有跨 rank 同步，等於你以為的 8 卡訓練實際上是 8 個各學各的頭；另外 checkpoint 載入失敗時不會拋錯，會回傳一個未訓練的模型。這兩項都不會報錯，但會讓這批實驗的結論不可用。修掉之後重跑本清單即可。</p>
+  <span class="tag">DO NOT LAUNCH</span>
+  <p>Two Tier 0 items failed. In multi-GPU training the action head's gradients never synchronise across ranks, so what you think is an 8-GPU run is eight heads each learning on its own; and a failed checkpoint load does not raise, it hands back an untrained model. Neither errors, and both make the conclusions from this batch unusable. Fix them and re-run this checklist.</p>
 </div>
 
 <div class="tally">
-  <div class="b"><div class="n">2</div><div class="l">阻斷 · 結果不可信</div></div>
-  <div class="a"><div class="n">3</div><div class="l">高 · 數字被系統性影響</div></div>
-  <div><div class="n">2</div><div class="l">中 · 影響有限但可量測</div></div>
-  <div><div class="n">41</div><div class="l">通過</div></div>
+  <div class="b"><div class="n">2</div><div class="l">Blocker · results untrustworthy</div></div>
+  <div class="a"><div class="n">3</div><div class="l">High · numbers systematically affected</div></div>
+  <div><div class="n">2</div><div class="l">Medium · bounded but measurable</div></div>
+  <div><div class="n">41</div><div class="l">Passed</div></div>
 </div>
 
-<h2>TIER 0 — 開跑前閘門</h2>
+<h2>TIER 0 — PRE-LAUNCH GATE</h2>
 <table class="gate">
-<thead><tr><th></th><th>檢查</th><th>結果</th><th>位置</th></tr></thead>
+<thead><tr><th></th><th>Check</th><th>Result</th><th>Location</th></tr></thead>
 <tbody>
-<tr><td>0.1</td><td>精度與 compute capability 相容</td><td class="ok">通過 · bf16 on SM80</td><td class="loc">train.py:41</td></tr>
-<tr><td>0.2</td><td>master weights 為 fp32</td><td class="bad">未通過 · 純 bf16，無 fp32 副本</td><td class="loc">train.py:118</td></tr>
-<tr><td>0.3</td><td>grad clip 在 unscale 之後</td><td class="ok">不適用 · bf16 未用 GradScaler</td><td class="loc">—</td></tr>
-<tr><td>0.4</td><td>scheduler 未被 accumulation 多叫</td><td class="ok">通過</td><td class="loc">train.py:206</td></tr>
-<tr><td>0.5</td><td>凍結的 encoder 有 <span class="mono">.eval()</span></td><td class="ok">通過</td><td class="loc">model.py:77</td></tr>
-<tr><td>0.6</td><td>正規化統計只用 train split</td><td class="bad">未通過 · 統計未與 checkpoint 綁定</td><td class="loc">data/stats.py:23</td></tr>
-<tr><td>0.7</td><td>truncation 與 termination 分開</td><td class="ok">不適用 · 非 RL 訓練</td><td class="loc">—</td></tr>
-<tr><td>0.8</td><td>eval seed 獨立於訓練步數</td><td class="bad">未通過 · env 跨 episode 重用</td><td class="loc">eval/run_eval.py:148</td></tr>
+<tr><td>0.1</td><td>Precision matches compute capability</td><td class="ok">Pass · bf16 on SM80</td><td class="loc">train.py:41</td></tr>
+<tr><td>0.2</td><td>Master weights are fp32</td><td class="bad">Fail · pure bf16, no fp32 copy</td><td class="loc">train.py:118</td></tr>
+<tr><td>0.3</td><td>Grad clip after unscale</td><td class="ok">N/A · bf16, no GradScaler</td><td class="loc">—</td></tr>
+<tr><td>0.4</td><td>Scheduler not over-stepped by accumulation</td><td class="ok">Passed</td><td class="loc">train.py:206</td></tr>
+<tr><td>0.5</td><td>Frozen encoder has <span class="mono">.eval()</span></td><td class="ok">Passed</td><td class="loc">model.py:77</td></tr>
+<tr><td>0.6</td><td>Normalisation stats from train split only</td><td class="bad">Fail · stats not bound to the checkpoint</td><td class="loc">data/stats.py:23</td></tr>
+<tr><td>0.7</td><td>Truncation separated from termination</td><td class="ok">N/A · not RL training</td><td class="loc">—</td></tr>
+<tr><td>0.8</td><td>Eval seeds independent of training step</td><td class="bad">Fail · env reused across episodes</td><td class="loc">eval/run_eval.py:148</td></tr>
 </tbody>
 </table>
 
-<h2>發現 — 依嚴重度排序</h2>
+<h2>FINDINGS — BY SEVERITY</h2>
 
 <div class="f blocker">
-  <div class="fh"><span class="sev blocker">阻斷</span><span class="fid">4.4</span>
-    <span class="ft">多卡訓練時 action head 的梯度沒有跨 rank 同步</span>
+  <div class="fh"><span class="sev blocker">BLOCKER</span><span class="fid">4.4</span>
+    <span class="ft">Action-head gradients are not synchronised across ranks in multi-GPU training</span>
     <span class="loc">train.py:388</span></div>
   <dl class="fb">
-    <dt>症狀</dt><dd>不會報錯。多卡與單卡的 loss 曲線看起來幾乎一樣，但多卡的最終表現不如預期，且卡數越多差距越大。</dd>
-    <dt>成因</dt><dd>action head 被 <code>DistributedDataParallel</code> 包起來，但程式呼叫的是 <code>action_head.module.predict_action(...)</code>。繞過 <code>DDP.forward()</code> 會讓 reducer 沒有被註冊，反向時梯度不會 all-reduce。每個 rank 只用自己的 local batch 更新自己的頭。</dd>
-    <dt>怎麼確認</dt><dd>訓練幾步後比較兩個 rank 上 action head 參數的雜湊值。同步正常時必須相同。</dd>
-    <dt>修法</dt><dd>呼叫 <code>action_head(...)</code> 而不是 <code>action_head.module(...)</code>；把 <code>predict_action</code> 的邏輯移進 <code>forward()</code>。</dd>
+    <dt>Symptom</dt><dd>No error. Multi-GPU and single-GPU loss curves look nearly identical, but multi-GPU underperforms and the gap widens with device count.</dd>
+    <dt>Cause</dt><dd>The action head is wrapped in <code>DistributedDataParallel</code>, but the code calls <code>action_head.module.predict_action(...)</code>. Bypassing <code>DDP.forward()</code> leaves the reducer unregistered, so gradients never all-reduce on the backward pass. Each rank updates its own head from its local batch alone.</dd>
+    <dt>How to confirm</dt><dd>After a few steps, compare hashes of the action head's parameters across two ranks. With synchronisation working they must match.</dd>
+    <dt>Fix</dt><dd>Call <code>action_head(...)</code> rather than <code>action_head.module(...)</code>; move the <code>predict_action</code> logic into <code>forward()</code>.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/moojink/openvla-oft/issues/160">moojink/openvla-oft#160</a> — OpenVLA-OFT 的 finetune.py 有完全相同的問題。</div>
+  <div class="prec">Precedent: <a href="https://github.com/moojink/openvla-oft/issues/160">moojink/openvla-oft#160</a> — OpenVLA-OFT's finetune.py has exactly this problem.</div>
 </div>
 
 <div class="f blocker">
-  <div class="fh"><span class="sev blocker">阻斷</span><span class="fid">10.5</span>
-    <span class="ft">checkpoint 載入失敗時回傳未訓練的模型而不是拋錯</span>
+  <div class="fh"><span class="sev blocker">BLOCKER</span><span class="fid">10.5</span>
+    <span class="ft">A failed checkpoint load returns an untrained model instead of raising</span>
     <span class="loc">policy/loader.py:64</span></div>
   <dl class="fb">
-    <dt>症狀</dt><dd>呼叫看起來成功，沒有例外，回傳的是正常的 policy 物件。唯一線索是一行捲上去的 warning。</dd>
-    <dt>為什麼致命</dt><dd>任何「把載入的模型跟自己比」的驗證都會通過，因為兩邊都是同一個未訓練模型，數字會完美吻合卻毫無意義。整批量測可能在你發現之前就已作廢。</dd>
-    <dt>怎麼確認</dt><dd>載入後比對權重雜湊與 checkpoint 檔的雜湊；或斷言載入後 <code>missing_keys</code> 與 <code>unexpected_keys</code> 皆為空。</dd>
-    <dt>修法</dt><dd>載入失敗一律 raise。要容忍缺鍵就顯式列出允許缺的鍵名，不要用寬鬆的預設。</dd>
+    <dt>Symptom</dt><dd>The call looks successful, nothing raises, and a normal policy object comes back. The only clue is a warning scrolled far up the log.</dd>
+    <dt>Why it is fatal</dt><dd>Any validation comparing the loaded model against itself passes, because both sides are the same untrained model — the numbers agree perfectly and mean nothing. A whole batch of measurements can be worthless before you notice.</dd>
+    <dt>How to confirm</dt><dd>Compare a weight hash against the checkpoint file after loading, or assert that <code>missing_keys</code> and <code>unexpected_keys</code> are both empty.</dd>
+    <dt>Fix</dt><dd>Always raise on a failed load. To tolerate missing keys, list the permitted names explicitly rather than relying on a lenient default.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/huggingface/lerobot/issues/4577">huggingface/lerobot#4577</a> — <span class="mono">PI0Policy.from_pretrained</span> 即使 <span class="mono">strict=True</span> 也會回傳未訓練模型。</div>
+  <div class="prec">Precedent: <a href="https://github.com/huggingface/lerobot/issues/4577">huggingface/lerobot#4577</a> — <span class="mono">PI0Policy.from_pretrained</span> returns an untrained model even with <span class="mono">strict=True</span>.</div>
 </div>
 
 <div class="f high">
-  <div class="fh"><span class="sev high">高</span><span class="fid">2.1</span>
-    <span class="ft">純 bf16 訓練，沒有 fp32 master weights</span>
+  <div class="fh"><span class="sev high">HIGH</span><span class="fid">2.1</span>
+    <span class="ft">Pure bf16 training with no fp32 master weights</span>
     <span class="loc">train.py:118</span></div>
   <dl class="fb">
-    <dt>症狀</dt><dd>訓練後期停止進步，但 grad norm 看起來完全正常。容易被誤判為方法飽和。</dd>
-    <dt>成因</dt><dd>bf16 相對精度約 <code>2^-8</code>。當 <code>|lr × grad| / |w| &lt; 2^-8</code> 時更新加上去權重不變，被靜默丟棄。後期權重變大、梯度變小，此條件很容易成立。</dd>
-    <dt>怎麼確認</dt><dd>抽樣參數，統計 <code>optimizer.step()</code> 前後完全未改變的比例。超過個位數百分比就是問題。</dd>
-    <dt>修法</dt><dd>改用 AMP（預設保留 fp32 master weights），或在 optimizer 內加 stochastic rounding／Kahan 補償求和。</dd>
+    <dt>Symptom</dt><dd>Stops improving late in training while grad norm looks entirely normal. Easily misread as the method saturating.</dd>
+    <dt>Cause</dt><dd>bf16 has about <code>2^-8</code> relative precision. When <code>|lr × grad| / |w| &lt; 2^-8</code> the update leaves the weight unchanged and is silently discarded. Late in training weights grow and gradients shrink, so the condition is easy to satisfy.</dd>
+    <dt>How to confirm</dt><dd>Sample parameters and count the fraction unchanged across <code>optimizer.step()</code>. Anything above single-digit percent is a problem.</dd>
+    <dt>Fix</dt><dd>Switch to AMP, which keeps fp32 master weights by default, or add stochastic rounding or Kahan-compensated summation inside the optimizer.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/Physical-Intelligence/openpi/issues/989">Physical-Intelligence/openpi#989</a> — 同資料同協定下 JAX 混合精度 82.6 vs PyTorch 純 bf16 71.9。</div>
+  <div class="prec">Precedent: <a href="https://github.com/Physical-Intelligence/openpi/issues/989">Physical-Intelligence/openpi#989</a> — same data and protocol: 82.6 with JAX mixed precision against 71.9 with pure-bf16 PyTorch.</div>
 </div>
 
 <div class="f high">
-  <div class="fh"><span class="sev high">高</span><span class="fid">6.8</span>
-    <span class="ft">評估時整個 suite 共用一個 env，episode 之間場景幾何會漂移</span>
+  <div class="fh"><span class="sev high">HIGH</span><span class="fid">6.8</span>
+    <span class="ft">One env is shared across the whole eval suite, so scene geometry drifts between episodes</span>
     <span class="loc">eval/run_eval.py:148</span></div>
   <dl class="fb">
-    <dt>症狀</dt><dd>同一個 checkpoint 重跑兩次分數不同；episode 序號越後面越不穩。</dd>
-    <dt>成因</dt><dd><code>env.seed()</code> 只在建 env 時呼叫一次，RNG 串流會跨 episode 前進。<code>env.reset()</code> 從該串流取樣家具擺位並寫進 <code>sim.model.body_pos</code>，而 <code>set_init_state()</code> 只還原 <code>qpos</code>／<code>qvel</code>，不還原 <code>body_pos</code>。</dd>
-    <dt>怎麼確認</dt><dd>連續兩個 episode 之間 diff <code>sim.model.body_pos</code>。應為零。</dd>
-    <dt>修法</dt><dd>在 episode 迴圈內呼叫 <code>env.seed(cfg.seed)</code>，或每個 episode 重建 env。</dd>
+    <dt>Symptom</dt><dd>The same checkpoint scores differently on two runs, and later episodes are less stable.</dd>
+    <dt>Cause</dt><dd><code>env.seed()</code> is called once at construction, so the RNG stream advances across episodes. <code>env.reset()</code> samples fixture placement from that stream into <code>sim.model.body_pos</code>, while <code>set_init_state()</code> restores only <code>qpos</code> and <code>qvel</code>, not <code>body_pos</code>.</dd>
+    <dt>How to confirm</dt><dd>Diff <code>sim.model.body_pos</code> between consecutive episodes. It should be zero.</dd>
+    <dt>Fix</dt><dd>Call <code>env.seed(cfg.seed)</code> inside the episode loop, or rebuild the env per episode.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/openvla/openvla/issues/342">openvla/openvla#342</a> — LIBERO 評估中爐台在 episode 之間位移 3.0mm。</div>
+  <div class="prec">Precedent: <a href="https://github.com/openvla/openvla/issues/342">openvla/openvla#342</a> — the stove moves 3.0mm between episodes during LIBERO evaluation.</div>
 </div>
 
 <div class="f high">
-  <div class="fh"><span class="sev high">高</span><span class="fid">9.1</span>
-    <span class="ft">沒有梯度裁剪，且沒有記錄 clip 前的 grad norm</span>
+  <div class="fh"><span class="sev high">HIGH</span><span class="fid">9.1</span>
+    <span class="ft">No gradient clipping, and the pre-clip grad norm is not logged</span>
     <span class="loc">train.py:214</span></div>
   <dl class="fb">
-    <dt>症狀</dt><dd>訓練中途 loss 突刺後崩潰，之後永不回復。輸出退化成與觀測無關的固定動作。</dd>
-    <dt>為什麼重要</dt><dd>VLA 的 LoRA 微調對這個特別敏感，一次突刺就足以讓整個 run 報廢，而你要跑完才會發現。</dd>
-    <dt>修法</dt><dd>加 <code>clip_grad_norm_</code>；同時記錄 clip 前與 clip 後的 norm。只記 clip 後的話它永遠等於閾值，看不出任何前兆。</dd>
+    <dt>Symptom</dt><dd>A loss spike mid-training followed by collapse that never recovers. Output degenerates into a fixed action unrelated to the observation.</dd>
+    <dt>Why it matters</dt><dd>LoRA finetuning of VLAs is especially exposed: one spike is enough to write off the whole run, and you only find out at the end.</dd>
+    <dt>Fix</dt><dd>Add <code>clip_grad_norm_</code>, and log the norm both before and after clipping. Logging only the post-clip value pins it to the threshold and shows no warning at all.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/openvla/openvla/issues/333">openvla/openvla#333</a> — LoRA 微調在第 6000 步 loss 由 2.2 跳到 5.2，成功率歸零且不回復。</div>
+  <div class="prec">Precedent: <a href="https://github.com/openvla/openvla/issues/333">openvla/openvla#333</a> — LoRA finetuning: loss jumps from 2.2 to 5.2 at step 6000, success falls to zero and never recovers.</div>
 </div>
 
 <div class="f mid">
-  <div class="fh"><span class="sev mid">中</span><span class="fid">6.4</span>
-    <span class="ft">動作正規化統計沒有與 checkpoint 綁在一起</span>
+  <div class="fh"><span class="sev mid">MEDIUM</span><span class="fid">6.4</span>
+    <span class="ft">Action normalisation statistics are not bound to the checkpoint</span>
     <span class="loc">data/stats.py:23</span></div>
   <dl class="fb">
-    <dt>症狀</dt><dd>換了資料版本之後推論的動作幅度不對，但訓練指標完全正常。</dd>
-    <dt>修法</dt><dd>把 mean/std 存進 checkpoint，推論時從 checkpoint 讀。啟動時斷言統計的雜湊與訓練時一致。</dd>
+    <dt>Symptom</dt><dd>After a data version change the inference action magnitudes are wrong, while training metrics look entirely normal.</dd>
+    <dt>Fix</dt><dd>Store mean/std in the checkpoint and read them from it at inference. Assert at startup that the statistics hash matches training.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/moojink/openvla-oft/issues/156">moojink/openvla-oft#156</a>、<a href="https://github.com/Physical-Intelligence/openpi/issues/1025">openpi#1025</a>（社群要求加正規化相容性報告）。</div>
+  <div class="prec">Precedent: <a href="https://github.com/moojink/openvla-oft/issues/156">moojink/openvla-oft#156</a>, <a href="https://github.com/Physical-Intelligence/openpi/issues/1025">openpi#1025</a> (a community request for a normalisation compatibility report)。</div>
 </div>
 
 <div class="f watch">
-  <div class="fh"><span class="sev watch">觀察</span><span class="fid">6.7</span>
-    <span class="ft">成功判準可能過寬，需要你判斷</span>
+  <div class="fh"><span class="sev watch">WATCH</span><span class="fid">6.7</span>
+    <span class="ft">The success criterion may be too loose — needs your judgement</span>
     <span class="loc">envs/tasks/place.py:88</span></div>
   <dl class="fb">
-    <dt>看到什麼</dt><dd>成功條件是物體中心進入目標框且速度低於閾值，但沒有要求夾爪已鬆開，也沒有保持幀數要求。</dd>
-    <dt>為什麼提出</dt><dd>這類判準在別的 benchmark 上被證實會高報：物體還在夾爪裡、或即將掉落時就已判定成功。我無法判斷你的任務是否可接受，所以標為觀察而非發現。</dd>
-    <dt>建議</dt><dd>加保持幀數（例如連續 10 幀）與夾爪狀態條件，然後重跑一次舊 checkpoint，看分數掉多少。掉很多的話，過去的數字都要重新解讀。</dd>
+    <dt>What was seen</dt><dd>Success requires the object's centre inside the target box below a velocity threshold, but does not require the gripper to have released, and has no hold-duration requirement.</dd>
+    <dt>Why it is raised</dt><dd>Criteria of this shape have been shown to over-report on other benchmarks: success declared while the object is still in the gripper, or about to fall. I cannot judge whether that is acceptable for your task, so this is a watch rather than a finding.</dd>
+    <dt>Suggestion</dt><dd>Add a hold duration (say 10 consecutive frames) and a gripper-state condition, then re-run an old checkpoint and see how far the score moves. If it moves a lot, every past number needs reinterpreting.</dd>
   </dl>
-  <div class="prec">同型案例：<a href="https://github.com/simpler-env/SimplerEnv/issues/129">SimplerEnv#129</a>（WidowX 任務過度樂觀）、<a href="https://github.com/Lifelong-Robot-Learning/LIBERO/issues/149">LIBERO#149</a>（物體接觸桌面前即判成功）。</div>
+  <div class="prec">Precedent: <a href="https://github.com/simpler-env/SimplerEnv/issues/129">SimplerEnv#129</a> (WidowX tasks over-optimistic), <a href="https://github.com/Lifelong-Robot-Learning/LIBERO/issues/149">LIBERO#149</a> (success before the object touches the table)。</div>
 </div>
 
-<h2>覆蓋範圍</h2>
+<h2>COVERAGE</h2>
 <div class="cov">
-  <div class="h">分類</div><div class="h n">檢查</div><div class="h n">通過</div><div class="h n">發現</div><div class="h n">不適用</div>
-  <div>1 · 精度與硬體相容</div><div class="n">6</div><div class="n">6</div><div class="n z">0</div><div class="n z">0</div>
-  <div>2 · 精度與學習率交互</div><div class="n">7</div><div class="n">5</div><div class="n">1</div><div class="n">1</div>
-  <div>3 · 混合精度正確性</div><div class="n">4</div><div class="n">4</div><div class="n z">0</div><div class="n z">0</div>
-  <div>4 · 凍結與參數群組</div><div class="n">3</div><div class="n">2</div><div class="n">1</div><div class="n z">0</div>
-  <div>5 · Seed 與決定性</div><div class="n">5</div><div class="n">4</div><div class="n z">0</div><div class="n">1</div>
-  <div>6 · 資料與評估正確性</div><div class="n">7</div><div class="n">4</div><div class="n">3</div><div class="n z">0</div>
-  <div>7 · RL 特有</div><div class="n">6</div><div class="n z">0</div><div class="n z">0</div><div class="n">6</div>
-  <div>8 · VLA / WAM 特有</div><div class="n">9</div><div class="n">9</div><div class="n z">0</div><div class="n z">0</div>
-  <div>9 · 訓練穩定與監控</div><div class="n">5</div><div class="n">4</div><div class="n">1</div><div class="n z">0</div>
-  <div>10 · Checkpoint 與復現</div><div class="n">4</div><div class="n">3</div><div class="n">1</div><div class="n z">0</div>
-  <div>11 · 效能陷阱</div><div class="n">6</div><div class="n">6</div><div class="n z">0</div><div class="n z">0</div>
+  <div class="h">Category</div><div class="h n">Checked</div><div class="h n">Passed</div><div class="h n">Found</div><div class="h n">N/A</div>
+  <div>1 · Precision and hardware</div><div class="n">6</div><div class="n">6</div><div class="n z">0</div><div class="n z">0</div>
+  <div>2 · Precision and learning rate</div><div class="n">7</div><div class="n">5</div><div class="n">1</div><div class="n">1</div>
+  <div>3 · Mixed-precision correctness</div><div class="n">4</div><div class="n">4</div><div class="n z">0</div><div class="n z">0</div>
+  <div>4 · Freezing and parameter groups</div><div class="n">3</div><div class="n">2</div><div class="n">1</div><div class="n z">0</div>
+  <div>5 · Seeds and determinism</div><div class="n">5</div><div class="n">4</div><div class="n z">0</div><div class="n">1</div>
+  <div>6 · Data and evaluation correctness</div><div class="n">7</div><div class="n">4</div><div class="n">3</div><div class="n z">0</div>
+  <div>7 · RL-specific</div><div class="n">6</div><div class="n z">0</div><div class="n z">0</div><div class="n">6</div>
+  <div>8 · VLA / WAM-specific</div><div class="n">9</div><div class="n">9</div><div class="n z">0</div><div class="n z">0</div>
+  <div>9 · Training stability and monitoring</div><div class="n">5</div><div class="n">4</div><div class="n">1</div><div class="n z">0</div>
+  <div>10 · Checkpointing and reproducibility</div><div class="n">4</div><div class="n">3</div><div class="n">1</div><div class="n z">0</div>
+  <div>11 · Performance traps</div><div class="n">6</div><div class="n">6</div><div class="n z">0</div><div class="n z">0</div>
 </div>
 
-<h2>靜態檢查看不出來的部分</h2>
+<h2>BEYOND STATIC REVIEW</h2>
 <div class="note">
-以下五項需要實際跑一次才能確認，這份報告沒有涵蓋。列出來是因為「沒查」和「查過沒事」不一樣，不要把空白當成通過。
+These five need an actual run to confirm and are not covered by this report. They are listed because not checked and checked-clean are different things — do not read a blank as a pass.
 <ul style="margin:9px 0 0;padding-left:20px">
-<li><span class="mono">1.4</span> SDPA 實際走了哪個 backend —— 要看 profiler 的 kernel 名稱。FlashAttention 沒裝成功時會靜默 fallback，本身就足以造成十個百分點的落差。</li>
-<li><span class="mono">2.1</span> 權重零位移比例 —— 要在訓練中抽樣統計。</li>
-<li><span class="mono">5.1</span> 種子是否真的覆蓋 dataloader worker 與 env —— 要跑兩次比對。</li>
-<li><span class="mono">9.5</span> dataloader 是否餓到 GPU —— 要看 profiler 時間軌跡，平均使用率會騙人。</li>
-<li><span class="mono">11</span> 是否走 NVLink —— 要看 <span class="mono">nvidia-smi topo -m</span> 與實際頻寬。</li>
+<li><span class="mono">1.4</span> Which SDPA backend actually ran — read the kernel names in a profiler. A failed FlashAttention install falls back silently and is on its own enough for a ten-point gap.</li>
+<li><span class="mono">2.1</span> The fraction of weights with zero displacement — sample during training.</li>
+<li><span class="mono">5.1</span> Whether seeding really reaches the dataloader workers and the env — run twice and compare.</li>
+<li><span class="mono">9.5</span> Whether the dataloader starves the GPU — read the profiler timeline; the average utilisation lies.</li>
+<li><span class="mono">11</span> Whether NVLink is in play — check <span class="mono">nvidia-smi topo -m</span> and the actual bandwidth.</li>
 </ul>
 </div>
 
 <footer>
-  <span>vla-code-review · 53 項清單 · 同型案例連結為公開 issue</span>
+  <span>vla-code-review · 61-item checklist · precedent links are public issues</span>
   <span class="mono">meridian-1 @ 4f2ac91</span>
 </footer>
 
