@@ -1,6 +1,6 @@
 ---
 name: grill-deeper
-description: 拷問一個計畫、設計或決定，直到它站得住 —— 而且會記住你這個人。跨 session 累積你的詞彙、已定案的決定、開放中的假設、環境約束，以及你答不出來的那幾類問題，所以問題會越用越深、越用越貼近你的工作。用於方案成形前、決定要不要投入前、或有人要你解釋為什麼這樣做的時候。Use when someone wants their plan, design, hypothesis or decision interrogated before committing to it, says 幫我挑戰這個 / 這樣想對嗎 / 有沒有漏掉什麼, or asks what they decided before and why.
+description: 拷問一個計畫、設計或決定，直到它站得住 —— 而且會記住你這個人。兩種模式：找洞用預設，砍東西用依序拷問（質疑需求 → 刪除 → 簡化 → 加速 → 自動化，不准跳步）。跨 session 累積你的詞彙、已定案的決定、開放中的假設、環境約束，以及你答不出來的那幾類問題，所以問題會越用越深、越用越貼近你的工作。用於方案成形前、決定要不要投入前、或有人要你解釋為什麼這樣做的時候。Use when someone wants their plan, design, hypothesis or decision interrogated before committing to it, says 幫我挑戰這個 / 這樣想對嗎 / 有沒有漏掉什麼, or asks what they decided before and why.
 ---
 
 # grill-deeper
@@ -19,6 +19,49 @@ description: 拷問一個計畫、設計或決定，直到它站得住 —— �
 `.grill/` **必須加進 `.gitignore`**。裡面會有內部專案名、算力配額、未發表結果。第一次在某個專案跑的時候就要確認這件事，沒有 gitignore 就先加。
 
 結構與欄位見 `reference/store.md`。
+
+## 輸入與輸出
+
+**輸入**
+
+| | 來源 |
+|---|---|
+| 必要 | 你要被拷問的東西：一段話、一份設計文件、一個 PR、一個還沒動手的想法 |
+| 自動讀 | `<專案>/.grill/`（若已建立）、`~/.claude/grill/profile.md` |
+| 第一次 | codebase、docs、近期 commit —— 用來建底，見 `reference/bootstrap.md` |
+
+輸入不需要整理好。半成形的想法正是最該被拷問的狀態；等你整理好了，你已經投入到捨不得砍了。
+
+**輸出**
+
+| | 內容 |
+|---|---|
+| 對話中 | 問題，一次一組三到五題 |
+| 結束時 | 短摘要：站得住的地方、需要補的地方、本次寫回了什麼 |
+| 副作用 | `.grill/` 最多 5 條更新，`sessions.md` 一筆紀錄 |
+
+**不會輸出的**：不給你答案、不幫你做決定、不產出計畫。它問問題、記答案，判斷是你的。要計畫的話拷問完接 plan mode。
+
+## 兩種模式
+
+**預設** —— 從六個攻擊面挑一到兩個，優先攻 profile 裡近期含糊的那類。見 `reference/lines-of-attack.md`。
+
+**依序拷問** —— 使用者說「用馬斯克那套」「從第一原理問」「幫我砍」時切換。五步有嚴格順序：質疑需求 → 刪除 → 簡化 → 加速 → 自動化，**不准跳步**。見 `reference/musk-order.md`。
+
+兩種模式的差別：預設模式在找洞，依序拷問在砍東西。**還在長的想法不要用依序拷問**，那套是用來砍的，會把嫩芽砍死。
+
+## 跟 plan mode 怎麼搭
+
+**先拷問，再 plan。** 順序反了會出事。
+
+plan mode 一旦產出實作計畫，你就會錨定在那個實作上，之後的拷問只會質疑「這樣實作對不對」，不會質疑「這東西該不該存在」。那正是依序拷問第 3 步在防的錯誤——優化一個不該存在的東西。
+
+實務上的兩個限制：
+
+- **plan mode 是唯讀的**，`.grill/` 的寫回會失敗。所以拷問要在 plan mode 之外做，或者接受這次不寫回。
+- 拷問完的摘要（站得住的、需要補的）**直接餵進 plan mode 當輸入**，plan 的品質會明顯不同，因為需求已經被砍過一輪。
+
+例外：計畫是別人給的、你要挑戰它——那就 plan 已經存在了，直接拷問它。
 
 ## 流程
 
@@ -91,6 +134,7 @@ profile 累積的是**你哪一類問題答不出來**，不是你哪裡做不�
 ## 檔案
 
 - `reference/store.md` —— 兩層知識的結構與欄位
-- `reference/lines-of-attack.md` —— 攻擊面與各自的問題庫
+- `reference/lines-of-attack.md` —— 預設模式的六個攻擊面與問題庫
+- `reference/musk-order.md` —— 依序拷問模式：質疑需求 → 刪除 → 簡化 → 加速 → 自動化
 - `reference/bootstrap.md` —— 第一次在專案裡建底
 - `templates/` —— `.grill/` 與 profile 的初始骨架
