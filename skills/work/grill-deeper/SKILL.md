@@ -122,6 +122,8 @@ Mark every question crisp, vague, or unknown:
 
 **Write back at most five entries.** Pick the ones that will change the next session's questions: new vocabulary, a decision just settled, an assumption overturned, a clear blind spot.
 
+**Search before appending**: an entry on the same subject is updated in place, not added alongside. And **delete a fact that turned out wrong** rather than annotating it — an entry kept with a note still gets read every session. Falsified assumptions are the exception and stay, because they are what stops something being retested. Rules in `reference/store.md`.
+
 **Stop raising a blind spot after the third time with no progress.** On the fourth, say once: "this is the fourth time — shall we just deal with it", then drop it. The way an interrogation tool dies is by nagging, and once you stop opening it, it is worth nothing.
 
 ## Decisions live here

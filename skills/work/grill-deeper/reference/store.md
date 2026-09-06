@@ -60,6 +60,40 @@ Wrote back context: primary metric / open-questions: perturbation parameters und
 
 Marks and writebacks only, never a transcript. This file exists to compute blind spots, not to minute the meeting.
 
+## Before writing: does an entry already cover this
+
+**Search the store before appending.** An entry on the same subject gets **updated in place** — new value, new date — not added alongside the old one.
+
+Without this the store slowly fills with near-duplicates, and worse, with two entries that disagree. The agent then reads both and has no way to tell which is current.
+
+```
+Wrong                                          Right
+- seeds: 3   ·2026-06-02                       - seeds: 5   ·2026-09-06
+- seeds: 5   ·2026-09-06
+```
+
+Same subject means the same field of the same thing, not the same wording. "Compute: 64 H100s" and "we have 64 H100s available" are one entry.
+
+## Deleting: stale, wrong, and falsified are three different things
+
+| State | What it means | What to do |
+|---|---|---|
+| Stale | May have changed; nobody has confirmed it lately | **Mark** for reconfirmation; ask once |
+| Wrong | Now known to be untrue, or definitely no longer true | **Delete it** |
+| Falsified assumption | Was tested and did not hold | **Keep it** |
+
+**Delete what is wrong rather than annotating it.** An entry kept with a "no longer applies" note still gets read every session, and the agent has to decide each time whether to trust it. Deleting removes that decision. The history lives in git if you ever need it — the store is not an archive.
+
+**The exception is falsified assumptions**, which live in `open-questions.md` and are kept on purpose: they are what stops the same thing being retested in three months. "A larger backbone solves sample efficiency → falsified, bought only 7 points" is worth more than silence.
+
+The distinction in one line: delete a **fact** that turned out wrong; keep a **question** that turned out answered.
+
+## A known limit
+
+All four files are read at the start of every session. That is fine while the store is small — writeback is capped at five entries and blind spots roll off after ten sessions, so it stays small by design.
+
+Past roughly 200 lines this stops being reasonable, and the store should move to one entry per file with an index that carries a one-line description of when each entry is relevant, so only the relevant ones get loaded. Do not build that in advance; note it and move when the size actually calls for it.
+
 ## Global layer: `~/.claude/grill/profile.md`
 
 One file. It follows the person across projects and jobs.
