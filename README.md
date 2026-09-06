@@ -67,7 +67,7 @@ cp -R skills4paranoia/skills/*/* ~/.claude/skills/
 
 | Skill | 管什麼 |
 |---|---|
-| [`grill-deeper`](skills/work/grill-deeper) | 拷問你的計畫，而且會累積對你工作的理解，越用越深 |
+| [`grill-deeper`](skills/work/grill-deeper) | 用 frontier 排程拷問你的計畫，而且會累積對你工作的理解，越用越深 |
 | [`research-deck`](skills/work/research-deck) | 結構與流程：問題 → 解法 → 成果，以及佐證怎麼掛 |
 | [`deck-design-system`](skills/work/deck-design-system) | 外觀：配色、字階、格線、字體、每個版式的精確幾何 |
 | [`research-figures`](skills/work/research-figures) | 圖表：曲線與誤差帶、矩陣、消融表、參考線、條件註腳 |
