@@ -1,27 +1,26 @@
 # research
 
-做研究本身用的 skill。與 `work/`（溝通與記錄）分開。
+Skills for doing the research itself, as distinct from `work/`, which is about communicating and recording it.
 
-| Skill | 管什麼 | 何時用 |
+| Skill | What it covers | When |
 |---|---|---|
-| [`experiment-prereg`](experiment-prereg) | 鎖死量測契約並凍結 | 決定要跑大實驗之後 |
-| [`vla-code-review`](vla-code-review) | 專找不會拋錯只會讓數字變差的工程層錯誤 | 開跑前，或重現不出數字時 |
+| [`experiment-prereg`](experiment-prereg) | Pin the measurement contract and freeze it | Once you have decided to spend the compute |
+| [`vla-code-review`](vla-code-review) | Hunts engineering failures that never raise and only make the numbers worse | Before launch, or when numbers do not reproduce |
 
-兩個互補：一個管「你有沒有定義清楚什麼叫做對」，一個管「code 有沒有偷偷做錯」。開跑前兩個都跑。
-
+Complementary: one covers whether you defined what "right" means, the other whether the code is quietly wrong. Run both before launching.
 
 ## experiment-prereg
 
-六個欄位缺一不可：要回答的是非題、匹配預算的基準、主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、最可能白跑的原因。
+Four fields, none optional: primary metric and minimum detectable effect, what counts as null, stopping and decision rules, and the evaluation protocol.
 
-最會被跳過的是「什麼算 null」。跳過它的代價不是少一份文件，是**跑完之後你一定找得到某個切片是贏的**。
+The field people skip is "what counts as null". Skipping it does not cost you a document, it costs you **the ability to be wrong** — run first and define success later and there is always some slice that looks like a win.
 
-裡面有一張 seed 數與可偵測差異的對照表，以及一條最容易犯的統計錯誤：**rollout 不是重複單位，seed 才是**。大部分 VLA 論文報 3 個 seed 然後宣稱 2–3 個百分點的改進 —— 在 σ=4pp 之下，3 個 seed 只能偵測 9.1 個百分點以上的差異。
+It carries a table of seed counts against detectable differences, and one statistical error worth naming: **rollouts are not the unit of replication, seeds are**. Most VLA papers report three seeds and claim two or three points of improvement; at σ=4pp, three seeds cannot resolve anything under 9.1.
 
 ## vla-code-review
 
-這類錯的共同特徵：訓練跑得完、loss 曲線正常、沒有錯誤訊息，但最後的數字比它該有的低幾個百分點，然後被誤診成方法不夠好。
+These errors share a shape: training completes, the loss curve looks normal, nothing errors, and the final number comes out a few points low — then gets blamed on the method.
 
-清單十一類約 60 項，涵蓋精度與學習率的交互作用、GPU 對 dtype 的支援、混合精度正確性、凍結與參數群組、seed 與決定性、資料與評估正確性、RL 與 VLA 特有的陷阱、訓練監控、復現、效能。
+Around 60 checks in eleven categories, covering the interaction between precision and learning rate, which dtypes a card supports, mixed-precision correctness, freezing and parameter groups, seeds and determinism, data and evaluation correctness, RL and VLA-specific traps, training monitoring, reproducibility and performance.
 
-`reference/precedents.md` 把每條檢查掛到真實 repo 出貨過的 bug —— OpenVLA 的評估環境跨 episode 漂移、OpenVLA-OFT 的 DDP 梯度沒同步、LeRobot 的 checkpoint 靜默載入失敗、openpi 的 JAX 與 PyTorch 精度落差。看到新案例就往裡加，清單會隨時間變強。
+`reference/precedents.md` ties each check to a bug that shipped in a public repo — OpenVLA's evaluation geometry drifting between episodes, OpenVLA-OFT's action-head gradients never synchronising, LeRobot's checkpoint load silently returning an untrained model, openpi's precision gap between JAX and PyTorch. Append new cases as you find them; the list is meant to grow.

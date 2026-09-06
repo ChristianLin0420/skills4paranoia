@@ -1,20 +1,20 @@
-# 產出
+# Emitting
 
-這個 skill 不附任何腳本。產檔的程式碼由 agent 當場寫，寫完就丟。下面是規格與踩過的坑。
+This skill ships no script. The producing code is written on the spot and thrown away. Below is the specification and the traps already hit.
 
-## 選哪個格式
+## Which format
 
-| 需求 | 產出 | 作法 |
+| Need | Output | How |
 |---|---|---|
-| 給人看、投影、印 PDF | 單檔 HTML | 直接寫 HTML，零相依 |
-| 要在 Keynote / PowerPoint 裡編輯 | `.pptx` | 當場寫 python-pptx 程式碼 |
-| 兩者都要 | 先 HTML 確認排版，再產 pptx | 同一份 deck.md 產兩次 |
+| For people to look at, project, print to PDF | A single HTML file | Write the HTML directly, no dependencies |
+| Editable in Keynote or PowerPoint | `.pptx` | Write python-pptx code on the spot |
+| Both | HTML first to check layout, then pptx | Emit twice from the same deck.md |
 
-先產 HTML 看一眼，排版對了再產 pptx —— pptx 每次都要開 Keynote 才看得到，迭代很慢。
+Emit HTML first and look at it; only produce the pptx once the layout is right. A pptx has to be opened in Keynote to be seen, which makes iteration slow.
 
 ## HTML
 
-一個檔案，內嵌每一頁的 SVG（`viewBox="0 0 960 540"`），字型用 `<link>` 從 Google Fonts 取。這樣不需安裝任何東西就能看到真正的字。
+One file, each page as an inline SVG (`viewBox="0 0 960 540"`), fonts pulled from Google Fonts with a `<link>`. Nothing needs installing to see the real typefaces.
 
 ```html
 <!doctype html>
@@ -29,18 +29,18 @@ svg{display:block;width:100%;height:auto}
 <div class="s"><svg viewBox="0 0 960 540">…</svg></div>
 ```
 
-SVG 的注意事項：
+SVG notes:
 
-- 每個 `<text>` 都要自己算換行，拆成多個 `<tspan x= y=>`。中日韓字寬約等於字級，拉丁小寫約 0.50、大寫與數字約 0.58。
-- 基線位置：`top + size × (leading − 0.30)`，之後每行加 `size × leading`。這樣才對得上 PowerPoint 的行框行為。
-- 字距用 `letter-spacing`（單位同 viewBox，即 pt）。
-- 對齊用 `text-anchor` 搭配 x：靠左用 `start` 且 x = 左緣；置中用 `middle` 且 x = 中心；靠右用 `end` 且 x = 右緣。
-- 折線用 `<polyline fill="none">`，誤差帶用 `<polygon>` 無 stroke。
-- 列印成 PDF 時每頁一張，加 `@page{size:960pt 540pt;margin:0}` 與 `.s{page-break-after:always}`。
+- Every `<text>` needs its own line breaking, split into several `<tspan x= y=>`. CJK glyphs are about one em wide; latin lowercase about 0.50, uppercase and digits about 0.58.
+- Baseline position: `top + size × (leading − 0.30)`, then add `size × leading` per line. This matches PowerPoint's line-box behaviour.
+- Tracking via `letter-spacing`, in the same units as the viewBox (points).
+- Alignment via `text-anchor` plus x: `start` at the left edge, `middle` at the centre, `end` at the right edge.
+- Polylines with `<polyline fill="none">`, error bands with `<polygon>` and no stroke.
+- For printing to PDF, one page per sheet: add `@page{size:960pt 540pt;margin:0}` and `.s{page-break-after:always}`.
 
 ## .pptx
 
-用 python-pptx。畫布設成 960 × 540 pt，用空白版面，所有東西都是自己畫的形狀，不用內建佔位框。
+Use python-pptx. Canvas 960 × 540 pt, blank layout, everything drawn as your own shapes — no built-in placeholders.
 
 ```python
 from pptx import Presentation
@@ -60,9 +60,9 @@ slide.background.fill.solid()
 slide.background.fill.fore_color.rgb = RGBColor.from_string("F1F2F3")
 ```
 
-### 踩過的坑
+### Traps already hit
 
-**中日韓字型要另外設。** `run.font.name` 只設拉丁字型，中文會掉回預設字。必須直接寫 XML，`latin`、`ea`、`cs` 三個都設：
+**The CJK typeface has to be set separately.** `run.font.name` sets only the latin face and Chinese falls back to a default. Write the XML directly, setting `latin`, `ea` and `cs`:
 
 ```python
 rPr = run._r.get_or_add_rPr()
@@ -73,24 +73,24 @@ for tag, face in (("a:latin", "IBM Plex Sans"), ("a:ea", "Noto Sans TC"), ("a:cs
     el.set("typeface", face)
 ```
 
-**字距沒有 API。** 設 `rPr` 的 `spc` 屬性，單位是百分之一 pt：`rPr.set("spc", str(int(tracking * 100)))`。
+**Tracking has no API.** Set the `spc` attribute on `rPr`, in hundredths of a point: `rPr.set("spc", str(int(tracking * 100)))`.
 
-**文字框預設有內距。** 四邊 margin 都設 0，否則位置全部偏掉：
+**Text boxes have default insets.** Zero all four margins or every position shifts:
 
 ```python
 tf = box.text_frame
 tf.word_wrap = True
 tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
-tf.vertical_anchor = MSO_ANCHOR.TOP        # 或 MIDDLE / BOTTOM
-p.alignment = PP_ALIGN.LEFT                # 或 CENTER / RIGHT
-p.line_spacing = 1.45                      # 浮點數是倍數
+tf.vertical_anchor = MSO_ANCHOR.TOP        # or MIDDLE / BOTTOM
+p.alignment = PP_ALIGN.LEFT                # or CENTER / RIGHT
+p.line_spacing = 1.45                      # a float is a multiple
 ```
 
-**形狀預設帶陰影。** 每個形狀都要 `shp.shadow.inherit = False`，否則 Keynote 會畫出預設投影。
+**Shapes carry a default shadow.** Every shape needs `shp.shadow.inherit = False`, or Keynote draws a default drop shadow.
 
-**圓角矩形的圓角要自己算。** `shp.adjustments[0] = radius / min(w, h)`，且上限 0.5。寬或高小於 1.5pt 就改用直角矩形，否則圓角會吃掉整個形狀。
+**Rounded-rectangle corners must be computed.** `shp.adjustments[0] = radius / min(w, h)`, capped at 0.5. Below 1.5pt in width or height, use a plain rectangle instead or the radius swallows the shape.
 
-**折線不能用預設的 close。** `add_line_segments(pts, close=False)`，預設 `True` 會把終點連回起點畫出一條多餘的線：
+**Polylines must not use the default close.** `add_line_segments(pts, close=False)`; the default `True` draws an extra segment back to the start:
 
 ```python
 b = shapes.build_freeform(pts[0][0], pts[0][1], Pt(1))   # scale = EMU per unit
@@ -101,17 +101,17 @@ shp.line.color.rgb = RGBColor.from_string("3A6183")
 shp.line.width = Pt(1.8)
 ```
 
-誤差帶則相反：把上界正走、下界反走串成一圈，`close=True`，填色、`shp.line.fill.background()` 不描邊。
+Error bands are the reverse: walk the upper bound forward and the lower bound back into one loop, `close=True`, fill it, and `shp.line.fill.background()` to leave it unstroked.
 
-**圖片會被拉變形。** 用 `pptx.parts.image.Image.from_file(path).size` 取像素尺寸，自己算等比縮放後置中，不要直接把 width 和 height 都塞進 `add_picture`。
+**Images get stretched.** Read the pixel dimensions with `pptx.parts.image.Image.from_file(path).size`, compute a proportional scale yourself and centre it; do not pass both width and height to `add_picture`.
 
-**細線用矩形不要用 connector。** 高度 0.75pt 的矩形在 Keynote 裡比 connector 穩定。
+**Use rectangles for hairlines, not connectors.** A 0.75pt-tall rectangle is more stable in Keynote.
 
-**講者備忘**：`slide.notes_slide.notes_text_frame.text = "…"`。
+**Speaker notes**: `slide.notes_slide.notes_text_frame.text = "…"`.
 
-### 產完檢查
+### Check after emitting
 
-不要只看有沒有跑完，打開檔案驗這幾件事：
+Do not just check that it finished. Open the file and verify:
 
 ```python
 from pptx import Presentation
@@ -119,15 +119,15 @@ import re
 p = Presentation(out)
 xml = "".join(s.shapes._spTree.xml for s in p.slides)
 assert round(p.slide_width / 12700) == 960
-print(sorted(set(re.findall(r'typeface="([^"]+)"', xml))))   # 中英字型都要在
+print(sorted(set(re.findall(r'typeface="([^"]+)"', xml))))   # both faces must be present
 ```
 
-再確認沒有任何形狀跑出 0–960 / 0–540 的範圍。最常見的成因是座標軸刻度上限小於資料最大值，線就會畫到框外面 —— 見 `research-figures` 第 3 節。
+Then confirm no shape falls outside 0–960 / 0–540. The usual cause is an axis whose top tick is below the data maximum, which draws the line outside the box — see `research-figures` section 3.
 
-## 字型安裝
+## Installing the fonts
 
-`.pptx` 只記字型名稱，開檔的機器沒裝就會被 Keynote 靜默替換、版面位移。要把預設的 IBM Plex + 思源黑體裝起來：從 Google Fonts 下載 `IBM Plex Sans`、`IBM Plex Mono`、`Noto Sans TC`，解壓後把 ttf/otf 放進 `~/Library/Fonts`，重開 Keynote。
+A `.pptx` stores font names only, so the machine opening it must have them or Keynote substitutes silently and the layout shifts. To install the default IBM Plex plus Noto Sans TC: download `IBM Plex Sans`, `IBM Plex Mono` and `Noto Sans TC` from Google Fonts, put the ttf/otf files in `~/Library/Fonts`, and restart Keynote.
 
-`IBM Plex Sans TC` 不在 Google Fonts 上，要從 github.com/IBM/plex 的 release 取。
+`IBM Plex Sans TC` is not on Google Fonts; take it from a release at github.com/IBM/plex.
 
-要傳給沒裝字型的人（尤其 Windows），改用 `typeface: system`（Helvetica Neue + PingFang TC + Menlo），全 macOS 內建。
+For anyone without the fonts, especially on Windows, use `typeface: system` — Helvetica Neue, PingFang TC and Menlo, all macOS built-ins.

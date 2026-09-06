@@ -1,153 +1,153 @@
-# 階段 0：盤點與釐清
+# Phase 0: inventory and clarification
 
-輸入是一個資料夾，裡面可能有 `figures/`、run log、實驗設計、模型設計、會議紀錄。輸出是一份雙方都同意的簡報計畫。
+The input is a folder that may hold `figures/`, run logs, experiment and model design notes, meeting notes. The output is a deck plan both sides agree on.
 
-**沒有走完這個階段就不要開始寫簡報。** 素材本身不會告訴你什麼重要 —— 那是使用者腦袋裡的東西，只能問出來。
+**Do not start writing before finishing this phase.** The material will not tell you what matters — that lives in the user's head, and only questions get it out.
 
-## 0.1 先盤點，不要先問
+## 0.1 Inventory first, ask nothing
 
-掃過整個資料夾，建一份清單。所有 `.md` 完整讀完；log 只取樣看欄位和規模，不要整份讀進來；圖只記檔名與尺寸，不要猜內容。
+Scan the whole folder and build a list. Read every `.md` in full; sample logs for their columns and scale rather than reading them in; note figure filenames and dimensions without guessing at content.
 
-然後把找到的東西攤給使用者看：
+Then lay out what you found:
 
 ```
-圖檔 (7)
+Figures (7)
   figures/scaling.png            1600×1000
   figures/ablation_ctx.png       1600×1000
   figures/arch_v2.png            2400×1200
-  figures/rollout_*.png          5 張序列
-文件 (3)
-  exp_design.md                  三組消融：context 長度、資料混比、encoder 凍結
-  model_design.md                三段式架構，凍結 encoder + 共享 world model
-  meeting_0903.md                會議紀錄，被質疑長時序表現
-記錄
-  runs/2026-09/*/eval.jsonl      14 個 run，欄位 task / seed / success / steps
+  figures/rollout_*.png          5-frame sequence
+Documents (3)
+  exp_design.md                  three ablations: context length, data mixing, frozen encoder
+  model_design.md                three-stage architecture, frozen encoder + shared world model
+  meeting_0903.md                meeting notes; long-horizon performance was challenged
+Records
+  runs/2026-09/*/eval.jsonl      14 runs, columns task / seed / success / steps
 ```
 
-**盤點階段不要問任何問題。** 先讓使用者看到你找到什麼，他們的回答才有依據。也順便讓他們發現你漏讀了什麼。
+**Ask nothing during inventory.** Let the user see what you found first, so their answers have something to stand on — and so they notice what you failed to read.
 
-## 0.2 訪談規則
+## 0.2 Interview rules
 
-- **提案，不要開放式提問。** 「你想解什麼問題？」得到的是模糊答案。「`exp_design.md` 看起來你在解 A，但消融的設計比較像在解 B，哪個才是這次要講的？」得到的是決定。每一題都先從素材裡推出候選答案，讓使用者否決或修正。
-- **一次問一組相關的**，三到五題。不要一次丟十題，也不要一題一題磨。
-- **不要問素材裡已經有答案的事。** 問了會讓使用者覺得你沒讀。
-- **每個答案都要當場落到結構的某一格**，不要收集一堆散的資訊最後才組裝。
-- **「都很重要」不是答案。** 逼他排序：「如果只能留三張圖，留哪三張？」
-- **使用者說「你決定就好」時，提一個具體方案讓他點頭或否決**，不要真的自己決定。
+- **Propose; do not ask openly.** "What do you want to say?" gets a vague answer. "`exp_design.md` reads as solving A, but the ablations look more like B — which is this deck about?" gets a decision. Derive candidates from the material every time and let the user reject or correct them.
+- **One group at a time**, three to five questions. Not ten at once, and not one at a time either.
+- **Do not ask what the material already answers.** It signals you did not read.
+- **Land every answer in a slot immediately**; do not collect loose information and assemble at the end.
+- **"They are all important" is not an answer.** Force a ranking: "if you could keep only three figures, which three?"
+- **When the user says "you decide", propose something specific** for them to accept or reject rather than actually deciding.
 
-## 0.3 五組問題
+## 0.3 Five groups
 
-### 第 1 組 — 大問題與拆解
+### Group 1 — the big problem and its decomposition
 
-從素材推出 2–3 個候選框架，請使用者選一個或改寫。接著提出你拆的 Q1…Qn，問哪些是真的、哪些是雜訊。
+Derive two or three candidate framings from the material and ask the user to pick or rewrite. Then propose your Q decomposition and ask which are real and which are noise.
 
-> 我從素材看到三種可能的框架：
-> (a) 樣本效率 —— 核心是資料成本，消融都在比達標所需的示範數
-> (b) 泛化 —— 核心是 held-out 表現，矩陣圖佔的份量最重
-> (c) 可部署性 —— 但只有一份延遲數字，證據最薄
+> Three framings come out of the material:
+> (a) sample efficiency — data cost is the core, and every ablation compares demos to target
+> (b) generalisation — held-out performance carries the most weight, the matrix dominates
+> (c) deployability — but there is only one latency measurement; the thinnest evidence
 >
-> 哪個是這次真正要講的？其他兩個要當成子問題還是完全不提？
+> Which is this deck actually about? Are the other two sub-problems, or not mentioned at all?
 
-### 第 2 組 — 每張圖的判決
+### Group 2 — a verdict on every figure
 
-**這一組最重要。** 每張圖有三種下場，每一張都要問到明確答案，不要留未判決的圖。
+**The most important group.** Every figure has one of three fates, and each one needs a clear answer. Leave nothing undecided.
 
-| 下場 | 什麼時候 | 結果 |
+| Fate | When | Result |
 |---|---|---|
-| **重畫** | 底層資料還在（CSV、jsonl、log） | agent 依主題規格重畫，全篇風格一致 |
-| **貼原圖** | 無法重製：架構圖、pipeline、rollout 影格、實機照片、外部來源 | 原樣置入，風格與其他頁不同 |
-| **刪掉** | 掛不到任何 Q | 不進簡報 |
+| **Redraw** | The underlying data exists (CSV, jsonl, log) | Redrawn to the theme, uniform throughout |
+| **Place the original** | Cannot be reproduced: architecture, pipeline, rollout frames, on-robot capture, external | Placed as-is, style differs from other pages |
+| **Drop** | Hangs off no Q | Not in the deck |
 
-判準：**有底層資料就重畫，沒有就貼原圖。** 這樣能統一的部分盡量統一，統一不了的部分也不會漏掉。統計圖（曲線、長條、矩陣、消融）幾乎都能重畫，只要找得到那份 CSV 或 log。
+The test: **redraw if the underlying data exists, place if it does not.** That way everything that can be unified is, and everything that cannot be is still there. Statistical figures — curves, bars, matrices, ablations — can almost always be redrawn if the CSV or log can be found.
 
-逐張確認，同時問「掛哪個 Q」和「重畫還是貼」：
+Go figure by figure, asking both "which Q" and "redraw or place":
 
-> - `scaling.png` —— 支撐 Q1 嗎？`runs/2026-09/` 底下有對應的 eval.jsonl，我可以照主題重畫成統一風格，還是你要用原圖？
-> - `ablation_ctx.png` —— 支撐哪一個？有原始數字嗎？有的話我重畫成消融表，會多一欄 Δ。
-> - `arch_v2.png` —— 方法圖，沒有底層資料，我直接貼。放解法頁還是佐證頁？
-> - `rollout_*.png` 五張 —— 無法重製，影格條放五張還是挑三張？
+> - `scaling.png` — supports Q1? There is a matching eval.jsonl under `runs/2026-09/`, so I can redraw it to the theme, or do you want the original?
+> - `ablation_ctx.png` — which Q? Do the raw numbers exist? If so I would redraw it as an ablation table, which adds a Δ column.
+> - `arch_v2.png` — an architecture figure with no underlying data, so I place it. Solution page or evidence page?
+> - `rollout_*.png`, five frames — cannot be reproduced. Filmstrip with all five, or pick three?
 
-對每一張追問兩句：
+Follow up on each with two questions:
 
-**「這張如果刪掉，哪個結論會站不住？」** 答不出來就刪。研究者的預設是全部都放，這一題是用來對抗那個預設的。
+**"If this were deleted, which conclusion would stop standing?"** Cannot answer, so delete it. A researcher's default is to include everything; this question exists to fight that default.
 
-**「這張你要讀者看出什麼？」** 答案就是那一頁的 2–3 條分析。你看得出曲線在 50k 分岔，但看不出那對他的研究意味著什麼 —— 這一題不問，圖表頁就只會有圖沒有解讀。使用者答得含糊時追問具體的：哪個點、哪段區間、跟哪條線比。
+**"What do you want the reader to see here?"** The answer becomes that page's two or three analysis lines. You can see the curve splits at 50k; you cannot see what it means for their research. Skip this and every figure page ends up with a figure and no reading. When the answer is vague, press for specifics: which point, which interval, compared against which line.
 
-找不到底層資料但明顯是統計圖時，要主動問：
+When something is obviously a statistical figure but the numbers cannot be found, raise it:
 
-> `loss_curve.png` 看起來是訓練曲線，但我在資料夾裡找不到對應的數值。原始 log 還在嗎？在的話我重畫，風格會跟其他頁一致；不在的話就貼原圖，那一頁的字體和配色會跟前後不同。
+> `loss_curve.png` looks like a training curve, but I cannot find matching numbers in the folder. Does the original log still exist? If it does I will redraw it and the styling will match the rest; if not I will place it, and that page's type and colour will differ from its neighbours.
 
-貼原圖的頁面，字級、顏色、字體本來就會跟其他頁不同。這是必然的，不要試圖用裁切或濾鏡去掩飾 —— 那只會讓它更突兀。正確的做法是盡量把可重畫的都重畫，剩下無可取代的就坦然貼上，並在標題與註腳上維持統一格式，讓框架的一致性去承接風格的不一致。
+A placed original will not match its neighbours. That is unavoidable — do not crop or filter it to hide the difference, that only makes it worse. Redraw everything that can be redrawn, place what is irreplaceable, and keep the title and footnote format consistent so the framework's uniformity carries the style's inconsistency.
 
-### 第 3 組 — 成果與未解
+### Group 3 — results and what is unsolved
 
-> - 這一輪哪個指標你其實還沒解掉？成果表一定要留那一格。
-> - 有沒有哪個數字你自己也不太相信？（seed 太少、評估集太小、只跑過一次）
-> - 有沒有哪個結果是巧合但你還沒排除？
+> - Which metric did you not actually solve this round? The results table must keep that cell.
+> - Is there a number you do not fully believe yourself? (too few seeds, too small an eval set, run once)
+> - Is any result a coincidence you have not ruled out?
 
-「還沒解掉的是什麼」是整場訪談裡最有價值的一題，也是使用者最會迴避的一題。要問到得到具體答案為止。只講贏的數字，簡報就變成宣傳。
+"What is still unsolved" is the most valuable question in the interview and the one users most avoid. Press until the answer is concrete. Showing only the wins turns the deck into marketing.
 
-### 第 4 組 — 聽眾
+### Group 4 — audience
 
-> - 誰會看？他們已經知道什麼？
-> - 他們最可能質疑哪一點？
-> - 有沒有哪個結論是他們上次就聽過、這次不用再講的？
+> - Who reads this? What do they already know?
+> - What are they most likely to challenge?
+> - Is there a conclusion they heard last time that does not need repeating?
 
-已經知道的砍掉，最可能質疑的預埋佐證頁。如果資料夾裡有會議紀錄，用它來回答這一組，不要重複問。
+Cut what they already know; pre-place evidence for what they will challenge. If the folder has meeting notes, answer this group from them rather than asking again.
 
-### 第 5 組 — 缺口回填
+### Group 5 — backfilling gaps
 
-心裡排完版之後，回頭檢查：
+Once you have laid it out mentally, check back:
 
-> Q3 目前只有一張圖支撐，而且是從 log 裡撈的。你手上還有別的證據嗎？沒有的話，要不要把 Q3 降成 Q2 底下的一個小問題？
+> Q3 has one supporting figure and it came out of a log. Do you have other evidence? If not, should Q3 drop to a sub-problem under Q2?
 
-寧可把 Q 拿掉，也不要留一個沒有證據的 Q。
+Better to remove a Q than to keep one with no evidence.
 
-## 0.4 收斂條件
+## 0.4 Convergence
 
-以下全部確定之前，不要開始寫簡報：
+Do not start writing until all of this is settled:
 
-1. 大問題，一句話，使用者確認過
-2. 2–4 個 Q，每個有 2–3 個可量測的小問題
-3. **每一張圖都被判決過** —— 重畫、貼原圖、或刪掉，三選一
-4. **每張留下來的圖都問過「要讀者看出什麼」** —— 那是它那頁的分析
-5. 成果表的欄位確定，而且至少包含一個未解的指標
-6. 聽眾是誰、他們已經知道什麼
+1. The big problem, one sentence, confirmed by the user
+2. Two to four Qs, each with two or three measurable sub-problems
+3. **Every figure has a verdict** — redraw, place, or drop
+4. **Every surviving figure has been asked "what should the reader see"** — that is its page's analysis
+5. The results table columns are fixed, and include at least one unsolved metric
+6. Who the audience is and what they already know
 
-達不到就繼續問。不要用猜的補 —— 猜錯的成本是整份簡報重排，因為每頁都掛在 Q 上。
+Keep asking until you get there. Do not fill gaps by guessing — a wrong guess costs a full re-layout, because every page hangs off a Q.
 
-## 0.5 計畫確認
+## 0.5 Confirm the plan
 
-開始寫之前，把計畫攤出來讓使用者點頭：
+Before writing, lay out the plan for the user to approve:
 
 ```
-大問題：<一句話>
+Big problem: <one sentence>
 
-Q1 <中問題>
-   佐證：資料規模曲線（E11，從 runs/*/eval.jsonl 重畫）
-         context 消融（E19，從 ablation.csv 重畫，加 Δ 欄）
-Q2 <中問題>
-   佐證：held-out 矩陣（E12，從 eval.jsonl 重畫）
-         rollout 影格（E13，貼 figures/rollout_{0,2,4}.png）
-Q3 <中問題>
-   佐證：延遲拆解（E10，從 bench.log 整理成表）
-方法圖：figures/arch_v2.png（貼原圖，放解法頁）
+Q1 <mid-level problem>
+   Evidence: data-scaling curve (E11, redrawn from runs/*/eval.jsonl)
+             context ablation (E19, redrawn from ablation.csv, adds a Δ column)
+Q2 <mid-level problem>
+   Evidence: held-out matrix (E12, redrawn from eval.jsonl)
+             rollout frames (E13, placing figures/rollout_{0,2,4}.png)
+Q3 <mid-level problem>
+   Evidence: latency breakdown (E10, from bench.log into a table)
+Method figure: figures/arch_v2.png (placed, on the solution page)
 
-成果表欄位：方法 × 達標示範數 / held-out / 長時序 / 延遲
-未解：長時序 34%，留在表上
+Results table columns: method × demos to target / held-out / long-horizon / latency
+Unsolved: long-horizon at 34%, kept on the table
 
-重畫 4 張、貼原圖 4 張、刪掉 2 張
-刪掉：figures/loss_curve.png（掛不到任何 Q）
-      figures/rollout_1,3.png（影格條只留三張）
+Redrawing 4, placing 4, dropping 2
+Dropping: figures/loss_curve.png (hangs off no Q)
+          figures/rollout_1,3.png (filmstrip keeps three)
 
-預估 13 頁：封面 + 三頁 + 9 頁佐證（沒有分隔頁、沒有結尾頁）
+Estimated 13 pages: cover + three + 9 evidence
 ```
 
-使用者說可以，才開始寫。這一步看起來多餘，但它是唯一能在花力氣產檔前抓到框架錯誤的地方。
+Only start once the user agrees. This step looks redundant, but it is the only place a framing error gets caught before the effort of producing files.
 
-## 0.6 什麼時候可以跳過
+## 0.6 When to skip
 
-只有兩種情況：
+Two cases only:
 
-- 使用者明確說「不要問，直接做」。照做，但在產出後告訴他你替他做了哪些判斷，特別是刪了哪些圖。
-- 這份簡報是上週的更新，`deck.md` 已經存在。這時只需要問變動：新增哪些圖、哪個 Q 有進展、成果表哪一格要更新。不要重新訪談一次。
+- The user explicitly says "do not ask, just do it". Comply, but afterwards tell them which judgements you made on their behalf, especially which figures you dropped.
+- This is an update of last week's deck and `deck.md` already exists. Then only ask about the changes: which figures are new, which Q moved, which cell of the results table updates. Do not re-interview.

@@ -1,83 +1,84 @@
-# 輸入格式與前三頁規格
+# Input format and the front three pages
 
-一份 markdown 就是一份簡報。YAML front-matter 之後，每一頁用一行 HTML 註解開頭宣告版式與屬性。
+One markdown file is one deck. After the YAML front-matter, every page opens with a single HTML comment naming its layout and attributes.
 
 ```
-<!-- E11 curves solves=Q1 eyebrow="樣本效率" source="runs/2026-08/curves.csv" -->
+<!-- E11 curves solves=Q1 eyebrow="sample efficiency" source="runs/2026-08/curves.csv" -->
 ```
 
-## 通用語法
+## Common syntax
 
-| markdown | 意義 |
+| markdown | Meaning |
 |---|---|
-| `# 文字` | 標題。寫結論句，不寫題目 |
-| `## 文字` | 副標 |
-| `> 文字` | 強調句／引言，依版式而定 |
-| `- 文字` | 條列，多欄位用 `\|` 分隔 |
-| `~ 文字` | 條件註腳：n=、seeds、硬體、量測方式 |
-| `![說明](path)` | 圖片，路徑相對於 deck.md |
-| ` ```chart ` | 圖表 YAML，見 `research-figures` |
-| ` ```notes ` | 講者備忘 |
-| 直式表格 | 表格資料。儲存格前綴 `*` 用重點色 |
+| `# text` | Title. A conclusion, not a topic |
+| `## text` | Subtitle |
+| `> text` | Emphasis line, depending on the layout |
+| `- text` | Bullet; multiple fields separated by `\|` |
+| `- observation \| why it matters` | Analysis on a figure or table page; two or three required |
+| `~ text` | Conditions footnote: n, seeds, hardware, method of measurement |
+| `![caption](path)` | Image, path relative to deck.md |
+| ` ```chart ` | Chart YAML, see `research-figures` |
+| ` ```notes ` | Speaker notes |
+| A pipe table | Table data |
 
-通用屬性：`solves=Q1`（佐證頁必填）、`eyebrow="…"`、`source="…"`、`footnote="…"`。
+Common attributes: `solves=Q1` (required on evidence pages), `eyebrow="…"`, `source="…"`, `footnote="…"`, `analysis=right|below`.
 
-## front-matter
+## Front-matter
 
 ```yaml
-title: Meridian-1 進度回顧
-running: Meridian-1 · Q3        # 頁首右上的短名
-subtitle: 架構凍結與資料規模
+title: Meridian-1 quarterly review
+running: Meridian-1 · Q3        # short name, top right
+subtitle: Freeze the architecture, move compute to data
 author: Your Name
 team: Robotics Learning
 date: 2026-09-05
-lang: zh                    # zh | en
-theme: slate-blue           # slate-blue | linen | mist
-typeface: plex              # plex | plex-full | inter | system
-footer: 內部討論用
+lang: en                        # en | zh
+theme: slate-blue               # slate-blue | linen | mist
+typeface: plex                  # plex | plex-full | inter | system
+footer: Internal
 contact: you@example.com
 ```
 
-## P1 問題
+## P1 — problem
 
 ```markdown
 <!-- P1 problem -->
-# 一句話的大問題
-- Q1 | 中問題 | 小問題 | 小問題 | 小問題
-- Q2 | 中問題 | 小問題 | 小問題
-- Q3 | 中問題 | 小問題 | 小問題
-> 不解決會怎樣（一行）
+# The big problem in one sentence
+- Q1 | mid-level problem | obstacle | obstacle | obstacle
+- Q2 | mid-level problem | obstacle | obstacle
+- Q3 | mid-level problem | obstacle | obstacle
+> What happens if it stays unsolved (one line)
 ```
 
-- 大問題最多兩行，超過代表還沒收斂。
-- 中問題 2–4 個。編號 `Q1`…`Q4`，寫在第一欄；省略時依序自動編號。
-- 每個中問題底下 2–3 個小問題，必須是可量測、可證偽的具體障礙。
-- 版面：大問題在上，下方一條 `rule`，然後等寬欄位並排；每欄頂端一條 2pt 短線（第一欄用 `accent`，其餘用 `ladder[2]`），Q 編號 9.5pt 等寬 `accent_deep`，中問題 12.5pt `ink`，小問題 11pt `ink2` 每條上方一條 `rule_soft`。
+- The big problem gets two lines at most; longer means it has not converged.
+- Two to four mid-level problems, labelled `Q1`…`Q4` in the first field; numbering is automatic if omitted.
+- Two or three sub-problems each, and they must be measurable, falsifiable obstacles.
+- Layout: the big problem on top, a `rule` beneath, then equal columns; each column has a 2pt bar (first `accent`, rest `ladder[2]`), the Q label at 9.5pt monospace `accent_deep`, the mid-level problem at 12.5pt `ink`, and sub-problems at 11pt `ink2` each above a `rule_soft`.
 
-## P2 解法
+## P2 — solution
 
 ```markdown
 <!-- P2 solution -->
-# 一句話講清楚機制
-![架構圖說明](figures/arch.png)
-- Q1 | 對應這個問題的機制 | 關鍵數字
-- Q2 | 對應這個問題的機制 | 關鍵數字
-- Q3 | 對應這個問題的機制 | 關鍵數字
-~ 條件註腳
+# The mechanism, in one sentence
+![architecture caption](figures/arch.png)
+- Q1 | the mechanism addressing it | key number
+- Q2 | the mechanism addressing it | key number
+- Q3 | the mechanism addressing it | key number
+~ conditions footnote
 ```
 
-- 每個在 P1 宣告過的 Q 都必須有一列，沒有落單的 Q。
-- 第三欄的關鍵數字用等寬字、`accent_deep`，例如 `可訓練參數 11%，示範數 4200 → 510`。
-- 有圖時左側佔 42%，右側是對應列；沒有圖時對應列佔滿。
-- 版面：每列上方一條細線，Q 編號固定寬 32，機制 12.5pt，關鍵數字 11pt 等寬。
+- Every Q declared on P1 must have a row. No orphan Qs.
+- The third field's key number is monospaced `accent_deep`, e.g. `trainable params 11%, demos 4200 → 510`.
+- With an image, the left takes 42% and the rows take the right; without one, the rows take the full width.
+- Layout: a hairline above each row, the Q label at a fixed width of 32, the mechanism at 12.5pt, the key number at 11pt monospace.
 
-## P3 成果
+## P3 — results
 
 ```markdown
 <!-- P3 results -->
-# 一句話講成果，包含還沒解掉的
-## 副標寫評估條件的關鍵前提
-| 方法 | 指標 A | 指標 B | 指標 C |
+# The result in one sentence, including what is not solved
+## Subtitle states the key precondition of the evaluation
+| Method | Metric A | Metric B | Metric C |
 | --- | --- | --- | --- |
 | Baseline | … | … | … |
 | Ours | *… | *… | *… |
@@ -86,23 +87,24 @@ type: line
 data: data/curves.csv
 band: std
 ```
-~ 條件註腳
+~ conditions footnote
 ```
 
-- **必須是表格**，不是幾個大數字。方法為列、指標為欄，最好的方法用 `*` 前綴。
-- 表格要包含還沒解掉的指標欄。只列贏的數字就變成宣傳。
-- 有圖時表格佔 56%，圖佔其餘；沒有圖時表格佔滿。
-- 副標寫關鍵前提，例如「同一組權重，未做任何 per-task 微調」。
+- **It must be a table**, not a few large numbers. Methods as rows, metrics as columns, the best method's cells prefixed `*`.
+- The table must include the column that is not solved. Listing only wins turns it into promotion.
+- With a figure the table takes 56% and the figure the rest; without one the table takes the full width.
+- The subtitle states the key precondition, e.g. "one checkpoint throughout, no per-task finetuning".
 
-## 佐證頁
+## Evidence pages
 
-第 4 頁起全部是佐證，版式見 `layouts.md`。置入使用者提供的圖用 `E20`（單張）、`E21`（並排）、`E13`（影格）、`E14`（圖 + 註解）、`E15`（滿版）；有底層資料的圖改用 `E06` / `E11` / `E12` / `E17` / `E19` 依主題重畫。每頁必須宣告 `solves=Qn`，章節頁 `E01` 除外。
+Everything from page 4 on is evidence; layouts in `layouts.md`. Place the user's own figures with `E20` (single), `E21` (pair), `E13` (frames), `E14` (figure plus notes) or `E15` (bleed); redraw figures whose underlying data exists with `E06` / `E11` / `E12` / `E17` / `E19` instead. Every page declares `solves=Qn`, except the section page `E01`.
 
-沒有分隔頁，也沒有結尾頁。P3 之後直接進第一份佐證，最後一頁是最後一份佐證。
+There is no divider page and no closing page. P3 runs straight into the first piece of evidence, and the last page is the last piece of evidence.
 
-## 不要做的事
+## What not to do
 
-- 不要有「請你決定 / 下一步 / 需要的資源」這種頁。研究簡報展示問題、解法、結果；要講限制就寫在成果頁或佐證頁的註腳。
-- 不要有「背景」「相關工作」「動機」頁。該講的在 P1 的小問題裡。
-- 不要有整頁只放三四個大數字的頁。
-- 不要在一份簡報裡混語言、混配色、混字體組。
+- No "so here is what I need you to decide" page. A research deck shows the problem, the solution and the result; limits go in a footnote on the results or an evidence page.
+- No "background", "related work" or "motivation" page. What matters is already in P1's sub-problems.
+- No page carrying only three or four large numbers.
+- No page carrying a single sentence.
+- No mixing languages, palettes or typefaces within one deck.

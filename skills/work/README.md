@@ -1,52 +1,54 @@
 # work
 
-工作用的 skill。跟 `research/` 的差別是這些**換工作帶得走**。
+Communication and record-keeping. Unlike `research/`, these **follow you to a new job**.
 
-| Skill | 管什麼 |
+| Skill | What it covers |
 |---|---|
-| [`grill-deeper`](grill-deeper) | 拷問你的計畫，而且會累積對你工作的理解 |
-| [`research-deck`](research-deck) 等三個 | 研究型簡報 |
+| [`grill-deeper`](grill-deeper) | Interrogates your plan, and accumulates an understanding of your work |
+| [`research-deck`](research-deck) + [`deck-design-system`](deck-design-system) + [`research-figures`](research-figures) | Research decks |
 
 ## grill-deeper
 
-拷問到設計樹上每個分支都被走過，然後記住這次學到什麼。
+Interrogates until every branch of the design tree has been visited, then remembers what the session taught it.
 
-問題的排程用 **frontier**：前置條件都已確定、現在就問得了的那一圈，一輪問完，每題附建議答案。機制取自 [mattpocock/skills](https://github.com/mattpocock/skills) 的 `grilling`。
+Questions are scheduled on a **frontier**: the ring whose prerequisites are settled, asked one round at a time with a recommended answer attached to each. The mechanism comes from `grilling` in [mattpocock/skills](https://github.com/mattpocock/skills).
 
-這裡加上的是**記憶**，而且它跟 frontier 是咬合的而不是並排的：**已知的事實等於已經確定的節點**，所以第一輪的 frontier 從一開始就比較外面。沒有記憶時第一輪問「你的評估怎麼做」，有記憶時直接問「這次的擾動參數要沿用上次的 ±3cm 嗎」——同樣一輪，深了兩層。
+What this adds is **memory**, and it meshes with the frontier rather than sitting beside it: **a known fact is a settled node**, so the first round's frontier starts further out. With no store, round one asks how your evaluation works; with one, round one asks whether the perturbation stays at last time's ±3cm. Same round, two levels deeper.
 
-全域層另外累積**你答不出來的那幾類問題**。用了五次之後它知道你每次講到評估協定就會含糊，然後在該輪把那題排前面，**而且不給建議答案**——給了等於幫你繞過去。
+The global layer separately accumulates **the categories of question you go vague on**. After five sessions it knows you get vague every time evaluation protocol comes up, puts that question first in the round, and **gives it no recommended answer** — supplying one is how you skate past it.
 
-知識分兩層：專案事實放 `<專案>/.grill/`（必須 gitignore），你的盲點模式放 `~/.claude/grill/profile.md`——**盲點跟著人走，換專案甚至換工作都還在**。
+Two layers: project facts in `<project>/.grill/` (gitignored), your blind-spot profile in `~/.claude/grill/profile.md`. Blind spots follow the person; project facts do not.
 
-決策紀錄併在這裡面：每個決定記「決定、替代方案、什麼證據會推翻它、日期」，而推翻條件也是這條決定的過期判準。
+The decision log lives here too: decision, alternative considered, what evidence would reverse it, date. The reversal condition is also how a decision expires — age does not stale one, its condition coming true does.
 
-## research-deck 系列
+## The research-deck trio
 
-三個 skill 互相引用，也可以分開用。只要畫一張論文圖就用 `research-figures`；只要檢查既有簡報的外觀就用 `deck-design-system`。
+Three skills that reference each other and can also be used alone. Use `research-figures` on its own to plot one paper figure; use `deck-design-system` on its own to review an existing deck's appearance.
 
-| Skill | 管什麼 |
+| Skill | What it covers |
 |---|---|
-| [`research-deck`](research-deck) | 結構與流程：問題 → 解法 → 成果，佐證怎麼掛 |
-| [`deck-design-system`](deck-design-system) | 配色、字階、格線、字體、版式幾何 |
-| [`research-figures`](research-figures) | 曲線與誤差帶、矩陣、消融 Δ 欄、參考線、條件註腳 |
+| [`research-deck`](research-deck) | Structure and process: problem → solution → results, and how evidence attaches |
+| [`deck-design-system`](deck-design-system) | Palette, type scale, grid, typeface, layout geometry |
+| [`research-figures`](research-figures) | Curves with error bands, matrices, ablation deltas, reference lines, conditions footnotes |
 
-### 核心主張
+### The claim
 
-**前三頁講完全部，其餘都是佐證。**
+**The front three pages carry the whole argument; everything after them is evidence.**
 
-1. **問題** — 一個大問題，拆成 2–4 個中問題（Q1…Q4），每個底下 2–3 個可量測的技術障礙
-2. **解法** — 一句話講機制，然後逐條對應回每一個 Q
-3. **成果** — 方法 × 指標的表格，**包含還沒解掉的那一格**，加一張關鍵圖
+1. **Problem** — one big problem, split into 2–4 mid-level problems (Q1…Q4), each with 2–3 measurable technical obstacles
+2. **Solution** — the mechanism in a sentence, then one row per Q
+3. **Results** — a method-by-metric table that **keeps the cell that is not solved**, plus one key figure
 
-第 4 頁起每一頁都要宣告 `solves=Qn`。掛不到任何 Q 的頁就刪掉。
+Every page from the fourth on declares `solves=Qn`. Anything attaching to no Q is deleted.
 
-沒有「所以請你決定」頁 —— 那是內部提案的寫法，不是研究簡報。沒有「數字牆」頁 —— 成果一律用表格，只放贏的數字就變成宣傳。
+No "here is what I need you to decide" page — that is an internal proposal, not a research deck. No wall of numbers — results go in a table, and showing only wins is promotion.
 
-### 資訊密度
+### Density
 
-一頁要放得下一份完整證據：圖、數字、以及它是在什麼條件下量出來的。每張圖表都要有 `~ ` 開頭的條件註腳（n=、seeds、硬體、量測方式），多 seed 要畫 ±1σ，有基準要畫參考線，有對照要算 Δ，數字用等寬字。
+One page carries one complete piece of evidence: the figure, the numbers, and the conditions they were measured under. Every figure and table needs a `~ ` conditions footnote and two or three analysis lines; multiple seeds need dispersion drawn; a baseline needs a reference line; a comparison needs a delta; numbers are monospaced.
 
-### 範例
+Where the analysis sits is decided by how much width the figure needs — few horizontal slots put it on the right so the figure keeps its height, many put it underneath so it keeps its width.
 
-`research-deck/examples/` 有中英各一份完整範例，涵蓋每一個版式，附 `data/` 的 CSV。從那份開始改比從零寫快。
+### Examples
+
+`research-deck/examples/` has complete decks in both English and Chinese covering every layout, with the CSVs in `data/`. Starting from an example beats starting from blank.

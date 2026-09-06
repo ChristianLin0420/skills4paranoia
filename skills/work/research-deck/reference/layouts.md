@@ -1,122 +1,122 @@
-# 佐證版式目錄
+# Evidence layout catalogue
 
-第 4 頁起可用的版式。每頁必須宣告 `solves=Qn`（`E01` 章節頁除外）。同一份簡報不要連續兩頁用同一個版式。
+The layouts available from page 4 on. Every page must declare `solves=Qn` (except the section page `E01`). Do not use the same layout on two consecutive pages.
 
-**沒有分隔頁、沒有結尾頁、沒有單句主張頁、沒有引言頁。** 一句話值不到一整頁；佐證頁靠 `solves=` 表明身分，不需要一頁來宣告；最後一頁應該是最後一份佐證。
+**There is no divider page, no closing page, no single-statement page and no pull quote.** A sentence is not worth a slide; evidence pages announce themselves with `solves=`; and the last page should be the last piece of evidence.
 
-## 選型
+## Choosing
 
-先看資料形狀，再選版式。優先序由上往下。
+Look at the shape of the data first. Preference runs top to bottom.
 
-| 資料形狀 | 首選 | 次選 | 不要用 |
+| Shape of the data | First choice | Second | Not |
 |---|---|---|---|
-| 隨訓練步數變化的多條線 | `E11` 曲線 | `E06` | 表格 |
-| 任務 × 方法的成績 | `E12` 矩陣 | `E10` | 條列 |
-| 兩個相關的量 | `E17` 面板 | 拆兩頁 | 疊同一組軸 |
-| 消融、逐項加法 | `E19` 消融 | `E10` | `E03` |
-| 超參數 / 硬體 / 資料規格 | `E18` 設定 | `E10` | `E03` |
-| 少數幾項的量值比較 | `E06` 圖表 | `E07` | `E03` |
-| 佔比或排名（≤6 項） | `E07` 圖文 | `E06` | 圓餅（沒這版式） |
-| 多欄位規格對照 | `E10` 表格 | `E04` | `E03` |
-| 兩個方案的取捨 | `E04` 對照 | `E10` | `E03` |
-| 時程或階段 | `E09` 時間軸 | `E10` | `E03` |
-| 使用者提供的單張圖 | `E20` 置圖 | `E15` | — |
-| 兩張圖並排比較 | `E21` 並排 | `E17` | 疊在一起 |
-| 影格序列、rollout | `E13` 影格條 | `E21` | — |
-| 架構圖、pipeline | `E14` 架構 | `E20` | — |
+| Several lines over training steps | `E11` curves | `E06` | A table |
+| Task by method scores | `E12` matrix | `E10` | Bullets |
+| Two related quantities | `E17` panels | Two pages | Overlaid on one axis |
+| Ablations, one mechanism at a time | `E19` ablation | `E10` | `E03` |
+| Hyperparameters, hardware, data specs | `E18` setup | `E10` | `E03` |
+| A few quantities compared | `E06` chart | `E07` | `E03` |
+| Proportions or ranking (≤6) | `E07` chart-side | `E06` | Pie (no such layout) |
+| Multi-column specification comparison | `E10` table | `E04` | `E03` |
+| A trade-off between two options | `E04` two-col | `E10` | `E03` |
+| Schedule or phases | `E09` timeline | `E10` | `E03` |
+| One supplied figure | `E20` figure | `E15` | — |
+| Two figures side by side | `E21` pair | `E17` | Overlaid |
+| Frame sequences, rollouts | `E13` filmstrip | `E21` | — |
+| Architecture, pipeline | `E14` architecture | `E20` | — |
 
-選到 `E03 條列` 通常代表還沒把它變成資料 —— 先想能不能升級成圖或表。
+Reaching for `E03 bullets` usually means you have not turned it into data yet — check first whether it can become a figure or a table.
 
-## 版式
+## The layouts
 
-| 代號 | 別名 | 用途 | 吃什麼 | 上限 |
+| Code | Alias | Purpose | Consumes | Cap |
 |---|---|---|---|---|
-| `F0` | cover | 封面，可省略 | front-matter | — |
-| `E01` | section | 章節分隔，大序號 | `#` `##`、屬性 `index=01` | — |
-| `E03` | bullets | 條列 | `#` `##`、`-`（`主句 \| 補述`） | 5 條 |
-| `E04` | two-col | 左右對照 | `#`、兩條 `-`（`欄標題 \| 行1 \| 行2 …`） | 2 欄 × 5 行 |
-| `E06` | chart-full | 全幅圖表 | `#` `##`、```chart | — |
-| `E07` | chart-side | 左文右圖 | `#`、內文段落、```chart | 4 段 |
-| `E09` | timeline | 時間軸 | `#`、`-`（`階段 \| 說明`） | 5 站 |
-| `E10` | table | 表格 | `#` `##`、直式表格 | 建議 6 列 |
-| `E11` | curves | 訓練曲線，鎖定 `type: line` | 同 `E06` | 5 條線 |
-| `E12` | matrix | 成功率矩陣，鎖定 `type: matrix` | 同 `E06` | — |
-| `E13` | filmstrip | 影格條 | `#`、多個 `![說明](path)` | 6 格 |
-| `E14` | architecture | 架構圖 + 右側註解 | `#`、一個 `![]()`、內文段落 | 註解 4 條 |
-| `E15` | image-full | 滿版圖 + 底部標題 | 一個 `![]()`、`#` `##` | — |
-| `E17` | panels | 多圖面板，2–4 張並排 | `#`、2–4 個 ```chart（各帶 `title:`） | 4 張 |
-| `E18` | setup | 實驗設定，值等寬右對齊 | `#`、`-`（`群組 \| 鍵=值 \| …`） | 4 組 × 8 項 |
-| `E19` | ablation | 消融表，自動加 Δ 欄並標最佳列 | 同 `E10`，加 `delta=<欄名>` `best=max\|min` | 建議 6 列 |
-| `E20` | figure | 置入一張使用者提供的圖，滿版於內容區 | `#` `##`、一個 `![說明](path)`、`~ ` 註腳 | 1 張 |
-| `E21` | figure-pair | 兩張並排，各自帶說明 | `#`、兩個 `![說明](path)`、`~ ` 註腳 | 2 張 |
+| `F0` | cover | Cover, optional | front-matter | — |
+| `E01` | section | Section break with a large numeral | `#` `##`, attribute `index=01` | — |
+| `E03` | bullets | Bullets | `#` `##`, `-` (`lead \| detail`) | 5 |
+| `E04` | two-col | Side-by-side comparison | `#`, two `-` (`heading \| line \| line …`) | 2 × 5 |
+| `E06` | chart-full | Full-width chart | `#` `##`, ```chart | — |
+| `E07` | chart-side | Text left, chart right | `#`, body paragraphs, ```chart | 4 paragraphs |
+| `E09` | timeline | Timeline | `#`, `-` (`stage \| description`) | 5 stops |
+| `E10` | table | Table | `#` `##`, a pipe table. A `*` prefix takes the accent colour | 6 rows suggested |
+| `E11` | curves | Training curves; `E06` locked to `type: line` | as `E06` | 5 lines |
+| `E12` | matrix | Success matrix; `E06` locked to `type: matrix` | as `E06` | — |
+| `E13` | filmstrip | Frame strip | `#`, several `![caption](path)` | 6 frames |
+| `E14` | architecture | Figure plus notes on the right | `#`, one `![]()`, body paragraphs | 4 notes |
+| `E15` | image-full | Bleed image with a title band | one `![]()`, `#` `##` | — |
+| `E17` | panels | 2–4 charts sharing one title | `#`, 2–4 ```chart blocks (each may carry `title:`) | 4 |
+| `E18` | setup | Experimental setup, values monospaced and right-aligned | `#`, `-` (`group \| key=value \| …`) | 4 × 8 |
+| `E19` | ablation | Ablation table, adds a Δ column and marks the winner | as `E10` plus `delta=<column>` `best=max\|min` | 6 rows suggested |
+| `E20` | figure | One supplied figure, filling the content area | `#` `##`, one `![caption](path)`, `~` footnote | 1 |
+| `E21` | figure-pair | Two side by side, each captioned | `#`, two `![caption](path)`, `~` footnote | 2 |
 
-沒有「數字牆」版式。成果一律用表格。
+There is no "wall of numbers" layout. Results always go in a table.
 
-## 圖與表都必須有分析
+## Redraw or place
 
-`E06` `E10` `E11` `E12` `E17` `E19` `E20` `E21` 都要用 `-` 條列寫 2–3 條分析，格式 `觀察 | 為什麼重要`。缺了會被結構檢查擋下。`E07` 用左側的內文段落當分析，同樣必填。
+Decide figure by figure during the interview (`intake.md` group 2); do not assume.
 
-**表格跟圖一樣需要分析。** 一張延遲拆解表放在那裡，讀者知道每一格的數字，但不知道你要他看哪一格。
+**Redraw if the underlying data exists** (`E06` / `E11` / `E12` / `E17` / `E19`), and colour, type and axes match the rest.
+**Place the original if it does not** (`E20` / `E21` / `E13` / `E14` / `E15`); the style will differ but it is irreplaceable.
 
-標題寫結論，分析寫「怎麼從這張圖表看出那個結論」。不確定分析主軸就回去問使用者。
+Statistical figures can almost always be redrawn as long as the CSV or log can be found. Architecture figures, pipelines, rollout frames, on-robot capture and screenshots can only be placed.
 
-### 分析放右邊還是下面
+## Figures and tables both need analysis
 
-依這張圖表**實際需要多少橫向空間**決定，不是固定的：
+`E06` `E10` `E11` `E12` `E17` `E19` `E20` `E21` all need two or three analysis lines written as `-` bullets, in the form `observation | why it matters`. Missing them fails the structure check. `E07` uses its left-hand body paragraphs as the analysis, equally required.
 
-| 放右邊（圖保住高度，佔 60% 寬） | 放下面（圖保住寬度，佔 62% 高） |
+**Tables need analysis as much as figures do.** A latency breakdown sitting there tells the reader every cell but not which cell to look at.
+
+The title states the conclusion; the analysis states how the figure or table gets you there. If you are unsure what the analysis should be, go back and ask.
+
+### Right or below
+
+Decided by **how much horizontal space the figure actually needs**, not fixed:
+
+| On the right (figure keeps its height, takes 60% width) | Below (figure keeps its width, takes 62% height) |
 |---|---|
-| 橫向格數 ≤ 5 的圖：3 根長條、橫條圖、≤5 欄的矩陣 | 橫向格數 > 5：多點訓練曲線、寬矩陣 |
-| ≤ 4 欄的表格 | > 4 欄的表格 |
-| 單張置入的圖 `E20` | 多圖面板 `E17`、並排 `E21` |
+| Five or fewer horizontal slots: three bars, a horizontal bar chart, a matrix of ≤5 columns | More than five: a many-point training curve, a wide matrix |
+| A table of four columns or fewer | More than four columns |
+| One placed figure `E20` | Multi-panel `E17`, pairs `E21` |
 
-橫向格數的算法：折線看 x 刻度數、直條看柱數、矩陣看欄數、橫條一律算 1、表格看欄數。
+Counting slots: a line plot counts x ticks, a bar chart counts bars, a matrix counts columns, a horizontal bar chart always counts 1, a table counts columns.
 
-**三根長條的圖不需要 848pt 的寬度**，硬要把分析壓在下面只會讓圖變扁；反過來，九個 x 點的曲線壓成 60% 寬會擠成一團。
+**A three-bar chart does not need 848pt of width**; forcing the analysis underneath only flattens it. Conversely, a nine-point curve squeezed into 60% width turns into a smear.
 
-要覆寫自動判斷就在指令加 `analysis=right` 或 `analysis=below`。
+Override the automatic choice with `analysis=right` or `analysis=below` on the directive.
 
-分析欄的規格：放右邊時垂直堆疊，每條之間一條 `rule_soft`；放下面時等寬並排，上方一條 `rule`。兩者都是頂端一條 14pt 的 `series` 短線、觀察 11pt `ink`、說明 9.5pt `ink2`。
+Analysis spec: stacked vertically when on the right, with a `rule_soft` between entries; equal columns when below, under a `rule`. Either way a 14pt `series` bar on top, observation at 11pt `ink`, detail at 9.5pt `ink2`.
 
-## 圖是重畫還是貼原圖
+## Geometry
 
-在訪談階段逐張決定（見 `intake.md` 第 2 組），不要自己假設。
+All layouts share the grid (see `deck-design-system`): content from y 88 to 446, side margins 56, content width 848.
 
-**有底層資料就重畫**（`E06` / `E11` / `E12` / `E17` / `E19`），配色字體與全篇一致。
-**沒有底層資料就貼原圖**（`E20` / `E21` / `E13` / `E14` / `E15`），風格會不同但無可取代。
+- **Title**: 21pt from y=88, two lines maximum, shrinking to 16pt if it does not fit. Subtitle 13.5pt beneath. Content begins 12 below the title's bottom.
+- **E06 / E10 / E11 / E12 / E19 / E20**: with the analysis on the right, the figure or table takes `CW × 0.60` with a 30 gap and the analysis column takes the rest at full height; below, the figure takes `(BODY_BOT − y) × 0.62` and the analysis sits underneath in equal columns.
+- **E07**: text on the left at 32%, gap 34, chart on the right; the chart starts at y=88 rather than below the title.
+- **E17**: two side by side, or 2×2 for four, column gap 26. Each chart's `title:` renders at 11pt `ink` at the top of its own box, taking 19pt.
+- **E18**: equal columns, a 2pt bar and an 11pt `accent_deep` heading on each; rows 24pt tall, key at 9.5pt `ink3` left, value at 11pt monospace `ink` right, a `rule_soft` under each.
+- **E20**: figure fills (56, y, 848, 446−y); with a caption the height drops 17 and the caption sits below at 9.5pt `ink3`.
+- **E21**: two equal columns, gap 24; with captions the height drops 28.
+- **E13**: equal cells, gap 10, height `min(column width × 0.7, available − 26)`, captions below at 9.5pt.
+- **E14**: with notes the figure takes 76% and the notes column 24%, gap 28; each note has a 16pt `series` bar above it.
 
-統計圖幾乎都能重畫，只要找得到那份 CSV 或 log。架構圖、pipeline、rollout 影格、實機照片、螢幕截圖只能貼。
-
-## 幾何
-
-所有版式共用格線（見 `deck-design-system`）：內容區 y 88–446，左右邊界 56，內容寬 848。
-
-- **標題**：21pt 從 y=88 起，最多兩行，放不下就縮到 16pt。副標 13.5pt 接在下面。內容從標題底部 +12 開始。
-- **E06 / E11 / E12**：圖表佔滿 (56, y, 848, 446−y)。
-- **E07**：左側文字佔 32%，間距 34，右側圖表佔其餘，圖表從 y=88 起而不是標題底部。
-- **E17**：2 張並排、4 張則 2×2，欄距 26。每張圖的 `title:` 用 11pt `ink` 畫在自己框的頂端，佔 19pt。
-- **E18**：等寬欄，每欄頂端 2pt 短線、標題 11pt `accent_deep`，之後每列 24pt 高，鍵 9.5pt `ink3` 靠左，值 11pt 等寬 `ink` 靠右，列下方一條 `rule_soft`。
-- **E06 / E10 / E11 / E12 / E19 / E20**：分析放右邊時圖表佔 `CW × 0.60`、間距 30，分析欄佔其餘並保住全高；放下面時圖表佔 `(BODY_BOT − y) × 0.62`，分析在下方等寬並排。
-- **E20**：圖佔滿 (56, y, 848, 446−y)，有說明時高度扣 17，說明 9.5pt `ink3` 貼在圖下方。
-- **E21**：兩欄等寬，欄距 24；有說明時高度扣 28，說明在各自圖下方。
-- **E13**：等寬圖格，格距 10，高度取 `min(欄寬 × 0.7, 可用高 − 26)`，說明在圖下方 9.5pt。
-- **E14**：有註解時圖佔 76%、註解欄佔 24%，間距 28；每條註解上方一條 16pt 的 `series` 短線。
-
-## 圖表區塊
+## The chart block
 
 ```yaml
 type: line          # bar | bar-h | line | matrix
-data: data/x.csv    # 或 labels / values / series 直接寫
+data: data/x.csv    # or labels / values / series inline
 unit: "%"
-xlabel: 訓練步數
-title: 成功率 vs 資料量          # E17 面板內的小標題
-note: "rollouts=100/task"      # 貼著圖的條件說明
-band: std                      # 讀 "<欄名> std" 畫 ±1σ；或 bounds 讀 lo/hi
-baseline: {value: 56, label: "Diffusion baseline 收斂點"}
-delta: pp           # bar / bar-h：對第一根算差，pp 百分點、pct 相對百分比
-highlight: 2        # 要強調的索引
-max: 100            # 固定軸上限，便於跨頁比較
-mark_best: true     # matrix：每列最佳值加底線
+xlabel: env steps
+title: Success vs data volume     # panel title inside E17
+note: "rollouts=100/task"         # a conditions line hugging the figure
+band: std                         # reads "<name> std" for ±1σ; or bounds for lo/hi
+baseline: {value: 56, label: "Diffusion baseline plateau"}
+delta: pp           # bar / bar-h: difference against the first, pp or pct
+delta_base: 0       # index of the reference
+highlight: 2        # which index to emphasise
+max: 100            # fix the axis top for cross-page comparison
+mark_best: true     # matrix: underline the best in each row
 ```
 
-細節見 `research-figures`。
+Details in `research-figures`.
