@@ -1,7 +1,7 @@
 {
   "name": "skills4paranoia",
   "version": "0.1.0",
-  "description": "Agent skills that enforce the disciplines people skip: pin the measurement contract before the run, hunt the code failures that never raise, and write decks where every page answers a stated problem.",
+  "description": "Agent skills that enforce the disciplines people skip: an interrogation that remembers your work and gets sharper each time, a measurement contract pinned before the run, a code review that hunts failures which never raise, and decks where every page answers a stated problem.",
   "author": {
     "name": "Bor-Jiun Lin",
     "url": "https://github.com/ChristianLin0420"
@@ -13,12 +13,14 @@
     "research",
     "code-review",
     "pre-registration",
+    "interrogation",
     "vla",
     "reinforcement-learning",
     "presentation",
     "design-system"
   ],
   "skills": [
+    "./skills/work/grill-deeper",
     "./skills/work/research-deck",
     "./skills/work/deck-design-system",
     "./skills/work/research-figures",

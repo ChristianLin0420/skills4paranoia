@@ -8,8 +8,9 @@ Agent skills，依主題分層。純 markdown 規格，沒有要安裝的相依�
 
 ```
 skills/
-  work/                     ← 主題：溝通與記錄
-    research-deck/          ← skill
+  work/                     ← 主題：換工作帶得走的
+    grill-deeper/           ← skill
+    research-deck/
     deck-design-system/
     research-figures/
   research/                 ← 主題：做研究本身
@@ -66,6 +67,7 @@ cp -R skills4paranoia/skills/*/* ~/.claude/skills/
 
 | Skill | 管什麼 |
 |---|---|
+| [`grill-deeper`](skills/work/grill-deeper) | 拷問你的計畫，而且會累積對你工作的理解，越用越深 |
 | [`research-deck`](skills/work/research-deck) | 結構與流程：問題 → 解法 → 成果，以及佐證怎麼掛 |
 | [`deck-design-system`](skills/work/deck-design-system) | 外觀：配色、字階、格線、字體、每個版式的精確幾何 |
 | [`research-figures`](skills/work/research-figures) | 圖表：曲線與誤差帶、矩陣、消融表、參考線、條件註腳 |
