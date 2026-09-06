@@ -131,7 +131,7 @@ Not allowed:
 
 ## 6. Input format
 
-The intermediate format is one markdown file — versionable and diffable. Full spec in `reference/structure.md`, complete examples in `examples/`.
+The intermediate format is one markdown file — versionable and diffable. Full spec in `reference/structure.md`, complete examples in `examples/`, and six rendered sample pages in `examples/preview/` if you want to see what comes out before reading the spec.
 
 ```markdown
 ---

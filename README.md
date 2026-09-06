@@ -82,6 +82,8 @@ Communication and record-keeping. These survive a change of role.
 | [`deck-design-system`](skills/work/deck-design-system) | Appearance: palette, type scale, grid, per-layout geometry |
 | [`research-figures`](skills/work/research-figures) | Figures: curves with error bands, matrices, ablation tables, reference lines, conditions footnotes |
 
+**[See six sample pages](skills/work/research-deck/examples/preview)** — the front three, and three evidence pages showing the density this aims at.
+
 The deck trio's claim is that **the front three pages carry the whole argument and everything after them is evidence**: one big problem split into 2–4 mid-level problems, a solution row for each, and a results table that keeps the cell that is not solved. Every page from the fourth on declares `solves=Qn`; anything that attaches to no problem is deleted.
 
 No "here is what I need you to decide" page — that is how an internal proposal is written, not a research deck. No wall of numbers — showing only the wins is promotion.

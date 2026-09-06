@@ -108,8 +108,14 @@ def _text(op, th):
     else:
         top = op["y"]
     first = top + size * (leading - 0.30)
-    latin, cjk = core.face(th, op.get("font", "sans"))
-    family = "'%s','%s',sans-serif" % (latin, cjk)
+    kind = op.get("font", "sans")
+    latin, cjk = core.face(th, kind)
+    # a monospace face falling back to sans-serif loses the column alignment that
+    # is the only reason it is there, so the generic family has to follow the role
+    if kind == "mono":
+        family = "'%s','%s','SF Mono',Menlo,Consolas,monospace" % (latin, cjk)
+    else:
+        family = "'%s','%s','Helvetica Neue',Arial,sans-serif" % (latin, cjk)
     spans = "".join(
         '<tspan x="%g" y="%g">%s</tspan>' % (tx, first + i * size * leading, escape(ln))
         for i, ln in enumerate(lines))

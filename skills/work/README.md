@@ -51,4 +51,6 @@ Where the analysis sits is decided by how much width the figure needs — few ho
 
 ### Examples
 
+**[Six sample pages](research-deck/examples/preview)** — the front three plus three evidence pages, rendered from the English example.
+
 `research-deck/examples/` has complete decks in both English and Chinese covering every layout, with the CSVs in `data/`. Starting from an example beats starting from blank.
