@@ -1,98 +1,100 @@
-# 預先登記 — <一句話標題>
+# Pre-registration — <one-line title>
 
 ```
-狀態      draft | 已定案（定案後主指標與 null 定義凍結）
-定案日期  YYYY-MM-DD
-commit    <定案時的 commit sha>
-預算      <GPU 型號 × 張數 × 時數> = <GPU-hours>
+Status     draft | frozen (once frozen, the primary metric and null definition do not change)
+Frozen on  YYYY-MM-DD
+Commit     <sha at freeze>
+Budget     <GPU type × count × hours> = <GPU-hours>
 ```
 
-## 1. 要回答的是非題
+## 1. The yes/no question
 
-<一句話。必須可以答「否」。>
+<One sentence. It must be answerable "no".>
 
-## 2. 基準與預算匹配
+## 2. Baseline and budget matching
 
-| 組別 | 設定 | 資料量 | 算力 | 參數量 | 超參數搜尋次數 |
+| Arm | Setting | Data | Compute | Params | HP search trials |
 |---|---|---|---|---|---|
-| 對照 | | | | | |
-| 實驗 | | | | | |
+| Control | | | | | |
+| Treatment | | | | | |
 
-放掉的維度與理由：<四個維度通常無法全部對齊，講明放掉哪個、為什麼>
+Dimension let go, and why: <all four rarely line up; say which one and why>
 
-**超參數搜尋次數是最常被漏掉的一欄。** 你的方法調了 100 組、對照組跑預設值，前三欄對齊了也沒用。
+**The search-trial column is the one that gets missed.** Your method tuned over 100 configurations against a baseline on defaults invalidates the comparison even with the first three matched.
 
-## 3. 主指標與最小可偵測差異
-
-```
-主指標        <只能一個>
-重複單位      seed（訓練 run）。rollout 不是重複單位。
-既有 σ        <seed 之間的標準差，不是 rollout 之間的。來源：>
-想偵測的差異  <多大才算有意義>
-需要 seed 數  <用 2.80 × σ × √(2/n) 反推>
-實際 seed 數  <預算允許的；事先講定，全部都要報>
-每 seed rollout <讓每個 seed 的平均夠穩，但增加它不會增加檢定力>
-實際可偵測    <照實際 seed 數算回來>
-```
-
-聚合方式：每個 seed 先算自己的平均 → 在 seed 的平均之間算 mean 與 std。`n` = seed 數。
-
-實際可偵測 > 想偵測的差異時，在這裡寫明：**本實驗偵測不到 <X> 以下的效果。**
-
-次要指標：<列出來，但事先聲明它們不能用來翻案>
-
-## 4. 什麼結果算 null
-
-<具體到數字。例如：主指標的平均差異小於 5 個百分點，或 95% 信賴區間跨過 0。>
-
-## 5. 停止與決策規則
+## 3. Primary metric and minimum detectable effect
 
 ```
-停止條件   <步數 / 時間 / 收斂判準>
-結果 > X   → <下一步>
-結果落在 null → <下一步>
-中間區間   → <下一步>
+Primary metric      <only one>
+Unit of replication seed (training run). Rollouts are not the unit.
+Existing σ          <across seeds, not across rollouts. Source:>
+Difference sought   <how large is meaningful>
+Seeds needed        <invert 2.80 × σ × √(2/n)>
+Seeds affordable    <what the budget allows; agreed in advance, all reported>
+Rollouts per seed   <enough that each seed's mean is stable; more buys no power>
+Actually detectable <recomputed from the affordable seed count>
 ```
 
-三個下一步如果一樣，這個實驗沒有資訊量。
+Aggregation: each seed's own mean first → then mean and standard deviation across seed means. `n` = seed count.
 
-## 6. 評估協定
+When "actually detectable" exceeds "difference sought", write it here: **this experiment cannot detect an effect below <X>.**
 
-```
-held-out 層級   <任務名稱 / 物件實例 / 場景 / 示範者>
-交集驗證        <已驗證 / 未驗證>
-成功判準        <幾何條件 + 保持幀數 + 末端狀態 + 旋轉不變>
-判準實作位置    <file:function，訓練與最終 eval 共用>
-eval seed       <固定集合，與訓練步數無關，每 episode 重新 seed>
-rollouts        <n / task × tasks × seeds>
-擾動            <物體擺位 / 指令改寫 / 初始姿態 / 視覺>
-主數字          <擾動下的值；未擾動值為上界>
-```
+Exclusion rule (defined in advance, identical for both arms): <e.g. diverged with NaN loss>
 
-## 7. 執行環境
+Secondary metrics: <list them, and state in advance that they cannot overturn the primary>
+
+## 4. What counts as null
+
+<Concrete, with numbers. e.g. the mean difference on the primary metric is under 5 percentage points, or the 95% interval crosses zero.>
+
+## 5. Stopping and decision rules
 
 ```
-節點指派   <每組是否橫跨所有節點；不要對照組全在 A、實驗組全在 B>
-時間跨度   <兩組是否同期跑；相隔太久驅動與叢集負載會混進來>
-實際紀錄   <run id → 節點 → 起訖時間>
+Stop when   <steps / time / convergence test>
+Result > X  → <next step>
+Result null → <next step>
+In between  → <next step>
 ```
 
-## 8. 最可能白跑的原因
+Three identical next steps means the run carries no information.
+
+## 6. Evaluation protocol
+
+```
+Held-out level      <task name / object instance / scene / demonstrator>
+Intersection check  <verified / not verified>
+Success criterion   <geometry + hold duration + end state + rotation invariance>
+Criterion lives at  <file:function, shared by training-time and final eval>
+Eval seeds          <fixed set, independent of training step, reseeded each episode>
+Rollouts            <n per task × tasks × seeds>
+Perturbation        <placement / instruction rewrites / initial pose / visual>
+Headline number     <the perturbed value; unperturbed as an upper bound>
+```
+
+## 7. Execution environment
+
+```
+Node assignment  <does every arm span every node; do not put control on A and treatment on B>
+Time span        <are the arms concurrent; far apart lets drivers and cluster load in>
+Actual record    <run id → node → start and end time>
+```
+
+## 8. The most likely way this is wasted
 
 1. <>
 2. <>
 3. <>
 
-跑完回來逐條對照。
+Come back and check against these.
 
 ---
 
-## 跑完之後
+## After the run
 
 ```
-實際結果      <主指標>
-落在哪個區間  <好 / null / 中間>
-執行的下一步  <與第 5 節是否一致；不一致要說明>
-白跑原因      <第 8 節有沒有命中>
-協定變更      <有無事後修改；有的話記在決策紀錄並寫明理由>
+Result             <primary metric>
+Which band         <good / null / in between>
+Action taken       <does it match section 5; explain if not>
+Waste cause        <did anything in section 8 land>
+Protocol changes   <any post-hoc edits; if so, record them in the decision log with the reason>
 ```

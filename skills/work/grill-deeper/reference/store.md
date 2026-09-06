@@ -1,82 +1,84 @@
-# 知識庫結構
+# The knowledge store
 
-兩層。專案層跟著專案，全域層跟著人。
+Two layers. The project layer belongs to the project; the global layer follows the person.
 
-## 專案層 `<專案>/.grill/`
+## Project layer: `<project>/.grill/`
 
-**先確認它在 `.gitignore` 裡。** 裡面會有內部專案名、算力配額、未發表結果。第一次在某個專案建立時就要處理，不要事後補。
+**Check it is in `.gitignore` first.** It will hold internal project names, compute quotas and unpublished results. Handle this when the store is first created, not afterwards.
 
-四個檔案，不要再多。
+Four files. Do not add more.
 
-### `context.md` —— 穩定的事實
+### `context.md` — the stable facts
 
-詞彙、定義、環境約束。這些不常變，但每次拷問都會用到。
-
-```markdown
-## 詞彙
-- held-out：切在物件實例層（asset id 不重疊），不是任務名稱層  ·2026-09-06
-- 主指標：擾動條件下 12 個 held-out 任務的平均成功率  ·2026-09-06
-
-## 約束
-- 算力：64 張 H100，叢集排隊中位數 6 小時  ·2026-09-06
-- 聽眾：週五給組內，季末給跨組評審  ·2026-09-06
-- 介面：實機整合由另一組負責，延遲預算 30Hz  ·2026-09-06
-```
-
-每條帶日期。90 天沒被重新確認的，下次開場挑一條問「這條還成立嗎」。
-
-### `decisions.md` —— 決定與推翻條件
+Vocabulary, definitions, environment constraints. These change rarely but every session uses them.
 
 ```markdown
-## 凍結 WAM-v1 架構  ·2026-09-05
-決定    Q4 不開新的 backbone 分支
-替代    繼續架構搜索（20 週、800 GPU-月）
-推翻條件 12 月中長時序成功率未過 55%
-狀態    有效
+## Vocabulary
+- held-out: cut at the object-instance level (asset ids disjoint), not by task name  ·2026-09-06
+- primary metric: mean success over 12 held-out tasks under perturbation  ·2026-09-06
+
+## Constraints
+- Compute: 64 H100s, median cluster queue 6 hours  ·2026-09-06
+- Audience: the team on Fridays, a cross-group review at quarter end  ·2026-09-06
+- Interfaces: on-robot integration is another group's; latency budget 30Hz  ·2026-09-06
 ```
 
-**推翻條件是最重要的一欄**，也是這條決定的過期判準——時間不會讓決定過期，推翻條件成真才會。每次開場掃一遍，條件成真的標成 `待重議`。
+Every entry dated. Anything unconfirmed for 90 days becomes one opening question next session: "does this still hold?"
 
-### `open-questions.md` —— 開放中的假設
+### `decisions.md` — decisions and their reversal conditions
 
 ```markdown
-- [開放] 長時序失敗是上下文遺失還是力控制不足  ·2026-08-20
-- [已證偽] 加大 backbone 能解決樣本效率  ·2026-08-14 → 只換到 7 個百分點
-- [已確認] 模擬混入 4:1 有效  ·2026-08-28 → 消融顯示 +14pp
+## Freeze the WAM-v1 architecture  ·2026-09-05
+Decision   No new backbone branches in Q4
+Alternative Keep searching (20 weeks, 800 GPU-months)
+Reverses if Long-horizon success has not cleared 55% by mid-December
+Status     active
 ```
 
-60 天還開著的，問一次「還開著嗎，還是已經有答案了」。已證偽／已確認的保留——它們防止重測。
+**The reversal condition is the important field**, and it is also how the decision expires — age does not stale a decision, its condition coming true does. Sweep these at the start of each session and mark any whose condition has fired as `reopen`.
 
-### `sessions.md` —— 拷問紀錄（append-only）
+### `open-questions.md` — assumptions still open
+
+```markdown
+- [open] Is long-horizon failure lost context or insufficient force control  ·2026-08-20
+- [falsified] A larger backbone solves sample efficiency  ·2026-08-14 → bought only 7 points
+- [confirmed] 4:1 sim mixing works  ·2026-08-28 → ablation shows +14pp
+```
+
+Anything still open after 60 days gets asked once: is it still open, or is there an answer? Keep the falsified and confirmed ones — they stop things being retested.
+
+### `sessions.md` — the session log, append only
 
 ```markdown
 ## 2026-09-06
-攻擊面  評估協定
-乾脆    主指標定義、seed 數
-含糊    擾動測試的具體參數、held-out 的驗證方式
-不知道  對照組的超參數搜尋次數
-寫回    context: 主指標定義 / open-questions: 擾動參數待定
+Line       evaluation protocol
+Crisp      primary metric definition, seed count
+Vague      the specific perturbation parameters, how the held-out split was verified
+Unknown    the baseline's hyperparameter search budget
+Wrote back context: primary metric / open-questions: perturbation parameters undecided
 ```
 
-只記標記與寫回，不要存逐字稿。這份是用來算盲點的，不是會議記錄。
+Marks and writebacks only, never a transcript. This file exists to compute blind spots, not to minute the meeting.
 
-## 全域層 `~/.claude/grill/profile.md`
+## Global layer: `~/.claude/grill/profile.md`
 
-一個檔案。跟著人走，換專案甚至換工作都還在。
+One file. It follows the person across projects and jobs.
 
 ```markdown
-## 盲點（近 10 次 session）
-- 評估協定：5 次裡 4 次含糊。慣用迴避是「跟上次一樣」但上次也沒寫下來。
-- 成本估計：3 次裡 3 次不知道。傾向低估排隊時間。
-- 機制假設：一向乾脆，不用花時間。
+## Blind spots (last 10 sessions)
+- Evaluation protocol: vague in 4 of 5. Habitual deflection is "same as last time",
+  but last time was not written down either.
+- Cost estimates: unknown in 3 of 3. Tends to underestimate queue time.
+- Mechanism hypotheses: consistently crisp, no need to spend time here.
 
-## 重複踩的坑
-- 三次栽在「對照組的預算沒對齊」  ·2026-04, 2026-06, 2026-08
+## Repeated pitfalls
+- Caught three times by an unmatched baseline budget  ·2026-04, 2026-06, 2026-08
 
-## 慣用的迴避方式
-- 被問到不確定的數字時會轉去講機制。追問時要把話題拉回數字。
+## Habitual deflections
+- When asked for a number they are unsure of, switches to talking about the mechanism.
+  Pull the topic back to the number.
 ```
 
-**只看最近 10 次 session**，更早的自動淡出。人會進步，profile 要跟上，不要拿半年前的弱點糾纏。
+**Only the last 10 sessions count**; older ones fade out. People improve, and the profile has to keep up rather than relitigating a weakness from six months ago.
 
-最後一節「慣用的迴避方式」是這份檔案最有用的部分，也最需要節制地寫——它是描述行為模式，不是評價人。寫「被問到數字時會轉去講機制」，不要寫「不擅長量化」。
+The last section is the most useful part of this file and the one that needs the most restraint — it describes a behaviour pattern, it does not rate the person. Write "switches to the mechanism when asked for an uncertain number", never "is bad at quantifying".

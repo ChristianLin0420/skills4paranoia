@@ -1,44 +1,44 @@
-# 第一次在專案裡建底
+# First run in a project
 
-目的：讓第一次使用就比通用拷問有用，不用等累積五次。
+The point is to make the first session more useful than generic interrogation, rather than waiting five sessions to become worth anything.
 
-## 順序
+## Order
 
-**一、先確認 gitignore。** `.grill/` 沒在裡面就先加，並跟使用者講一句為什麼（會有內部資訊，而且這個 repo 可能是公開的）。
+**1. Check the gitignore.** If `.grill/` is not in it, add it and say why in one line: it will hold internal detail, and this repo may be public.
 
-**二、讀，不要問。** 這一步不問任何問題。
+**2. Read; do not ask.** No questions in this phase.
 
-- `README.md`、`docs/`、實驗設計與模型設計文件
-- 近 30 個 commit 的訊息（看得出正在做什麼、卡在哪）
-- 過去的簡報或報告（若有）
-- 設定檔（看得出算力規模、資料規模、評估設定）
+- `README.md`, `docs/`, experiment and model design notes
+- The last 30 commit messages — they show what is being worked on and where it is stuck
+- Past decks or reports, if any
+- Config files — they show compute scale, data scale, evaluation setup
 
-**三、抽出兩類東西，攤給使用者確認。**
+**3. Extract two kinds of thing and show them for confirmation.**
 
 ```
-我從素材抽出這些，請確認或修正：
+Pulled these out of the material — confirm or correct:
 
-詞彙
-  held-out 指的是 asset id 不重疊，不是任務名稱不同      （來自 scripts/check_split.py）
-  主指標看起來是擾動條件下的平均成功率                    （來自 eval/run_eval.py，但不確定）
+Vocabulary
+  held-out means asset ids are disjoint, not that task names differ   (from scripts/check_split.py)
+  the primary metric looks like mean success under perturbation        (from eval/run_eval.py, unsure)
 
-約束
-  64 張 H100                                          （來自 configs/cluster.yaml）
-  評估用 12 個任務、每任務 100 次 rollout                （來自 eval config）
+Constraints
+  64 H100s                                                            (from configs/cluster.yaml)
+  12 tasks, 100 rollouts each                                         (from the eval config)
 
-我猜但沒有把握的
-  你們的 seed 數看起來是 3，但 runs/ 底下有 6 個同設定的目錄，
-  所以實際上是 3 還是 6？
+Guessed, not confident
+  Seed count reads as 3, but runs/ has 6 directories at the same setting —
+  is it 3 or 6?
 ```
 
-**四、寫進 `context.md`。** 使用者確認過的寫成事實，沒確認的不要寫。
+**4. Write into `context.md`.** Only what the user confirmed becomes a fact. Do not write the guesses.
 
-**五、不要在建底時拷問。** 建底就是建底。使用者這時候在校對事實，不是在被挑戰，兩件事混在一起會兩邊都做不好。
+**5. Do not interrogate during bootstrap.** Bootstrap is bootstrap. The user is proof-reading facts here, not being challenged; mixing the two does neither well.
 
-## 建底要花多久
+## How long
 
-十五分鐘以內。超過就是讀太多了 —— 你不需要理解整個 codebase，只需要拿到足夠問出具體問題的詞彙與約束。
+Under fifteen minutes. Longer means you are reading too much — you do not need to understand the codebase, only to acquire enough vocabulary and constraints to ask specific questions.
 
-## 之後
+## Afterwards
 
-`profile.md` 不在建底範圍。盲點只能從實際的拷問裡累積，第一次是空的，這很正常。
+`profile.md` is not part of bootstrap. Blind spots can only accumulate from real interrogation, so the first session has none. That is expected.

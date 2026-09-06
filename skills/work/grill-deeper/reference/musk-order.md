@@ -1,77 +1,77 @@
-# 依序拷問模式
+# Ordered mode
 
-使用者說「用馬斯克那套問我」「從第一原理問」「幫我砍」時切換到這個模式。它取代 `lines-of-attack.md` 的攻擊面選擇。
+Switch to this when the user says "use the Musk algorithm", "from first principles", or "help me cut". It replaces the attack-line selection in `lines-of-attack.md`.
 
-**這套的價值在順序，不在問題本身。** 跳步等於沒做。
+**The value of this is the order, not the questions.** Skipping a step means you did not do it.
 
-## 五步
+## Five steps
 
-### 1. 每個需求要有名字
+### 1. Every requirement gets a name
 
-- 這個需求是誰提的？**要人名，不要部門，不要「大家覺得」。**
-- 那個人現在還這樣認為嗎？他當初的理由是什麼？
-- 如果不滿足這個需求會怎樣？具體會壞掉什麼？
+- Who asked for this? **A person's name — not a department, not "everyone thinks".**
+- Do they still think so? What was their reason at the time?
+- What breaks, concretely, if it is not satisfied?
 
-**來自聰明人的需求最危險**，因為沒有人會去質疑它。找不到名字的需求，多半是某次會議的殘留物，早就沒有人真的需要它。
+**Requirements from smart people are the most dangerous**, because nobody questions them. A requirement with no name attached is usually the residue of some meeting nobody actually needs any more.
 
-問到每個需求都掛上一個人名為止。掛不上的，直接進第 2 步的刪除候選。
+Press until every requirement carries a name. The ones that cannot get one go straight into step 2's deletion candidates.
 
-### 2. 刪掉能刪的
+### 2. Delete what can be deleted
 
-- 這一段能不能整個拿掉？不是簡化，是拿掉。
-- 拿掉之後誰會先發現？多久會發現？
-- 沒人發現的話，它為什麼還在？
+- Can this whole section be removed? Not simplified — removed.
+- Who notices first if it goes? How long until they notice?
+- If nobody notices, why is it still here?
 
-**判準：刪到你必須加回大約 10% 為止。** 一項都不用加回來，代表你刪得不夠，還有東西該死沒死。
+**The test: delete until you have to add roughly 10% back.** Adding nothing back means you did not delete enough and something is still alive that should not be.
 
-這一步最容易被跳過，因為刪東西沒有成就感，而且會得罪當初做那東西的人（常常就是自己）。
+This is the step people skip, because deleting things is not satisfying and it offends whoever built the thing — often yourself.
 
-### 3. 簡化剩下的
+### 3. Simplify what remains
 
-**只有在第 1、2 步做完之後才准進來。**
+**Only after steps 1 and 2.**
 
-最常見的錯誤是優化一個根本不該存在的東西。使用者一開口就在講怎麼優化時，把他拉回第 1 步：先確認這東西該存在。
+The most common mistake is optimising something that should not exist. When the user opens by talking about how to optimise, pull them back to step 1: establish first that the thing should exist.
 
-### 4. 加快循環
+### 4. Accelerate the cycle
 
-- 一次迭代要多久？其中多少是等待？
-- 縮短一半的話，瓶頸會移到哪裡？
+- How long is one iteration? How much of it is waiting?
+- If it halved, where does the bottleneck move?
 
-不能在前三步之前做。加速一個該刪的東西，只是更快地做錯事。
+Not before the first three. Accelerating something that should have been deleted just does the wrong thing faster.
 
-### 5. 自動化
+### 5. Automate
 
-最後。自動化一個沒被簡化過的流程，等於把混亂固化下來。
+Last. Automating a process that was never simplified sets the mess in concrete.
 
-## 怎麼執行
+## Running it
 
-**一次一步，做完才往下。** 不要一次丟五步的問題。
+**One step at a time, finish before moving on.** Do not throw all five steps of questions at once.
 
-每一步問到收斂了，講一句「第 N 步結束，目前的狀態是 X」，再進下一步。
+When a step converges, say "step N done, here is where that leaves us" and move to the next.
 
-**使用者跳步的時候要擋。** 他在講第 3 步的優化但第 1 步還沒做，就說：
+**Block the user when they skip.** They are talking about step 3 optimisations while step 1 is unanswered:
 
-> 先停一下。這一段的需求是誰提的？在確認它該存在之前，優化它是白費。
+> Hold on. Who asked for this section? Optimising it before establishing that it should exist is wasted work.
 
-擋這一下是這個模式的全部價值。不擋的話它就退化成一般的拷問。
+That block is the entire value of this mode. Without it, it degrades into ordinary interrogation.
 
-## 語氣
+## Register
 
-- **要數字，不要形容詞。** 「快很多」不是答案，「從 40 分鐘到 6 分鐘」才是。
-- **要具體的人，不要角色。** 「產品端要求的」不是答案。
-- **追問到底層。** 「因為框架是這樣設計的」不是理由，那只是把問題往下推一層——那就往下推，繼續問。
-- **不要客套地同意。** 使用者給出一個沒有數字的理由時，不要說「有道理，那麼——」，直接指出它沒有數字。
+- **Numbers, not adjectives.** "Much faster" is not an answer; "from 40 minutes to 6" is.
+- **A person, not a role.** "Product asked for it" is not an answer.
+- **Push to the bottom.** "Because that is how the framework is designed" is not a reason, it pushes the question down a level — so follow it down and keep asking.
+- **Do not agree politely.** When a reason arrives with no number, do not say "fair enough, so —"; say that it has no number.
 
-## 什麼時候不要用這個模式
+## When not to use this mode
 
-- 你在探索一個還沒成形的想法。這套是用來砍的，不是用來長的，會把嫩芽砍死。
-- 你要拷問的是一個假設而不是一個系統。假設用 `lines-of-attack.md` 的機制與對立解釋那一面。
-- 對方是別人的東西而你只是想理解。這套的攻擊性只適合用在自己身上或有共識的團隊內。
+- The idea is still taking shape. This is built to cut, not to grow, and it will kill a seedling.
+- What is being interrogated is a hypothesis rather than a system. Use the mechanism-and-rivals line in `lines-of-attack.md`.
+- It is someone else's work and you only want to understand it. This much aggression only suits your own work, or a team that has agreed to it.
 
-## 跟知識庫的關係
+## What it feeds back
 
-依序拷問一樣要寫回，而且它產出的東西特別值得記：
+Ordered mode writes back too, and what it produces is worth keeping:
 
-- 第 1 步找出的**需求負責人**，寫進 `context.md`。這是最容易失傳的資訊。
-- 第 2 步**刪掉的東西與理由**，寫進 `decisions.md`，推翻條件填「誰來抱怨」。
-- 使用者在哪一步卡住，寫進 profile 的盲點——多數人卡在第 2 步。
+- The **requirement owners** found in step 1 go into `context.md`. This is the information most likely to be lost.
+- **What was deleted and why** goes into `decisions.md`, with "who complains" as the reversal condition.
+- **Which step the user stalls on** goes into the profile's blind spots. Most people stall on step 2.

@@ -1,48 +1,48 @@
-# `.grill/` 初始骨架
+# Starting skeleton for `.grill/`
 
-在專案根目錄建 `.grill/`，並確認它在 `.gitignore` 裡。
+Create `.grill/` at the project root and confirm it is in `.gitignore`.
 
 ## context.md
 ```markdown
-# <專案名> — 穩定事實
+# <project> — stable facts
 
-## 詞彙
-- <術語>：<在這個專案裡的確切意思>  ·YYYY-MM-DD
+## Vocabulary
+- <term>: <what it means exactly, here>  ·YYYY-MM-DD
 
-## 約束
-- 算力：  ·YYYY-MM-DD
-- 聽眾：  ·YYYY-MM-DD
-- 介面：  ·YYYY-MM-DD
+## Constraints
+- Compute:  ·YYYY-MM-DD
+- Audience:  ·YYYY-MM-DD
+- Interfaces:  ·YYYY-MM-DD
 ```
 
 ## decisions.md
 ```markdown
-# 決定
+# Decisions
 
-## <一句話的決定>  ·YYYY-MM-DD
-決定     <做了什麼>
-替代     <當時考慮過但沒選的>
-推翻條件 <什麼證據會讓我們改變主意>
-狀態     有效 | 待重議 | 已推翻
+## <the decision in one line>  ·YYYY-MM-DD
+Decision    <what was done>
+Alternative <what was considered and not taken>
+Reverses if <what evidence would change our mind>
+Status      active | reopen | reversed
 ```
 
 ## open-questions.md
 ```markdown
-# 開放假設
+# Open assumptions
 
-- [開放] <假設>  ·YYYY-MM-DD
-- [已確認] <假設>  ·YYYY-MM-DD → <證據>
-- [已證偽] <假設>  ·YYYY-MM-DD → <證據>
+- [open] <assumption>  ·YYYY-MM-DD
+- [confirmed] <assumption>  ·YYYY-MM-DD → <evidence>
+- [falsified] <assumption>  ·YYYY-MM-DD → <evidence>
 ```
 
 ## sessions.md
 ```markdown
-# 拷問紀錄
+# Session log
 
 ## YYYY-MM-DD
-攻擊面  <一到兩個>
-乾脆    <哪些問題答得具體>
-含糊    <哪些只給了形容詞或類別>
-不知道  <哪些明講不知道>
-寫回    <這次寫進哪幾個檔案的哪幾條>
+Line       <one or two>
+Crisp      <which questions got specific answers>
+Vague      <which got only adjectives or categories>
+Unknown    <which were openly unknown>
+Wrote back <which entries went into which files>
 ```

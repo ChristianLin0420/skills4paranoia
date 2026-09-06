@@ -1,71 +1,72 @@
-# 評估協定
+# The evaluation protocol
 
-四件事不寫死，你的數字就無法跟任何人比較，包括三個月後的你自己。每一條後面的案例都是實際發生過的重現失敗，詳見 `vla-code-review/reference/precedents.md`。
+Leave these four unfixed and your numbers cannot be compared with anyone's, including your own three months from now. Each one has a real reproduction failure behind it; see `vla-code-review/reference/precedents.md`.
 
-## 1. held-out 切在哪一層
+## 1. Which layer held-out is cut at
 
-這是四個不同的層級，強度由弱到強：
+Four different levels, weakest to strongest:
 
-| 層級 | 意思 | 量到的是 |
+| Level | Meaning | What it measures |
 |---|---|---|
-| 任務名稱 | 換個指令措辭 | 幾乎什麼都不是 |
-| 物件實例 | 同類別不同個體（不同的杯子） | 類別內泛化 |
-| 場景 | 不同版面、光照、背景 | 視覺泛化 |
-| 示範者 | 不同人蒐集的資料 | 對操作風格的泛化 |
+| Task name | Reword the instruction | Almost nothing |
+| Object instance | Same category, different item (a different mug) | Within-category generalisation |
+| Scene | Different layout, lighting, background | Visual generalisation |
+| Demonstrator | Data collected by a different person | Generalisation over operating style |
 
-**在報告裡寫明你切在哪一層。** 只換任務名稱不換分布，那個數字量的是記憶不是泛化 —— LIBERO-PRO 發現在 LIBERO 上拿到 90%+ 的模型，只要在同一個模擬器內擾動物體擺位或改寫指令，成功率會崩到接近零。
+**State which level in the report.** Change only the task name and the number measures memorisation, not generalisation — LIBERO-PRO found that models scoring 90%+ on LIBERO collapse toward zero under in-simulator perturbation of object placement or paraphrased instructions.
 
-切分要在**產生資料的那一層**做，不是在任務名稱上做。做完之後實際比對 asset id、scene id、demonstrator id 的交集，確認是空的。
+Cut the split **at the layer that generates the data**, not on task names. Then verify: the intersection of asset ids, scene ids and demonstrator ids should be empty.
 
-## 2. 成功判準的完整定義
+## 2. The full success criterion
 
-一個完整的判準至少要包含四件事：
+A complete criterion needs at least four things:
 
-1. **幾何條件** —— 物體中心在目標區域內，還是接觸？區域怎麼定義？
-2. **保持幀數** —— 連續幾幀滿足才算？少了這條，判準會在物體即將掉落時就觸發。
-3. **末端狀態** —— 夾爪是否已鬆開？機械臂是否已退開？
-4. **旋轉不變性** —— 容器被轉動時判定還成立嗎？
+1. **The geometric condition** — object centre inside the target region, or contact? How is the region defined?
+2. **Hold duration** — how many consecutive frames must satisfy it? Without this the criterion fires while the object is still falling.
+3. **End state** — has the gripper released? Has the arm withdrawn?
+4. **Rotation invariance** — does the test still hold when the container is rotated?
 
-前兩條漏掉會**高報**（SimplerEnv#129：物體只是靠近目標、機器人還沒鬆手就算成功；LIBERO#149：物體接觸桌面前就算成功）。第四條漏掉會**低報**（LIBERO#145：`in_box` 沒考慮旋轉，容器轉了之後中心在內的物體被判在外）。
+Missing the first two **over-reports** (SimplerEnv#129: success while the object is merely near the target and the robot has not released; LIBERO#149: success before the object touches the table). Missing the fourth **under-reports** (LIBERO#145: `in_box` ignores site orientation, so an object whose centre is inside a rotated container reads as outside).
 
-**判準只能實作一次。** 訓練中的 eval 與最終 eval 必須 import 同一個函式，否則兩邊的數字對不起來。
+**Implement the criterion once.** Training-time eval and final eval must import the same function, or the two sets of numbers will not agree.
 
-改判準的時候要重跑舊 checkpoint，看分數掉多少。掉很多的話，過去所有數字都要重新解讀。
+When you change the criterion, re-run an old checkpoint and see how far the score moves. If it moves a lot, every past number needs reinterpreting.
 
-## 3. eval seed 協定
+## 3. The eval seed protocol
 
-三條規則：
+Three rules:
 
-- **固定集合**，例如 `range(100)`，寫死在設定裡。
-- **與訓練步數無關** —— 否則不同 checkpoint 評的是不同的初始狀態，比較是假的。
-- **每個 episode 重新 seed** —— 不是每個 task 一次。
+- **A fixed set**, e.g. `range(100)`, written into the config.
+- **Independent of training step** — otherwise different checkpoints are evaluated on different initial states and the comparison is fake.
+- **Reseed every episode**, not once per task.
 
-第三條特別容易漏。OpenVLA#342：`run_libero_eval.py` 每個 task 只建一個 env、只 seed 一次，RNG 串流跨 episode 前進，`reset()` 取樣的家具擺位寫進模擬器幾何但 `set_init_state()` 不還原，結果爐台在 episode 之間位移 3.0mm。在 episode 迴圈內補一次 seed 就完全消除。
+The third is the one that gets missed. OpenVLA#342: `run_libero_eval.py` builds one env per task and seeds once, so the RNG stream advances across episodes; `reset()` samples fixture placement from it into the simulator geometry while `set_init_state()` restores only `qpos`/`qvel`. The stove moved 3.0mm between episodes. Reseeding inside the episode loop removed the effect entirely.
 
-## 4. 擾動測試
+## 4. Perturbation testing
 
-如果不測擾動，你不知道 90% 是能力還是死記。
+Without it you do not know whether 90% is capability or rote learning.
 
-最低限度四種，每種各報一個數字：
+Four kinds at minimum, each reported separately:
 
-- **物體擺位** —— 在合理範圍內隨機化初始位置
-- **指令改寫** —— 同義句、不同措辭
-- **初始狀態** —— 機械臂起始姿態
-- **視覺** —— 光照、材質、背景
+- **Object placement** — randomise the starting position within a reasonable range
+- **Instruction rewording** — synonyms, different phrasings
+- **Initial state** — the arm's starting pose
+- **Visual** — lighting, materials, background
 
-**擾動下的成功率才是你該報的主數字**，未擾動的那個是上界。兩個都報，差距本身就是資訊：差距大代表模型記住了版面。
+**The perturbed success rate is the number you should be leading with**; the unperturbed one is an upper bound. Report both — the gap is itself informative, and a large gap means the model memorised the layout.
 
-## 5. 寫進設計文件的樣子
+## 5. What this looks like in the document
 
 ```
-評估協定
-  held-out 層級   物件實例 + 場景（asset id 與 scene id 交集為空，已驗證）
-  成功判準        物體中心在目標框內、連續 10 幀、夾爪已鬆開、旋轉不變
-                  實作於 envs/criteria.py:success()，訓練與最終 eval 共用
-  eval seed       range(100)，固定，與訓練步數無關，每 episode 重新 seed
-  rollouts        100 / task × 12 tasks × 3 seeds
-  擾動            物體擺位 ±3cm、指令改寫 ×3、初始姿態 ×3、光照 ×2
-  主數字          擾動下的平均成功率；未擾動值一併報告為上界
+Evaluation protocol
+  Held-out level     object instance + scene (asset and scene ids disjoint, verified)
+  Success criterion  object centre in target box, 10 consecutive frames, gripper released,
+                     rotation-invariant. Implemented in envs/criteria.py:success(),
+                     shared by training-time and final eval
+  Eval seeds         range(100), fixed, independent of training step, reseeded each episode
+  Rollouts           100 per task × 12 tasks × 3 seeds
+  Perturbation       placement ±3cm, 3 instruction rewrites, 3 initial poses, 2 lightings
+  Headline number    mean success under perturbation; unperturbed reported as an upper bound
 ```
 
-這一段直接搬進 `research-deck` 的 `E18 setup` 頁。
+This block goes straight into the deck's setup page in `research-deck`.

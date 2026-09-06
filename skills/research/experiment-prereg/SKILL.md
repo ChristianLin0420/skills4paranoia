@@ -125,7 +125,7 @@ Changing them is allowed, but it goes in the decision record with the reason and
 
 ## 7. Output
 
-`templates/prereg.md` is the blank; `examples/filled-prereg.md` is a worked one — start from the example, the margin notes there show how specific each field has to be.
+`templates/prereg.md` is the blank; `examples/filled-prereg.en.md` and `.zh.md` are worked ones — start from the example, the margin notes there show how specific each field has to be.
 
 The document is three things at once: the pre-launch checklist, the source for the deck's setup page in `research-deck`, and the only record of what you were actually testing when you look back in three months.
 

@@ -1,27 +1,27 @@
-# `~/.claude/grill/profile.md` 初始骨架
+# Starting skeleton for `~/.claude/grill/profile.md`
 
-跨專案，跟著人走。第一次是空的，累積三到五次 session 之後才會有內容。
+Cross-project; follows the person. Empty at first, and only has content after three to five sessions.
 
 ```markdown
-# 拷問側寫
+# Interrogation profile
 
-## 盲點（近 10 次 session）
-- <問題類別>：<n> 次裡 <m> 次含糊。<觀察到的迴避方式>
+## Blind spots (last 10 sessions)
+- <question category>: vague in <m> of <n>. <the deflection observed>
 
-## 重複踩的坑
-- <描述>  ·YYYY-MM, YYYY-MM
+## Repeated pitfalls
+- <description>  ·YYYY-MM, YYYY-MM
 
-## 慣用的迴避方式
-- <行為模式，不是評價>
+## Habitual deflections
+- <a behaviour pattern, not a judgement>
 ```
 
-## 寫這份的分寸
+## Writing this with restraint
 
-**描述行為，不評價人。**
+**Describe behaviour; do not rate the person.**
 
-- 可以：「被問到不確定的數字時會轉去講機制」
-- 不行：「不擅長量化」
+- Fine: "switches to talking about the mechanism when asked for a number they are unsure of"
+- Not fine: "is bad at quantifying"
 
-前者可以行動——下次把話題拉回數字就好；後者是貼標籤，而且會讓使用者不想再用這個 skill。
+The first is actionable — pull the topic back to the number. The second is a label, and it will make the user stop opening this skill.
 
-**只看最近 10 次。** 人會進步，不要拿半年前的弱點糾纏。淡出的條目直接刪掉，不要留著當歷史。
+**Only the last 10 sessions.** People improve; do not relitigate a weakness from six months ago. Delete faded entries rather than keeping them as history.

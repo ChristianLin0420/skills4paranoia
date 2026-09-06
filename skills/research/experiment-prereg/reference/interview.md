@@ -1,71 +1,71 @@
-# 訪談協定
+# The interview
 
-提案式，不要開放式。從既有素材推出候選答案讓使用者否決或修正 —— 「你想測什麼」得到模糊答案，「從 `exp_design.md` 看起來你在測 A，但消融的設計比較像在測 B，哪個對」得到決定。
+Propose; do not ask openly. Derive candidate answers from the existing material and let the user reject or correct them — "what do you want to test?" gets a vague answer, "the design doc reads as testing A, but the ablation looks more like B; which is it?" gets a decision.
 
-一次問一組，三到五題。每個答案當場填進設計文件的某一欄。
+One group at a time, three to five questions. Every answer goes straight into a field of the document.
 
-## 第 1 組 — 要回答的是非題
+## Group 1 — the yes/no question
 
-> 我從素材推出三個可能的問題：
-> (a) 共享世界模型能否在示範資料減半下維持成功率
-> (b) 凍結 encoder 是否足以達到全微調的水準
-> (c) 模擬混入比例的最佳值在哪
+> Three possible questions come out of the material:
+> (a) can a shared world model hold success with half the demonstrations
+> (b) is a frozen encoder enough to match full finetuning
+> (c) where is the optimal sim-mixing ratio
 >
-> 哪個是這輪真正要回答的？其他兩個是這輪的副產品，還是根本不測？
+> Which is this round actually answering? Are the other two byproducts, or not tested at all?
 
-追問一句：**「這個問題可以答『否』嗎？」** 答不了否的不是是非題，是宣傳語。
+Follow up once: **"can this question be answered no?"** Anything that cannot be answered no is not a question, it is a slogan.
 
-## 第 2 組 — 基準與預算匹配
+## Group 2 — baseline and budget
 
-> 對照組打算用什麼？我看到 repo 裡有 `baseline_bc` 和 `diffusion_policy` 兩個設定。
+> What is the control? The repo has `baseline_bc` and `diffusion_policy` configs.
 >
-> 三個維度各要怎麼對齊 —— 資料量、算力、參數量？三個都對齊通常做不到，你要放掉哪一個，為什麼？
+> How does each of four dimensions line up — data, compute, parameters, hyperparameter search count? All four rarely can; which one are you letting go, and why?
 
-**沒有匹配預算的比較沒有意義。** 如果對照組只跑了一半的步數，你量到的是步數不是方法。放掉哪一個維度是合理的取捨，但要明講。
+**A comparison with an unmatched budget means nothing.** If the control ran half the steps, you measured steps, not method. Letting a dimension go is a reasonable trade, but say so.
 
-## 第 3 組 — 什麼算 null
+## Group 3 — what counts as null
 
-最重要也最會被迴避的一組。問到具體數字為止。
+The most important group and the most avoided. Press until there is a number.
 
-> - 主指標是哪一個？只能有一個。
-> - 這個指標在你既有的 run 上，同設定不同 seed 的標準差大約多少？
-> - 你想偵測多大的差異才算有意義？
-> - 落在什麼範圍就算假設不成立？
+> - Which is the primary metric? Only one.
+> - On your existing runs, what is the standard deviation across seeds at the same setting?
+> - How large a difference would count as meaningful?
+> - What range means the hypothesis did not hold?
 
-拿到 σ 和想偵測的差異之後，用 SKILL.md 第 2 節的表算出需要幾個 seed。算出來跑不起的話，直接講：
+With σ and the target difference, use the table in SKILL.md section 2 to get the seed count. When the answer is unaffordable, say so directly:
 
-> 你想偵測 3 個百分點的差異，但 σ 是 4pp，這需要每組 20 個 seed。你的預算只夠 3 個，那實際上只能偵測到 9 個百分點以上的差異。要嘛接受這個實驗只能抓大效果，要嘛縮小範圍把 seed 加到 10 個。你選哪個？
+> You want to detect 3 points, σ is 4pp, and that needs 20 seeds per arm. Your budget covers 3, which detects nothing under 9 points. Either accept that this run only catches large effects, or narrow the scope and go to 10 seeds. Which?
 
-這個對話是整場訪談最有價值的部分。
+This exchange is the most valuable part of the interview.
 
-## 第 4 組 — 停止與決策規則
+## Group 4 — stopping and decision rules
 
-> - 跑到什麼條件停？步數、時間、還是指標收斂？
-> - 如果主指標落在「好」的區間，下一步做什麼？
-> - 落在「null」區間呢？
-> - 落在中間那個尷尬區間呢？
+> - What condition stops the run? Steps, time, or metric convergence?
+> - If the primary metric lands in the good band, what happens next?
+> - In the null band?
+> - In the awkward band between them?
 
-**如果三個區間的下一步都一樣，這個實驗沒有資訊量。** 直接告訴使用者，讓他決定要不要改設計或不跑。
+**If all three bands lead to the same next step, the run carries no information.** Say so and let the user decide whether to change the design or not run it.
 
-## 第 5 組 — 最可能白跑的原因
+## Group 5 — the most likely way this is wasted
 
-> 這個實驗最可能因為什麼而白跑？我先猜三個：
-> (a) 對照組的資料前處理跟實驗組不同
-> (b) 評估用的 held-out 其實有洩漏
-> (c) seed 數不夠，結果落在噪音裡
+> What is most likely to waste this run? Three guesses:
+> (a) the control's data preprocessing differs from the treatment's
+> (b) the held-out split actually leaks
+> (c) too few seeds, and the result sits inside the noise
 >
-> 哪個最像？還有我沒想到的嗎？
+> Which is closest? Anything I have not thought of?
 
-寫下來，跑完對照。這一欄的價值在事後 —— 你事先寫的擔憂如果成真了，下一輪先解決它。
+Write it down and check against it afterwards. The value of this field is retrospective: if what you worried about happened, deal with it first next round.
 
-## 收斂條件
+## Convergence
 
-六個欄位全部有具體內容，而且第 3 組算出的 seed 數與預算對得起來。達不到就繼續問，或者結論是「這個實驗現在不該跑」—— 那也是一個有效的產出。
+All fields have concrete content, and the seed count from group 3 fits the budget. Otherwise keep asking — or conclude that this run should not happen yet, which is also a valid output.
 
-## 什麼時候跳過
+## When to skip
 
-使用者說「這只是探索性的，先跑跑看」時，不要照做也不要拒絕。改問：
+When the user says "this is exploratory, let us just try it", neither comply nor refuse. Ask instead:
 
-> 那我們把停止規則設成跑到 20k 步先看一次，主指標看訓練 loss 而不是成功率，這樣可以嗎？
+> Then shall we set the stopping rule at 20k steps and look once, with training loss rather than success rate as the primary metric?
 
-把探索性實驗變成**有明確終點的**探索性實驗。無限期的「跑跑看」是算力最大的漏洞。
+Turn an exploratory run into an exploratory run **with an endpoint**. Open-ended "let us just try it" is the largest leak in a compute budget.

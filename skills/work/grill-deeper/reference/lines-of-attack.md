@@ -1,78 +1,78 @@
-# 設計樹上的六種節點
+# The six kinds of node on the tree
 
-這**不是**一張「選一個來問」的菜單。問題的順序由 frontier 決定（前置條件確定了才問得了），不由你挑。
+This is **not** a menu to pick one from. Question order comes from the frontier — prerequisites settled first — not from choosing.
 
-這六類的用途是**完整性檢查**：攤開設計樹之後掃一遍，確認沒有整類分支從樹上缺席。少了一整類通常代表使用者沒想過那個面向，而不是那個面向不適用。
+These six are a **completeness check**: once the design tree is laid out, sweep them and confirm no whole category is missing from it. A missing category usually means the user has not considered that dimension, not that the dimension does not apply.
 
-**盲點的用法**：profile 顯示近期含糊的那一類，在**同一輪之內**排前面，而且不給建議答案。它不改變樹的形狀，只改變輪內順序。
+**How blind spots are used**: a category the profile shows as recently vague goes early **within a round**, and gets no recommended answer. It changes the order inside a round, not the shape of the tree.
 
-## 1. 機制與對立解釋
+## 1. Mechanism and rival explanations
 
-- 你相信的因果是什麼？一句「因為 A 所以 B」。
-- 同樣的觀察還能被什麼解釋？
-- **你的假設和那個對立解釋，會預測不同的東西嗎？** 不會的話，你手上的證據不區分兩者。
+- What causal claim do you believe? One sentence of "A therefore B".
+- What else explains the same observation?
+- **Do your explanation and that rival predict different things?** If not, your evidence does not distinguish them.
 
-第三題是這一面的核心。最常見的失敗是假設和它的反面預測同一件事——「加了 X 效果變好」既符合「X 的機制有效」也符合「X 只是加了容量」。
+The third question is the core of this category. The common failure is a hypothesis and its negation predicting the same thing — "adding X improved it" follows just as well from "X's mechanism works" as from "X only added capacity".
 
-## 2. 量測與判準
+## 2. Measurement and criteria
 
-- 主指標是哪一個？只能有一個。
-- 什麼結果會讓你說「這條路不通」？
-- 重複單位是什麼？（不要把同一次訓練的多次評估當成獨立樣本）
-- 判準是在做之前定的還是之後定的？
+- Which is the primary metric? Only one.
+- What result would make you say this path does not work?
+- What is the unit of replication? (Repeated evaluations of one training run are not independent samples.)
+- Was the criterion set before or after the fact?
 
-## 3. 範圍與取捨
+## 3. Scope and trade-offs
 
-- 你**不**做什麼？為什麼那個可以不做？
-- 如果只能做一半，砍哪一半？
-- 這個方案假設了什麼不會變？
+- What are you **not** doing? Why is that safe to leave out?
+- If you could only do half, which half gets cut?
+- What does this approach assume will not change?
 
-## 4. 依賴與假設
+## 4. Dependencies and assumptions
 
-- 這件事成立需要別人先做什麼？他們知道嗎？
-- 哪個假設一旦錯了，整件事就垮？
-- 有沒有哪個數字是別人給的、而你沒有驗過？
+- What does someone else have to do first? Do they know?
+- Which assumption, if wrong, brings the whole thing down?
+- Is there a number here that came from someone else and you have not verified?
 
-## 5. 失敗模式
+## 5. Failure modes
 
-- 這件事最可能怎麼失敗？
-- 失敗的時候你多久會知道？
-- 有沒有一種失敗是「看起來成功但其實沒有」？
+- How is this most likely to fail?
+- How soon would you know?
+- Is there a failure that looks like success?
 
-最後一題是最有價值的，因為那種失敗不會自己現形。
+The last one is the most valuable, because that kind of failure does not surface on its own.
 
-## 6. 聽眾與交付
+## 6. Audience and delivery
 
-- 誰要看？他們已經知道什麼？
-- 他們最可能質疑哪一點？
-- 講完之後你希望他們做什麼？
+- Who reads this? What do they already know?
+- What are they most likely to challenge?
+- What do you want them to do afterwards?
 
-## 提案式，不要開放式
+## Propose, do not ask openly
 
-已經有 `.grill/context.md` 之後，問題要具體到用上裡面的詞彙：
+Once `context.md` exists, questions should be specific enough to use the vocabulary in it:
 
-- 弱：「你的評估怎麼做？」
-- 強：「你的 held-out 一樣切在物件實例那一層嗎，還是這次改了？」
+- Weak: "how does your evaluation work?"
+- Strong: "is held-out still cut at the object-instance level, or did that change this time?"
 
-第二種能得到決定，第一種只能得到敘述。這是累積知識最直接的回報。
+The second gets a decision; the first gets a description. This is the most direct payoff of accumulating knowledge.
 
-## 節點之間常見的依賴
+## Dependencies that usually order these
 
-排 frontier 時用得到。箭頭左邊沒確定，右邊就問不了：
+Useful when computing the frontier. If the left side is unsettled, the right side cannot be asked:
 
 ```
-機制與對立解釋  →  量測與判準      不知道要驗證什麼，就定不了主指標
-範圍與取捨      →  依賴與假設      範圍沒定，不知道會依賴到誰
-量測與判準      →  失敗模式        沒有判準，「失敗」沒有定義
-範圍與取捨      →  聽眾與交付      交付什麼取決於做了什麼
+Mechanism and rivals   →  Measurement       You cannot fix a primary metric without knowing what you are verifying
+Scope and trade-offs   →  Dependencies      Without a scope you do not know who you will depend on
+Measurement            →  Failure modes     Without criteria, "failure" has no definition
+Scope and trade-offs   →  Audience          What you deliver depends on what you did
 ```
 
-這些是常見情況不是鐵律。實際的依賴由使用者的具體內容決定，看到不同的依賴就照實際的排。
+These are common cases, not laws. The real dependencies come from the user's specifics; when they differ, order by the real ones.
 
-## 什麼時候停
+## When to stop
 
-**frontier 空了就停** —— 每個分支都走過，沒有東西被默默假設掉。
+**When the frontier is empty** — every branch visited, nothing silently assumed.
 
-不是問到沒問題可問（永遠有），也不是問到使用者不耐煩。是問到樹上沒有未確定的節點。
+Not when you run out of questions (you never will), and not when the user gets impatient. When there are no unsettled nodes left.
 
-停下來之後給一份短的：站得住的地方、需要補的地方、本次寫回了什麼。不要重述整段對話。
+Then give a short close: what holds up, what needs filling in, what got written back. Do not restate the conversation.
