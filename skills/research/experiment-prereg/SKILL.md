@@ -1,6 +1,6 @@
 ---
 name: experiment-prereg
-description: 實驗的預先登記：在花掉算力之前把假設、主指標、什麼算 null、停止與決策規則寫死並凍結。強迫填完四個欄位（主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、評估協定），並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. This does NOT design the experiment or argue for it — falsify-first does that; this takes the design that came out of it and pins the measurement contract down. For choosing the design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power analysis, use a dedicated experimental-design or statistical-power skill. For the code rather than the protocol, use vla-code-review.
+description: 實驗的預先登記：在花掉算力之前把假設、主指標、什麼算 null、停止與決策規則寫死並凍結。強迫填完四個欄位（主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、評估協定），並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. This does NOT design the experiment — it takes one that already exists and pins the measurement contract down. For choosing the design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power analysis, use a dedicated experimental-design or statistical-power skill. For the code rather than the protocol, use vla-code-review.
 ---
 
 # experiment-prereg
@@ -24,9 +24,9 @@ description: 實驗的預先登記：在花掉算力之前把假設、主指標�
 | 3 | **停止與決策規則** | 跑到什麼條件停；結果落在哪個區間就做什麼 |
 | 4 | **評估協定** | held-out 層級、成功判準、seed 協定、擾動 |
 
-**論證那一層不在這裡。** 要回答的是非題、對立解釋、基準怎麼設計、最可能白跑的原因 —— 那些是 `falsify-first` 的產出，直接搬過來當輸入，不要在這裡重問一次。
+**先確認一件事再往下**：你的假設和它的反面，會不會預測**不同的**觀察？如果會預測同一件事，這個實驗不區分，鎖死量測契約也沒用。
 
-沒有跑過 `falsify-first` 就直接來的話，先回頭跑它。在還沒確認「這個實驗能不能分辨你的假設和它的反面」之前，鎖死量測契約是鎖了一個可能沒有意義的東西。
+例：「加了世界模型成功率上升」既符合「它讓物理知識跨任務共享」，也符合「它只是多了參數」—— 這種情況要先換一個能分辨兩者的操作，才值得往下走。
 
 ### 為什麼第 2 欄最重要
 
@@ -34,11 +34,11 @@ description: 實驗的預先登記：在花掉算力之前把假設、主指標�
 
 問到具體答案為止。「效果不明顯就算 null」不是答案；「主指標的平均差異小於 5 個百分點，或 95% 信賴區間跨過 0」才是。
 
-### 從 falsify-first 帶過來的基準，要補一欄
+### 基準匹配別漏掉超參數搜尋次數
 
-`falsify-first` 會給你對照組的設計，但它通常只對齊資料量、算力、參數量。**還要補上超參數搜尋次數。**
+資料量、算力、參數量三個對齊了還不夠。**你的方法調了 100 組、對照組跑預設值**，這個比較還是無效的。
 
-你的方法調了 100 組、對照組跑預設值，前三個對齊了也沒用。這是實務上最常見的不公平比較，因為它不像其他三個那麼顯眼。要嘛給兩邊同樣的搜尋次數，要嘛把「本方法搜了 N 組、對照組搜了 M 組」寫進文件讓讀者折扣（Dodge 等人）。
+這是實務上最常見的不公平比較，因為它不像其他三個那麼顯眼。要嘛給兩邊同樣的搜尋次數，要嘛把「本方法搜了 N 組、對照組搜了 M 組」寫進文件讓讀者折扣（Dodge 等人）。
 
 ## 2. 幾個 seed 才夠
 
@@ -123,10 +123,9 @@ rollout 數還是要夠（每個 seed 的平均才穩），但增加 rollout 不
 - `research-deck` 的 `E18 setup` 頁的內容來源
 - 三個月後回頭看「我當初到底在測什麼」的唯一憑據
 
-跑完之後回到這份文件，逐欄對照。也回頭看 `falsify-first` 那份探針文件裡寫的「最可能白跑的原因」有沒有發生 —— 有的話，下一輪先解決它。
+跑完之後回到這份文件，逐欄對照。
 
 ## 8. 相關技能
 
-- `falsify-first` —— 在這之前跑。它管「這個想法值不值得花大實驗去測」，產出的機制陳述與基準設計直接餵進來
 - `vla-code-review` —— 開跑前也跑一次，它管「code 有沒有偷偷做錯」，這個管「你有沒有定義清楚什麼叫做對」
 - `research-deck` —— 設計文件直接變成簡報的實驗設定頁

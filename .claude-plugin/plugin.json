@@ -1,7 +1,7 @@
 {
   "name": "skills4paranoia",
   "version": "0.1.0",
-  "description": "Agent skills that enforce the disciplines people skip: find the cheap experiment that could prove your idea wrong before you spend on the expensive one, pin the measurement contract before the run, hunt the code failures that never raise, and write decks where every page answers a stated problem.",
+  "description": "Agent skills that enforce the disciplines people skip: pin the measurement contract before the run, hunt the code failures that never raise, and write decks where every page answers a stated problem.",
   "author": {
     "name": "Bor-Jiun Lin",
     "url": "https://github.com/ChristianLin0420"
@@ -22,7 +22,6 @@
     "./skills/work/research-deck",
     "./skills/work/deck-design-system",
     "./skills/work/research-figures",
-    "./skills/research/falsify-first",
     "./skills/research/experiment-prereg",
     "./skills/research/vla-code-review"
   ]
