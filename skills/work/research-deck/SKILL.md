@@ -1,195 +1,198 @@
 ---
 name: research-deck
-description: 從一個裝著 figures、run log、實驗設計、會議紀錄的資料夾，訪談使用者釐清重點後產生研究型簡報（PPT / Keynote / HTML）。強制「問題 → 解法 → 成果」三頁講完，其餘全是佐證。使用者提供的圖直接置入，有底層資料的圖依主題重畫以統一風格。Use when the user points at a folder of experiment materials and wants slides, a deck, a presentation, 簡報, or 投影片 out of it.
+description: >-
+  Turn a folder of experiment material — figures, run logs, experiment and model design notes,
+  meeting notes — into a research deck (PPT / Keynote / HTML), after interviewing the user about
+  what actually matters. Enforces a three-page front that carries the whole argument (problem,
+  solution, results) with everything after it as evidence. Figures the user supplies are placed
+  as-is; figures whose underlying data exists are redrawn to the theme so the styling stays
+  uniform. Use when someone points at a folder of experiment material and wants slides, a deck
+  or a presentation out of it.
 ---
 
 # research-deck
 
-輸入是一個資料夾，輸出是一份簡報。中間最重要的一段不是排版，是**問清楚什麼重要**。
+The input is a folder, the output is a deck. The part that matters most in between is not layout, it is **finding out what matters**.
 
-素材不會告訴你什麼重要 —— 那在使用者腦袋裡。所以流程是：盤點 → 訪談 → 計畫確認 → 才開始寫。
+The material will not tell you — that lives in the user's head. So the order is: inventory → interview → confirm the plan → only then write.
 
-這個 skill 是入口，使用者只需要叫它。它會在需要時**主動載入**另外兩個 sibling skill：
+**Language.** Write in whatever language the user writes in, and set the deck's own `lang` accordingly. These instructions are in English because English is this repo's source language; a Chinese user gets a Chinese deck, and the examples ship in both.
 
-- **`research-figures`** —— 在步驟 5 佈置佐證之前載入。決定每張圖重畫還是貼原圖、重畫時的軸與誤差帶規格。
-- **`deck-design-system`** —— 在步驟 7 產出之前載入。色票、字階、格線、每個版式的精確幾何。
+This skill is the entry point; it loads two sibling skills when it needs them:
 
-不要憑記憶寫規格，那兩份是唯一的來源。
+- **`research-figures`** — before laying out evidence in step 5. Decides redraw-or-place per figure, and the axis, error-band and reference-line specs for redrawn ones.
+- **`deck-design-system`** — before emitting in step 7. Palette, type scale, grid, per-layout geometry.
 
-## 1. 階段 0 是強制的
+Do not write specifications from memory; those two files are the only source.
 
-拿到資料夾之後，**先照 `reference/intake.md` 走完盤點與訪談**，不要直接開始寫簡報。
+## 1. Phase 0 is mandatory
 
-摘要：
+Given a folder, **work through the inventory and interview in `reference/intake.md`** before writing any slide.
 
-1. **盤點** —— 掃資料夾、讀完所有 `.md`、取樣 log、列出所有圖，把找到的東西攤給使用者看。這個階段不問問題。
-2. **訪談** —— 五組問題：大問題與拆解、每張圖的判決、成果與未解、聽眾、缺口回填。提案式提問，不要開放式。
-3. **計畫確認** —— 把 Q 拆解、每張圖掛到哪個 Q、成果表欄位、預估頁數攤出來，使用者點頭才動筆。
+1. **Inventory** — scan the folder, read every `.md` in full, sample the logs, list every figure, and show the user what you found. Ask nothing in this phase.
+2. **Interview** — five rounds: the problem and its decomposition, a verdict on every figure, results and what is still unsolved, the audience, gap backfill. Propose candidate answers; do not ask open questions.
+3. **Confirm the plan** — lay out the Q decomposition, which figure hangs off which Q, the results table columns and the page estimate. Do not start writing until the user agrees.
 
-跳過訪談的唯一情況是使用者明確說「不要問，直接做」。那就照做，但產出後要告訴他你替他做了哪些判斷，特別是刪了哪些圖。
+The only reason to skip the interview is the user saying "do not ask, just do it". Then do it, but afterwards tell them which judgements you made on their behalf, especially which figures you dropped.
 
-## 2. 前三頁就是全部
+## 2. The front three pages are the whole argument
 
-| 頁 | 內容 | 判準 |
+| Page | Content | Test |
 |---|---|---|
-| 1 · 問題 | 一個大問題，拆成 2–4 個中問題（Q1…Q4），每個底下 2–3 個具體的技術障礙 | 讀者能不能自己判斷這個問題值不值得解 |
-| 2 · 解法 | 一句話講清楚機制，然後**逐條對應**第 1 頁的每個 Q | 每個 Q 都有一列，沒有落單的 Q，也沒有無主的機制 |
-| 3 · 成果 | 方法 × 指標的成果表，加一張關鍵圖 | 包含還沒解掉的那一格，不是只列贏的數字 |
-| 4+ | 佐證。每頁宣告 `solves=Q2`，不得出現新結論 | 刪掉這頁會不會讓某個 Q 失去支撐 |
+| 1 · Problem | One big problem, split into 2–4 mid-level problems (Q1…Q4), each with 2–3 concrete technical obstacles | Can the reader judge for themselves whether this is worth solving |
+| 2 · Solution | The mechanism in a sentence, then **one row per Q** from page 1 | Every Q has a row; no orphan Q, no unclaimed mechanism |
+| 3 · Results | A method-by-metric table plus one key figure | Includes the cell that is not solved yet, not only the wins |
+| 4+ | Evidence. Every page declares `solves=Q2` and introduces no new conclusion | Would deleting this page cost some Q its support |
 
-推論：
+Consequences:
 
-- **不要有「所以請你決定」那種頁。** 這是研究簡報不是內部提案。要講限制就寫在成果頁或佐證頁的註腳。
-- **問題頁不是「背景」。** 不要寫領域介紹、相關工作、動機故事。直接寫那個大問題，然後拆開。
-- **成果頁必須包含沒解掉的部分。** 只放贏的數字就變成行銷。把失敗的那一格留在表上，它是可信度的來源。
-- 佐證頁的存在理由只有一個：支撐某個 Q。找不到它支撐哪一個，就刪掉。
+- **No "so here is what I need you to decide" page.** This is a research deck, not an internal proposal. Limits go in a footnote on the results or evidence pages.
+- **The problem page is not "background".** No field introduction, no related work, no motivational story. State the problem and split it.
+- **The results page must contain what is unsolved.** Only showing wins turns it into marketing. The failed cell on the table is where credibility comes from.
+- An evidence page exists for exactly one reason: to support some Q. If you cannot say which, delete it.
 
-### 問題怎麼拆
+### How to split the problem
 
-大問題是一句話，中問題是它的必要條件，小問題是具體的技術障礙。判準：小問題必須是可量測、可證偽的，不是形容詞。
+The big problem is one sentence, the mid-level problems are its necessary conditions, and the sub-problems are concrete technical obstacles. Test: a sub-problem must be measurable and falsifiable, not an adjective.
 
-壞的小問題：「泛化能力不足」「效率有待提升」。
-好的小問題：「材質與光照一變就失效」「diffusion 方法 23ms/step，撐不到 30Hz」。
+Bad: "generalisation is insufficient", "efficiency needs improving".
+Good: "changing material or lighting breaks it", "diffusion methods run 23ms/step and cannot hold 30Hz".
 
-## 3. 圖從哪裡來
+## 3. Where figures come from
 
-三種來源，在訪談時逐張決定，不要自己假設：
+Three sources, decided figure by figure during the interview. Do not assume.
 
-| 來源 | 什麼時候 | 風格 |
+| Source | When | Style |
 |---|---|---|
-| **依主題重畫** | 底層資料還在（CSV、jsonl、log） | 與全篇一致 |
-| **貼使用者提供的原圖** | 無法重製：架構圖、pipeline、rollout 影格、實機照片 | 與其他頁不同，但無可取代 |
-| **刪掉** | 掛不到任何 Q | — |
+| **Redraw to the theme** | The underlying data exists (CSV, jsonl, log) | Uniform with the rest |
+| **Place the user's original** | Cannot be reproduced: architecture diagrams, pipelines, rollout frames, on-robot capture | Differs from the other pages, but irreplaceable |
+| **Drop it** | Hangs off no Q | — |
 
-**判準：有底層資料就重畫，沒有就貼原圖。** 統計圖（曲線、長條、矩陣、消融）幾乎都能重畫，只要找得到那份數值。重畫的好處是配色、字體、軸樣式跟整份簡報一致；貼原圖的好處是不會漏掉無法自動產生的東西。兩者搭配才既統一又完整。
+**The test: redraw if the underlying data exists, place if it does not.** Statistical figures can almost always be redrawn as long as the numbers can be found. Redrawing gives uniform colour, type and axes; placing keeps the things that cannot be generated. You need both to be uniform *and* complete.
 
-貼原圖的頁面，字級與配色本來就會跟其他頁不同。不要用裁切或濾鏡去掩飾，那只會更突兀。維持標題與註腳的格式一致，讓框架的一致性去承接風格的不一致。
+A placed original will not match the surrounding type and colour. Do not crop or filter it to hide that — it only makes it worse. Keep the title and footnote format consistent and let the framework's uniformity carry the style's inconsistency.
 
-置入圖片的版式：`E20 figure`（單張）、`E21 figure-pair`（兩張並排）、`E13 filmstrip`（影格序列）、`E14 architecture`（圖 + 右側註解）、`E15 image-full`（滿版）。
+Placement layouts: `E20 figure` (one), `E21 figure-pair` (two side by side), `E13 filmstrip` (a sequence), `E14 architecture` (figure plus notes), `E15 image-full` (bleed).
 
-### 每張圖表都要有分析
+### Every figure needs analysis
 
-**一整頁只有圖或只有表是不合格的。** 圖旁邊或下方要有 2–3 條分析，格式 `- 觀察 | 為什麼重要`：
+**A page holding only a figure or only a table is not acceptable.** Two or three analysis lines go beside or under it, in the form `- observation | why it matters`:
 
 ```markdown
-- 分岔點在 50k 步 | 在那之前三條線幾乎重疊，效率差異不是來自初始化
-- baseline 在 125k 後走平 | 我們的仍在爬，代表資料還沒吃滿
-- ±1σ 帶在 100k 後收窄 | 三個 seed 行為一致，不是單一 run 的僥倖
+- The split happens at 50k steps | Before that the three curves overlap, so the gap is not from initialisation
+- The baseline flattens after 125k | Ours is still climbing, so more data still buys progress
+- The ±1σ band narrows after 100k | All three seeds agree; this is not one lucky run
 ```
 
-標題寫的是結論，分析寫的是**怎麼從這張圖看出那個結論**。兩者不同，都要有。
+The title states the conclusion; the analysis states **how the figure gets you to that conclusion**. They are different and both are required. Tables too — a latency breakdown sitting there tells the reader every cell but not which cell to look at.
 
-表格也一樣。一張延遲拆解表放在那裡，讀者看得到每一格，但不知道你要他看哪一格。
+**If you are unsure what the analysis should be, go back and ask. Do not invent it.** You can see the curve splits at 50k; you cannot see what that means for their research. Ask "what do you want the reader to see here" for every figure during the interview — the answer is these lines.
 
-**不確定分析主軸就回去問使用者，不要自己編。** 你看得出曲線在 50k 分岔，但看不出那對他的研究意味著什麼。訪談時每張圖表都要問一句「這張你要讀者看出什麼」，答案就是這幾條分析。
+Whether the analysis sits to the right or underneath is **decided automatically** by how much width the figure actually needs: few horizontal slots (three bars, a three-column matrix, a table under five columns) put it on the right so the figure keeps its height; many (a nine-point curve, a wide table, a multi-panel figure) put it underneath so the figure keeps its width. Rules in `reference/layouts.md`; override with `analysis=right` or `analysis=below`.
 
-分析放右邊還是下面是**自動決定的**：橫向格數少的圖表（三根長條、三欄矩陣、≤4 欄的表）分析放右邊，圖保住高度；橫向格數多的（多點曲線、寬表格、多圖面板）放下面，圖保住寬度。規則見 `reference/layouts.md`，要覆寫就加 `analysis=right` 或 `analysis=below`。
+## 4. Density
 
-## 4. 資訊密度
+One page carries one complete piece of evidence: the figure, the numbers, and **the conditions they were measured under**. The test is whether the page lets someone judge the conclusion for themselves.
 
-一頁要放得下一份完整證據：圖、數字、以及**它是在什麼條件下量出來的**。判準是這一頁能不能讓人自己判斷結論成不成立。
+Required:
 
-必要的東西：
+- **A conditions footnote on every figure and table** — n, seeds, hardware, hyperparameters, method of measurement. The line starting with `~ `.
+- **Draw dispersion for multi-seed results**, never a bare mean.
+- **Draw a reference line where there is a baseline**, so the reader knows what good means.
+- **Compute a delta where there is a comparison** — percentage points or relative percent, one or the other throughout.
+- **Monospace every number**, so table and chart values line up.
 
-- **每張圖每張表都要有條件註腳** —— n=、seeds、硬體、超參數、量測方式。用 `~ ` 開頭那行。
-- **多 seed 就畫分散度**，不要只畫平均線。
-- **有基準就畫參考線**，讀者才知道好在哪。
-- **有對照就算 Δ**，百分點或相對百分比擇一，全篇一致。
-- **數字用等寬字**，表格與圖表的數值才對得齊。
+Not allowed:
 
-不要的東西：
+- **A page with a figure and no analysis.** That hands the interpretation back to the audience.
+- **A page carrying one sentence.** Statement pages and pull quotes both count — a sentence is not worth a slide; fold it into a figure's analysis or a results title.
+- **A "here comes the evidence" divider.** Evidence pages announce themselves with `solves=Qn`.
+- **A closing "thank you" page.** The last page should be the last piece of evidence.
+- A page of three or four large numbers and an adjective. That is a promotional page; use a table.
+- Figures with no axis label or unit.
+- "Substantially improved", "significantly better" and other claims without numbers.
+- More than five bullets. Reaching for bullets usually means you have not turned it into data yet.
 
-- **整頁只有一張圖、沒有分析。** 那是把解讀丟給讀者。
-- **整頁只講一句結論。** 單句主張頁、引言頁都算 —— 一句話值不到一整頁，把它塞進某張圖的分析或成果頁的標題。
-- **「以下為佐證」這種分隔頁。** 佐證頁自己就會用 `solves=Qn` 表明身分，不需要一頁來宣告。
-- **「謝謝」結尾頁。** 最後一頁應該是最後一份佐證。
-- 整頁只有三四個大數字加一句形容詞。那是宣傳頁，不是成果頁。用表格。
-- 沒有軸標籤或單位的圖。
-- 「大幅提升」「顯著改善」這類沒有數字的說法。
-- 條列超過 5 條。選到條列通常代表你還沒把它變成資料 —— 先想能不能升級成圖或表。
+## 5. Process
 
-## 5. 流程
+**Step 1 — finish phase 0.** See `reference/intake.md`. Do not proceed without a plan the user has agreed to.
 
-**步驟 1 — 走完階段 0。** 見 `reference/intake.md`。沒有使用者確認過的計畫就不要往下。
+**Step 2 — write the problem page** from the confirmed decomposition.
 
-**步驟 2 — 寫問題頁。** 照訪談確認的大問題與 Q 拆解填進去。
+**Step 3 — write the solution page, row by row against the Qs.** One row per Q: the mechanism, and the key number. A Q with no matching mechanism means the solution does not cover a problem you raised — either add the mechanism or drop the Q.
 
-**步驟 3 — 寫解法頁，逐條對回去。** 每個 Q 一列：機制是什麼、關鍵數字是多少。有 Q 找不到對應的機制，代表解法沒覆蓋你自己提的問題 —— 要嘛補機制，要嘛拿掉那個 Q。
+**Step 4 — write the results page.** Method by metric, best values marked, and the unsolved metric the interview surfaced left on the table.
 
-**步驟 4 — 寫成果頁。** 方法 × 指標的表格，最佳值標記，把訪談時問出來的「還沒解掉的」留在表上。
+**Step 5 — lay out the evidence.** Load `research-figures` first, then follow the figure-to-Q map from the interview. Redrawn figures come from the data; placed ones use `E20` / `E21` / `E13` / `E14`. Layout selection in `reference/layouts.md`.
 
-**步驟 5 — 佈置佐證。** 先載入 `research-figures`，再照訪談確認的圖→Q 對應表排。要重畫的圖從資料產生（依 `research-figures` 的軸、誤差帶、參考線規格），要貼的圖用 `E20`／`E21`／`E13`／`E14`。版式選擇見 `reference/layouts.md`。
+**Step 6 — self-check, then emit.** Section 7.
 
-**步驟 6 — 自檢，然後才產檔。** 見第 7 節。
+**Step 7 — emit.** Load `deck-design-system` for the palette, type scale and geometry, then follow `reference/emit.md`.
 
-**步驟 7 — 產出。** 先載入 `deck-design-system` 取得色票、字階與版式幾何，再照 `reference/emit.md` 產檔。
+## 6. Input format
 
-## 6. 輸入格式
-
-中繼格式是一份 markdown，可版控、可 diff。完整規格見 `reference/structure.md`，完整範例見 `examples/`。
+The intermediate format is one markdown file — versionable and diffable. Full spec in `reference/structure.md`, complete examples in `examples/`.
 
 ```markdown
 ---
-title: Meridian-1 進度回顧
-lang: zh
+title: Meridian-1 quarterly review
+lang: en
 theme: slate-blue
 typeface: plex
 ---
 
 <!-- P1 problem -->
-# 一句話的大問題
-- Q1 | 中問題 | 小問題 | 小問題 | 小問題
-- Q2 | 中問題 | 小問題 | 小問題
-> 不解決會怎樣
+# The one big problem, in a sentence
+- Q1 | mid-level problem | obstacle | obstacle | obstacle
+- Q2 | mid-level problem | obstacle | obstacle
+> What happens if it stays unsolved
 
 <!-- P2 solution -->
-# 一句話講清楚機制
-![架構圖](figures/arch.png)
-- Q1 | 對應的機制 | 關鍵數字
-- Q2 | 對應的機制 | 關鍵數字
-~ 條件註腳
+# The mechanism, in a sentence
+![architecture](figures/arch.png)
+- Q1 | the mechanism that addresses it | key number
+- Q2 | the mechanism that addresses it | key number
+~ conditions
 
 <!-- P3 results -->
-# 一句話講成果，包含還沒解掉的
-| 方法 | 指標 A | 指標 B | 未解的指標 |
+# The result in a sentence, including what is not solved
+| Method | Metric A | Metric B | The unsolved one |
 | --- | --- | --- | --- |
 | Baseline | … | … | … |
 | Ours | *… | *… | *… |
-~ 條件註腳
+~ conditions
 
 <!-- E20 figure solves=Q2 -->
-# 這張圖說明什麼（寫結論不寫題目）
+# What this figure shows (a conclusion, not a topic)
 ![](figures/rollout_grid.png)
-- 觀察一 | 為什麼重要
-- 觀察二 | 為什麼重要
-~ 條件註腳
+- observation | why it matters
+- observation | why it matters
+~ conditions
 ```
 
-`~ ` 是條件註腳，`- 觀察 | 為什麼重要` 是圖的分析（圖表頁必填 2–3 條），`*` 前綴的儲存格用重點色，`solves=Q1` 宣告這頁支撐哪個中問題。
+`~ ` is the conditions footnote, `- observation | why it matters` is the analysis (two or three required on any figure or table page), `*` prefixes a cell that takes the accent colour, and `solves=Q1` declares which mid-level problem the page supports.
 
-**把 `deck.md` 留在專案裡跟著版控。** 下一次更新時，P1 的問題拆解通常不用動，只換佐證頁和成果表的數字 —— 那時走 `intake.md` 的增量模式，不要重新訪談一次。
+**Keep `deck.md` in the project under version control.** Next time round the problem decomposition usually does not change; only the evidence pages and the results numbers do. Use the incremental path in `intake.md` rather than interviewing again.
 
-## 7. 產出前自檢
+## 7. Self-check before emitting
 
-1. 每張圖都被判決過嗎（重畫／貼原圖／刪掉）？
-2. **每個圖表頁都有 2–3 條分析嗎？** 表格也算。只有圖表沒有分析的頁一律不合格。
-3. 每個 Q 在解法頁都有對應的一列嗎？
-4. 每個 Q 都至少有一頁佐證嗎？
-5. 有沒有哪頁刪掉不影響任何一個 Q？有就刪。
-6. 成果表有沒有包含還沒解掉的指標？
-7. 每張圖表都有條件註腳嗎？
-8. 多 seed 的結果畫了分散度嗎？有基準的畫了參考線嗎？
-9. 有沒有哪一頁只有大數字沒有表格？
-10. 有沒有「請你決定」「以下為佐證」「謝謝」或只講一句結論的頁？有就刪。
-11. 全篇單一配色、單一字體組、單一語言嗎？
-12. 標題是不是結論句而非題目？
+1. Has every figure been given a verdict (redraw / place / drop)?
+2. **Does every figure and table page carry two or three analysis lines?** Tables included.
+3. Does every Q have a matching row on the solution page?
+4. Does every Q have at least one evidence page?
+5. Is there a page whose deletion would cost no Q its support? Delete it.
+6. Does the results table include the metric that is not solved?
+7. Does every figure and table have a conditions footnote?
+8. Is dispersion drawn for multi-seed results, and a reference line where there is a baseline?
+9. Is there a page of large numbers with no table?
+10. Is there a "what I need you to decide", a divider, a thank-you, or a single-sentence page? Delete it.
+11. One palette, one typeface, one language throughout?
+12. Are titles conclusions rather than topics?
 
-## 8. 三個 skill 的分工
+## 8. How the three skills divide up
 
-| Skill | 誰叫它 | 什麼時候 |
+| Skill | Who invokes it | When |
 |---|---|---|
-| `research-deck` | 使用者 | 要做簡報時。唯一的入口 |
-| `research-figures` | `research-deck` 在步驟 5 自動載入 | 也可以單獨叫：只想畫一張論文圖、只想決定某張圖要不要重畫 |
-| `deck-design-system` | `research-deck` 在步驟 7 自動載入 | 也可以單獨叫：檢查既有簡報的外觀、要色票的 hex、加新版式時查幾何 |
-
-另外兩個都能獨立使用，但做整份簡報時不需要分別呼叫 —— `research-deck` 會在該用的時候載入它們。
+| `research-deck` | The user | The only entry point |
+| `research-figures` | Loaded by `research-deck` at step 5 | Also standalone: plot one paper figure, or decide redraw-vs-place for an existing one |
+| `deck-design-system` | Loaded by `research-deck` at step 7 | Also standalone: review an existing deck, look up a colour, check geometry for a new layout |

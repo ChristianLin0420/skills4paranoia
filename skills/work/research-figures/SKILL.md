@@ -1,122 +1,130 @@
 ---
 name: research-figures
-description: 研究型圖表的規格：訓練曲線與誤差帶、任務×方法矩陣、消融表與 Δ 欄、基準參考線、條件註腳。畫任何實驗結果圖之前先讀。Use when plotting experiment results, training curves, ablations, benchmark comparisons, or success-rate matrices for a paper or deck.
+description: >-
+  Specifications for research figures — training curves with error bands, task-by-method
+  matrices, ablation tables with a delta column, baseline reference lines, and the conditions
+  footnote. Read before plotting any experimental result. Covers the decision of whether to
+  redraw a figure from its underlying data or place the one the user already has. Use when
+  plotting experiment results, training curves, ablations, benchmark comparisons, or success-
+  rate matrices for a paper or a deck.
 ---
 
 # research-figures
 
-論文圖和簡報圖的差別不在美術，在於**它有沒有交代自己是怎麼量出來的**。少了條件，圖就只是裝飾。
+What separates a paper figure from a marketing figure is not the artwork, it is **whether it says how it was measured**. Without the conditions, a figure is decoration.
 
-配色與字級見 `deck-design-system`。
+Colours and type sizes are in `deck-design-system`.
 
-做整份簡報時，`research-deck` 會在佈置佐證前自動載入這份，使用者不需要單獨呼叫。單獨用的時機：只要畫一張論文圖、或只想判斷某張既有的圖該重畫還是照貼。
+**Language.** Write in whatever language the user writes in. These instructions are in English because English is this repo's source language; axis labels, captions and footnotes should be in the user's language.
 
-## 0. 先決定：重畫還是貼原圖
+When producing a whole deck, `research-deck` loads this automatically before laying out evidence — the user does not need to invoke it separately. Invoke it on its own to plot a single paper figure, or to decide whether an existing figure should be redrawn or placed as-is.
 
-使用者常常已經有圖了。不要一律重畫，也不要一律貼。
+## 0. First decide: redraw or place as-is
 
-| 來源 | 什麼時候 | 結果 |
+Users often already have figures. Do not redraw everything, and do not place everything.
+
+| Source | When | Result |
 |---|---|---|
-| **依主題重畫** | 底層資料還在（CSV、jsonl、log） | 配色、字體、軸樣式與全篇一致 |
-| **貼原圖** | 無法重製：架構圖、pipeline、rollout 影格、實機照片、螢幕截圖 | 風格與其他頁不同，但無可取代 |
+| **Redraw to the theme** | The underlying data still exists (CSV, jsonl, log) | Colours, type and axes match the rest |
+| **Place the original** | Cannot be reproduced: architecture diagrams, pipelines, rollout frames, on-robot capture, screenshots | Style differs from the other pages, but irreplaceable |
 
-**判準：有底層資料就重畫，沒有就貼原圖。** 統計圖（曲線、長條、矩陣、消融）幾乎都能重畫，只要找得到那份數值 —— 重畫之後整份簡報的圖才會像同一個人做的。
+**The test: redraw if the underlying data exists, place if it does not.** Statistical figures — curves, bars, matrices, ablations — can almost always be redrawn as long as the numbers can be found, and redrawing them is what makes a deck look like one person made it.
 
-這個決定要在訪談時逐張問過，不要自己假設。看到一張明顯是統計圖但找不到數值的，主動問原始 log 還在不在。
+Decide this figure by figure during the interview; do not assume. When something is obviously a statistical plot but the numbers cannot be found, ask whether the original log still exists.
 
-下面的規格適用於重畫的圖。貼原圖時只需要維持標題與 `~ ` 條件註腳的格式一致，不要裁切或加濾鏡去試圖統一風格。
+The specifications below apply to redrawn figures. For a placed original, just keep the title and the `~` conditions footnote in the same format; do not crop or filter it in an attempt to unify the style.
 
-## 1. 每張圖的最低要求
+## 1. The minimum for any figure
 
-一張圖沒有這四樣就不算完成：
+A figure is not finished without these five:
 
-1. **軸標籤與單位** — 沒有單位的數字不能比較。
-2. **分散度** — 多 seed 就畫 ±1σ 帶或誤差棒，只畫平均線是隱瞞變異。
-3. **參考基準** — 有 baseline 就畫一條參考線並標值，讀者才知道好在哪。
-4. **條件註腳** — n=、seeds 數、硬體、關鍵超參數、量測方式。
+1. **Axis labels and units** — numbers without units cannot be compared.
+2. **Dispersion** — multiple seeds means a ±1σ band or error bars; a mean line alone hides variance.
+3. **A reference baseline** — draw and label it, so the reader knows what "good" is relative to.
+4. **A conditions footnote** — n, seed count, hardware, key hyperparameters, how it was measured.
+5. **Analysis** — two or three "observation | why it matters" lines. The figure gives the numbers; the analysis says where to look. Tables need this too.
 
-範例註腳：`TaskSuite-20 · 20 tasks · 3 seeds · ±1σ · A100×8 · rollouts=100/task · lr 3e-4, bs 256`
+Example footnote: `ManiSkill-20 · 20 tasks · 3 seeds · ±1σ · A100×8 · rollouts=100/task · lr 3e-4, bs 256`
 
-## 2. 圖型選擇
+## 2. Choosing a form
 
-| 資料形狀 | 用 | 不要用 |
+| Shape of the data | Use | Not |
 |---|---|---|
-| 隨訓練步數變化的多條線 | 折線 + ±1σ 帶 | 表格 |
-| 任務 × 方法的成績 | 熱度矩陣，每列標最佳 | 群組長條 |
-| 少數幾項的量值比較 | 直條 + Δ 標註 | 圓餅 |
-| 佔比或排名（≤6 項） | 橫條 | 圓餅 |
-| 消融、逐項加法 | 表格 + Δ 欄 | 折線 |
-| 超參數 / 硬體 / 資料規格 | 鍵值表，值用等寬字 | 條列 |
-| 兩個相關的量 | 並排雙面板，共用一個標題 | 疊在同一組軸上 |
+| Several lines over training steps | Line plus ±1σ band | A table |
+| Task by method scores | Heat matrix, best marked per row | Grouped bars |
+| A few quantities compared | Bars with delta annotations | Pie |
+| Proportions or ranking (≤6) | Horizontal bars | Pie |
+| Ablations, one mechanism at a time | Table with a delta column | A line plot |
+| Hyperparameters, hardware, data specs | Key-value table, values monospaced | Bullets |
+| Two related quantities | Side-by-side panels under one title | Overlaid on one axis |
 
-沒有圓餅圖。比例用橫條或 100% 堆疊。
+There is no pie chart. Use horizontal bars or a 100% stack for proportions.
 
-## 3. 座標軸
+## 3. Axes
 
-**刻度必須涵蓋資料。** 選一個 nice step（1／2／2.5／5 × 10ⁿ），下限往下取整、上限往上取整到**大於等於資料最大值**為止。常見錯誤是照著資料範圍算完就停，結果最高的那條線畫到繪圖區外面。加誤差帶時，範圍要用帶的上下界算，不是用平均值算。
+**Ticks must bracket the data.** Pick a nice step (1 / 2 / 2.5 / 5 × 10ⁿ), round the lower bound down and the upper bound up until it is **greater than or equal to the data maximum**. The common error is computing from the data range and stopping there, which draws the topmost series outside the plot box. With an error band, compute the range from the band's bounds, not the mean.
 
-刻度標籤用等寬字、9.5pt、`ink3`、右對齊。網格線用 `rule_soft`，基線用 `rule`。
+Tick labels monospaced, 9.5pt, `ink3`, right-aligned. Gridlines `rule_soft`, the baseline `rule`.
 
-x 軸標籤數量控制在 8 個以內。有軸名時要先量軸名寬度，把任何會撞進那塊的刻度標籤整個略過 —— 只省略最後一個在窄圖上不夠，圖越窄撞得越多。
+Keep x labels under eight. When there is an axis name, measure its width first and drop any tick label that would run into it — skipping only the last one is not enough on a narrow plot, and the narrower it gets the more collide.
 
-## 4. 折線與誤差帶
+## 4. Lines and error bands
 
-繪製順序：**誤差帶 → 網格線 → 參考線 → 線**。帶畫在網格線之前，否則會蓋掉網格。
+Draw order: **bands → gridlines → reference line → lines**. Bands go before the gridlines or they cover them.
 
-- 帶用 `band` 色（各數列對應一個），無邊框。
-- 線寬：主數列 1.8，其餘 1.4。
-- 不用圖例，直接在線的末端標數列名，顏色與線相同，右邊預留寬度。
-- 末端加一個 4.4pt 的方點。
-- 參考線用 `ink3`、0.9pt，標籤靠**左**放在線上方 —— 靠右會撞到數列末端標籤。
+- Bands use `band` colours, no stroke.
+- Line weight 1.8 for the primary series, 1.4 for the rest.
+- No legend — label each series at the end of its line in the line's own colour, reserving width on the right.
+- A 4.4pt square marker at the end.
+- Reference line in `ink3` at 0.9pt, label to the **left** above the line — on the right it collides with the series end labels.
 
-## 5. 直條與橫條
+## 5. Bars
 
-- 只有最重要的那一根用重點色，其餘用灰階階梯。
-- 值標在條的外側，等寬字。
-- 有對照時加 Δ：`pp` 是百分點差、`pct` 是相對百分比。全篇只用一種。
-- 橫條的類別標籤靠左，值靠右，Δ 再靠右一欄。
-- 圓角 1.5，不做膠囊端點。
+- Only the most important bar gets the accent colour; the rest use the grey ladder.
+- Values outside the bar, monospaced.
+- With a comparison, add a delta: `pp` for percentage points, `pct` for relative percent. Use one or the other throughout.
+- Horizontal bars: category label left, value right, delta one column further right.
+- Corner radius 1.5, no capsule ends.
 
-## 6. 矩陣
+## 6. Matrices
 
-熱度五階，值寫在格子中央、等寬字。正規化值 > 0.62 的深格用 `bg` 色寫字，其餘用 `ink`。每列最佳值下方加一條 2pt 的 `accent_deep` 底線。格間距 2.5。
+Five heat steps, values centred in the cell and monospaced. Cells above 0.62 normalised take `bg` for the text, the rest `ink`. A 2pt `accent_deep` underline marks the best value in each row. Cell gap 2.5.
 
-列標籤靠左，欄標籤在上方置中、9.5pt `ink2`。
+Row labels left, column labels centred above at 9.5pt `ink2`.
 
-## 7. 消融表
+## 7. Ablation tables
 
-第一列是 baseline，之後每列加一個機制。自動加一欄 Δ，對第一列算差。最佳列在左側畫一條 `accent` 直條。數值欄右對齊、等寬字。
+First row is the baseline, each later row adds one mechanism. Add a Δ column against the first row. Mark the winning row with an `accent` bar on the left. Numeric columns right-aligned and monospaced.
 
 ```
-| 變體 | 參數量 | 訓練時數 | 成功率 |
+| Variant | Params | GPU-hours | Success |
 | Baseline BC | 0.31B | 42 | 31% |
-| + 更大 backbone | 1.24B | 128 | 38% |
-| + 共享世界模型 | 1.20B | 96 | 64% |
-| + 模擬混入 4:1 | *1.24B | *104 | *78% |
+| + larger backbone | 1.24B | 128 | 38% |
+| + shared world model | 1.20B | 96 | 64% |
+| + 4:1 sim mixing | *1.24B | *104 | *78% |
 ```
 
-註腳要寫清楚 Δ 是百分點還是相對百分比，以及訓練時數是哪種硬體的 wall-clock。
+The footnote must say whether Δ is percentage points or relative percent, and what hardware the GPU-hours are wall-clock on.
 
-## 8. 資料來源
+## 8. Data sources
 
-指向檔案，不要手貼數字。CSV 第一欄是類別或 x 軸刻度，欄名即圖例。要畫 ±1σ 就多給 `<欄名> std` 欄；要畫上下界就給 `<欄名> lo` 與 `<欄名> hi`。
+Point at files, do not paste numbers. First CSV column is the category or x tick; column names are the legend. For ±1σ add a `<name> std` column; for bounds add `<name> lo` and `<name> hi`.
 
 ```csv
-step,Baseline BC,Baseline BC std,Meridian-1,Meridian-1 std
+step,Baseline BC,Baseline BC std,WAM-v1,WAM-v1 std
 0,2,1,4,1
 25k,9,3,22,5
-50k,16,4,41,6
 ```
 
-重跑實驗後只要重新產檔，不需要碰投影片。
+After a re-run, rebuild; nothing in the slides needs touching.
 
-## 9. 檢查
+## 9. Checks
 
-1. 刻度上限有沒有 ≥ 資料（含誤差帶）的最大值？
-2. 有沒有軸標籤與單位？
-3. 多 seed 有沒有畫分散度？
-4. 有基準的有沒有畫參考線，而且標籤沒撞到數列末端？
-5. 有沒有條件註腳？
-6. 數值是不是等寬字、右對齊？
-7. 重點色是不是只用在一個地方？
-8. 顯示的每個數字都四捨五入過嗎？（不要出現 0.30000000000000004）
+1. Does the top tick reach the data maximum, bands included?
+2. Are there axis labels and units?
+3. Is dispersion drawn for multi-seed results?
+4. Is there a reference line where there is a baseline, and does its label clear the series end labels?
+5. Is there a conditions footnote?
+6. Are values monospaced and right-aligned?
+7. Does the accent colour appear in exactly one place?
+8. Has every displayed number been rounded? (no `0.30000000000000004`)

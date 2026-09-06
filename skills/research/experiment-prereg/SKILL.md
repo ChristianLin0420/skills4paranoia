@@ -1,131 +1,137 @@
 ---
 name: experiment-prereg
-description: 實驗的預先登記：在花掉算力之前把假設、主指標、什麼算 null、停止與決策規則寫死並凍結。強迫填完四個欄位（主指標與最小可偵測差異、什麼結果算 null、停止與決策規則、評估協定），並擋下把 rollout 當獨立樣本的偽重複。用於開跑前審查、或重現不出別人的數字時回頭檢查協定。也接非正式問法：「要跑幾個 seed」「這樣比較公平嗎」「這個差距算顯著嗎」「先跑跑看」。Use before committing GPU time, when designing an ablation or benchmark comparison, or when reproduced numbers do not match. This does NOT design the experiment — it takes one that already exists and pins the measurement contract down. For choosing the design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power analysis, use a dedicated experimental-design or statistical-power skill. For the code rather than the protocol, use vla-code-review.
+description: >-
+  Pre-registration for an experiment: before the compute is spent, write down and freeze the
+  primary metric, the minimum detectable effect, what counts as null, the stopping and decision
+  rules, and the evaluation protocol. Blocks the pseudoreplication of treating rollouts as
+  independent samples. Use before committing GPU time, when designing an ablation or benchmark
+  comparison, or when reproduced numbers do not match and the protocol needs pinning down. Also
+  answers informal phrasings like how many seeds do I need / is this a fair comparison / is that
+  gap significant / let us just try it. This does NOT design the experiment — for choosing the
+  design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power
+  analysis, use a dedicated experimental-design or statistical-power skill. For the code rather
+  than the protocol, use vla-code-review.
 ---
 
 # experiment-prereg
 
-**這個 skill 不設計實驗。** 它接手一個已經設計好的實驗，在花掉算力之前把它釘死。
+**This skill does not design experiments.** It takes a design that already exists and pins it down before the compute is spent.
 
-做的事就是預先登記：宣告要回答的是非題、主指標、什麼結果算 null、停止與決策規則、評估協定，然後**凍結**。跑兩個月才發現設計有問題是這一行最貴的錯，但更貴的是跑完之後才決定什麼叫成功 —— 那時候你一定找得到某個切法讓自己滿意。
+What it does is pre-registration: declare the primary metric, what counts as null, the stopping and decision rules and the evaluation protocol, then **freeze them**. Discovering two months in that the design was wrong is this field's most expensive mistake, but deciding what counts as success *after* the run is worse — by then you will always find some slice that satisfies you.
 
-它不評論你的方法好不好，那是你的專業。它只確認一件事：**這個實驗跑完之後，不論結果如何，你都能得到一個明確的答案。**
+It does not comment on whether your method is good; that is your expertise. It confirms one thing: **that whatever the result turns out to be, you will get a clear answer out of it.**
 
-要選擇設計本身（隨機化、區組、因子配置）或做封閉解的檢定力計算，那是另一類 skill 的事，這份會把你推過去。
+**Language.** Write in whatever language the user writes in. These instructions and templates are in English because English is this repo's source language, not because the output must be English.
 
-## 1. 四個欄位，缺一不可
+## 1. Four fields, none optional
 
-沒填完不要開跑。填不出來通常代表這個實驗還不該跑。
+Do not launch without all four. Not being able to fill one in usually means the run should not happen yet.
 
-| # | 欄位 | 判準 |
+| # | Field | Test |
 |---|---|---|
-| 1 | **主指標與最小可偵測差異** | 一個主指標。要偵測多大的差？幾個 seed？ |
-| 2 | **什麼結果算 null** | 落在什麼範圍就算假設不成立 |
-| 3 | **停止與決策規則** | 跑到什麼條件停；結果落在哪個區間就做什麼 |
-| 4 | **評估協定** | held-out 層級、成功判準、seed 協定、擾動 |
+| 1 | **Primary metric and minimum detectable effect** | One primary metric. How large a difference must you detect? How many seeds? |
+| 2 | **What counts as null** | What range means the hypothesis did not hold |
+| 3 | **Stopping and decision rules** | What condition stops the run; what you do for each outcome band |
+| 4 | **Evaluation protocol** | Held-out level, success criterion, seed protocol, perturbation |
 
-**先確認一件事再往下**：你的假設和它的反面，會不會預測**不同的**觀察？如果會預測同一件事，這個實驗不區分，鎖死量測契約也沒用。
+**Check one thing before any of this**: do your hypothesis and its negation predict *different* observations? If they predict the same thing, the experiment does not discriminate, and pinning a measurement contract to it pins down something meaningless.
 
-例：「加了世界模型成功率上升」既符合「它讓物理知識跨任務共享」，也符合「它只是多了參數」—— 這種情況要先換一個能分辨兩者的操作，才值得往下走。
+Example: "success went up after adding the world model" follows just as well from "it shares physics across tasks" as from "it added parameters". In that situation, find a manipulation that separates the two before going further.
 
-### 為什麼第 2 欄最重要
+### Why the second field matters most
 
-「什麼結果算 null」是最常被跳過、也最會被迴避的一欄。跳過它的代價不是少了一份文件，而是**跑完之後你一定找得到某個切片是贏的** —— 換個任務子集、換個 checkpoint、換個聚合方式，總有一個組合看起來像成功。事先寫死 null，等於在你還沒有動機作弊的時候先綁住自己。
+"What counts as null" is the field people skip and avoid. Skipping it does not cost you a document, it costs you **the ability to be wrong** — run first and define success later and there is always some task subset, some checkpoint, some aggregation that looks like a win. Writing null down in advance binds you while you still have no motive to cheat.
 
-問到具體答案為止。「效果不明顯就算 null」不是答案；「主指標的平均差異小於 5 個百分點，或 95% 信賴區間跨過 0」才是。
+Press until the answer is concrete. "If the effect is unclear" is not an answer; "the mean difference on the primary metric is under 5 percentage points, or the 95% interval crosses zero" is.
 
-### 基準匹配別漏掉超參數搜尋次數
+### Baseline matching: do not miss the search budget
 
-資料量、算力、參數量三個對齊了還不夠。**你的方法調了 100 組、對照組跑預設值**，這個比較還是無效的。
+Matching data, compute and parameter count is not enough. **Your method tuned over 100 configurations against a baseline on defaults** is still an invalid comparison, and it is the most common unfair one because it is less visible than the other three.
 
-這是實務上最常見的不公平比較，因為它不像其他三個那麼顯眼。要嘛給兩邊同樣的搜尋次數，要嘛把「本方法搜了 N 組、對照組搜了 M 組」寫進文件讓讀者折扣（Dodge 等人）。
+Either give both sides the same number of trials, or write "ours searched N, baseline searched M" into the document so the reader can discount it (Dodge et al.).
 
-## 2. 幾個 seed 才夠
+## 2. How many seeds
 
-大部分 VLA 論文報 3 個 seed，然後宣稱 2–3 個百分點的改進。這在統計上讀不出來。
+Most VLA papers report three seeds and claim two or three points of improvement. That is not readable from the data.
 
-在 80% power、雙尾 α=0.05 之下，每組 n 個 seed 能偵測到的最小差異約為 `2.80 × σ × √(2/n)`：
+At 80% power and two-sided α=0.05, the smallest difference n seeds per arm can detect is about `2.80 × σ × √(2/n)`:
 
-| 每組 seed 數 | 可偵測差異 | σ=4pp 時實際上是 |
+| Seeds per arm | Detectable | At σ=4pp that is |
 |---|---|---|
-| 3 | 2.29 σ | ≥ 9.1 個百分點 |
-| 5 | 1.77 σ | ≥ 7.1 個百分點 |
-| 10 | 1.25 σ | ≥ 5.0 個百分點 |
-| 20 | 0.89 σ | ≥ 3.5 個百分點 |
+| 3 | 2.29 σ | ≥ 9.1 percentage points |
+| 5 | 1.77 σ | ≥ 7.1 |
+| 10 | 1.25 σ | ≥ 5.0 |
+| 20 | 0.89 σ | ≥ 3.5 |
 
-**用法**：先從既有的 run 估 σ（同設定不同 seed 的標準差），再問自己想偵測多大的差，然後回頭看需要幾個 seed。如果算出來的 seed 數跑不起，那就要承認**這個實驗偵測不到你想要的效果**，並在設計文件裡寫明。這比跑完再說「趨勢是正向的」誠實得多。
+**How to use it**: estimate σ from existing runs (the standard deviation across seeds at the same setting), decide how large a difference would matter, then read off the seeds you need. If that number is unaffordable, say so in writing — **this experiment cannot detect the effect you are after** — which is far more honest than reaching for "the trend is positive" afterwards.
 
-σ 未知時，先跑 3 個 seed 估 σ，再決定要不要補。這是合理的兩階段做法，但要事先講明，不要跑完才決定要不要加。
+With σ unknown, run three seeds to estimate it and then decide whether to add more. That is a reasonable two-stage approach, but declare it in advance; do not decide after seeing the numbers.
 
-**跑了 10 個 seed 只報最好的 3 個，等於沒有做這件事。** 事先講好跑幾個，就全部報幾個。要排除某個 run 必須有事前定義的理由（例如「發散且 loss 為 NaN」），而且對兩組適用同一條規則。
+**Running ten seeds and reporting the best three undoes the entire exercise.** Agree the count in advance and report all of them. Excluding a run needs a rule defined beforehand — "diverged with NaN loss" — applied identically to both arms.
 
-### 別把 rollout 當成 seed
+### Do not let rollouts stand in for seeds
 
-這是最容易犯、後果最嚴重的統計錯誤，古典設計裡叫**偽重複（pseudoreplication）**。
+The most damaging statistical error here, and in classical design it has a name: **pseudoreplication**.
 
-100 次 rollout 來自同一個 checkpoint，**不是 100 個獨立樣本**。它們共用同一組權重、同一次訓練的所有隨機性。方法比較的重複單位是**訓練 run（seed）**，不是 rollout。
+A hundred rollouts from one checkpoint are **not a hundred independent samples**. They share the weights and every random choice of that training run. The unit of replication for comparing methods is the **training run (seed)**, not the rollout.
 
-- rollout 之間的變異量到的是「這個 checkpoint 有多不穩」
-- seed 之間的變異量到的才是「這個方法有多不穩」
+- Variation between rollouts measures how unstable that checkpoint is
+- Variation between seeds measures how unstable the *method* is
 
-**正確做法**：每個 seed 先算自己的平均成功率，得到每個 seed 一個數字；然後在這些數字之間算平均與標準差。`n` 是 seed 數，不是 rollout 數。
+**Do it this way**: each seed gets its own mean success rate first, giving one number per seed; then take the mean and standard deviation across those numbers. `n` is the seed count, not the rollout count.
 
-把 300 次 rollout（3 seeds × 100）當成 n=300 去算誤差棒，會把真實不確定性低估到荒謬的程度 —— 誤差棒縮小約 √(100)，於是任何兩條線看起來都顯著不同。下一節那張表裡的 n 指的一律是 seed 數。
+Treating 300 rollouts (3 seeds × 100) as n=300 shrinks the error bar by roughly ten, after which any two curves look separated. Every `n` in the table above is a seed count.
 
-rollout 數還是要夠（每個 seed 的平均才穩），但增加 rollout 不會增加統計檢定力，只有增加 seed 才會。
+Rollouts still need to be plentiful enough that each seed's mean is stable, but **more rollouts buy no statistical power; only more seeds do**.
 
-## 3. 評估協定要釘死
+## 3. Pin the evaluation protocol
 
-這一節來自實際的重現失敗（見 `vla-code-review/reference/precedents.md`）。四件事不寫死，你的數字就無法跟任何人比較，包括三個月後的你自己。
+This section comes from real reproduction failures (see `vla-code-review/reference/precedents.md`). Leave these four unfixed and your numbers cannot be compared with anyone's, including your own three months from now.
 
-見 `reference/evaluation-protocol.md`。摘要：
+See `reference/evaluation-protocol.md`. In brief:
 
-- **held-out 切在哪一層** —— 任務名稱、物件實例、場景、示範者是四個不同的層級。只換任務名稱不換分布，那個數字量的是記憶不是泛化。
-- **成功判準的完整定義** —— 包含保持幀數與夾爪狀態。少了這兩個，判準會提早觸發。
-- **eval seed 協定** —— 固定集合，與訓練步數無關，每個 episode 重新 seed。
-- **擾動測試** —— 不做的話你不知道 90% 是能力還是死記。
+- **Which layer held-out is cut at** — task name, object instance, scene and demonstrator are four different levels. Change only the task name and the number measures memorisation, not generalisation.
+- **The full success criterion** — including hold duration and gripper state. Without those, the criterion fires early.
+- **The eval seed protocol** — a fixed set, independent of training step, reseeded every episode.
+- **Perturbation testing** — without it you do not know whether 90% is capability or rote learning.
 
-### 不要讓硬體與時間混進來
+### Do not let hardware and time in
 
-古典設計會隨機化執行順序來對抗批次漂移。對應到這裡：**不要把對照組全跑在 A 節點、實驗組全跑在 B 節點**，也不要對照組跑上個月、實驗組跑這週。驅動版本、卡的個體差異、共用叢集的負載都會混進你的效果裡。
+Classical design randomises run order against batch drift. Here that means: **do not put the control on one node and the treatment on another**, and do not run one arm last month and the other this week. Driver versions, individual card variation and shared-cluster load all leak into your effect.
 
-做法：把 run 對節點的指派隨機化，或至少讓每一組都橫跨所有節點。設計文件裡記下每個 run 實際跑在哪台、什麼時候。
+Randomise the assignment of runs to nodes, or at least make every arm span every node. Record which run went to which machine and when.
 
-## 4. 算力預算的現實檢查
+## 4. Sanity-check the compute budget
 
-估出這個實驗要多少 GPU-hours，然後問一句：**如果結果是最好的那種，會改變任何決定嗎？**
+Estimate the GPU-hours, then ask: **if the result is the best possible one, does it change any decision?**
 
-答案是否的話就不要跑。這聽起來理所當然，但「跑一下看看」的實驗佔掉的算力比任何人願意承認的都多。
+If not, do not run it. That sounds obvious, but "let us just try it" consumes more compute than anyone admits.
 
-同樣要問：如果結果是最壞的那種，你會怎麼做？如果兩種結果你的下一步都一樣，這個實驗沒有資訊量。
+Ask the same of the worst case. If both outcomes lead to the same next step, the experiment carries no information.
 
-## 5. 訪談
+## 5. The interview
 
-不要開放式提問。從既有的素材（`exp_design.md`、過去的 run、論文）推出候選答案，讓使用者否決或修正。完整協定見 `reference/interview.md`。
+Do not ask open questions. Derive candidate answers from the existing material — the design doc, past runs, the paper — and let the user reject or correct them. Full protocol in `reference/interview.md`.
 
-五組：要回答的是非題、基準與預算、null 的定義、停止與決策規則、最可能白跑的原因。
+Five rounds: the yes/no question, baseline and budget, the definition of null, stopping and decision rules, and the most likely way this run is wasted.
 
-**使用者說「先跑跑看」的時候**，不要照做也不要拒絕。改問：「那我們把停止規則設成跑到 20k 步先看一次，這樣可以嗎？」把探索性實驗變成一個有明確終點的探索性實驗，而不是無限期的。
+**When the user says "let us just try it"**, neither comply nor refuse. Ask instead: "then shall we set the stopping rule at 20k steps and look once?" Turn an exploratory run into an exploratory run with an endpoint.
 
-## 6. 開跑之後凍結
+## 6. Freeze after launch
 
-設計文件一旦定案並開跑，**主指標與 null 的定義就不准改**。
+Once the document is settled and the run starts, **the primary metric and the definition of null are frozen**.
 
-要改不是不行，但必須記在決策紀錄裡並寫明理由與時間點。事後改判準而不留痕跡，就是自己騙自己 —— 這個 repo 存在的理由。
+Changing them is allowed, but it goes in the decision record with the reason and the date. Changing the criterion afterwards and leaving no trace is fooling yourself — the thing this whole repo exists to prevent.
 
-## 7. 產出
+## 7. Output
 
-`templates/prereg.md` 是空白模板，`examples/filled-prereg.md` 是填好的範例 —— 從範例改比從空白填快，而且範例裡的旁註示範了每一欄該有多具體。
+`templates/prereg.md` is the blank; `examples/filled-prereg.md` is a worked one — start from the example, the margin notes there show how specific each field has to be.
 
-這份文件同時是：
+The document is three things at once: the pre-launch checklist, the source for the deck's setup page in `research-deck`, and the only record of what you were actually testing when you look back in three months.
 
-- 開跑前的檢查清單
-- `research-deck` 的 `E18 setup` 頁的內容來源
-- 三個月後回頭看「我當初到底在測什麼」的唯一憑據
+Return to it after the run and go field by field.
 
-跑完之後回到這份文件，逐欄對照。
+## 8. Related
 
-## 8. 相關技能
-
-- `vla-code-review` —— 開跑前也跑一次，它管「code 有沒有偷偷做錯」，這個管「你有沒有定義清楚什麼叫做對」
-- `research-deck` —— 設計文件直接變成簡報的實驗設定頁
+- `vla-code-review` — run it before launch too. That one covers whether the code is quietly wrong; this one covers whether you defined what "right" means.
+- `research-deck` — the document becomes the deck's experimental setup page.

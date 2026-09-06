@@ -1,71 +1,80 @@
 ---
 name: vla-code-review
-description: 審查 VLA / WAM / RL 訓練與評估程式碼，專找不會拋錯、只會讓數字變差的工程層錯誤：精度與學習率不匹配、GPU 不支援的 dtype、DDP 梯度沒同步、checkpoint 靜默載入失敗、評估環境狀態外洩、成功判準過寬。產出一份可視化的審查報告。Use when reviewing a robot-learning, VLA, world-model or RL codebase before launching an expensive training run, or when reproduced numbers do not match expectations.
+description: >-
+  Review VLA / WAM / RL training and evaluation code for the engineering-level failures that
+  never raise and only make the numbers worse — precision paired badly with the learning rate, a
+  dtype the card does not support, DDP gradients never synchronised, a checkpoint load that
+  silently returns an untrained model, evaluation state leaking between episodes, a success
+  criterion that fires early. Produces a visual review report. Use when reviewing a robot-
+  learning, VLA, world-model or RL codebase before launching an expensive training run, or when
+  reproduced numbers do not match expectations.
 ---
 
 # vla-code-review
 
-專找**不會拋錯、只會讓數字變差**的錯。方法本身的問題不在範圍內 —— 那是研究者的專業。這個 skill 負責的是「方法對了但實作把它吃掉了」的那一類。
+Hunts the errors that **do not raise, and only make the numbers worse**. Problems with the method itself are out of scope — that is the researcher's expertise. This covers the class where the method was right and the implementation ate it.
 
-這類錯的共同特徵：訓練跑得完、loss 曲線看起來正常、沒有任何錯誤訊息，但最後的數字比它該有的低幾個百分點，然後被誤診成方法不夠好。`reference/precedents.md` 裡每一條都是知名 repo 實際出貨過的。
+What these have in common: training completes, the loss curve looks normal, nothing errors, and the final number comes out a few points below what it should be — then gets diagnosed as the method not being good enough. Every entry in `reference/precedents.md` is a bug that shipped in a well-known repo.
 
-## 1. 三種結果，不准有第四種
+**Language.** Write in whatever language the user writes in. These instructions and the report template are in English because English is this repo's source language, not because the output must be English. A Chinese user gets a Chinese report with the same structure.
+
+## 1. Three outcomes, never a fourth
 
 ```
-[通過]   2.6 clip 在 unscale 之後        train.py:214
-[發現]   4.4 DDP 被 .module 繞過         train.py:388
-         action head 的梯度不會 all-reduce
-[不適用] 7.1 truncation vs termination   此 codebase 不是 RL
+[PASS]   2.6 clip after unscale            train.py:214
+[FOUND]  4.4 DDP bypassed via .module      train.py:388
+         action-head gradients are never all-reduced
+[N/A]    7.1 truncation vs termination     this codebase is not RL
 ```
 
-**不確定的一律歸「發現」並附行號，讓人判斷。** 這份清單抓的是「看起來對的錯」，最大的失敗模式是 agent 因為程式碼讀起來合理就標通過。標錯成通過的代價是使用者信了然後燒掉兩個月；標錯成發現的代價是他花三分鐘確認。這兩個不對等。
+**Anything uncertain is FOUND, with a line number, for a human to judge.** This checklist hunts errors that look correct, and the dominant failure mode is an agent marking something PASS because the code reads sensibly. Marking a real problem PASS costs the user two months of compute; marking a non-problem FOUND costs them three minutes. Those are not symmetric.
 
-沒查到的項目要明講「沒查」，不要留白。空白會被當成通過。
+Say explicitly when something was not checked. Do not leave it blank — blanks get read as passes.
 
-## 2. 順序
+## 2. Order
 
-**先跑 Tier 0。** `reference/checklist.md` 開頭那十題，每一題單獨成立就足以讓整批實驗白跑。任何一題未通過，報告的判決就是「不要開跑」，其餘發現排在後面。
+**Run Tier 0 first.** The ten items at the top of `reference/checklist.md`; any one of them alone is enough to waste a whole batch of experiments. If any fails, the report's verdict is "do not launch" and everything else ranks below it.
 
-**再逐類掃過十一個分類。** 精度與硬體、精度與學習率、混合精度正確性、凍結與參數群組、seed 與決定性、資料與評估正確性、RL 特有、VLA/WAM 特有、訓練穩定與監控、checkpoint 與復現、效能陷阱。
+**Then work the eleven categories.** Precision and hardware, precision and learning rate, mixed-precision correctness, freezing and parameter groups, seeds and determinism, data and evaluation correctness, RL-specific, VLA/WAM-specific, training stability and monitoring, checkpointing and reproducibility, performance traps.
 
-**不適用的整類標不適用。** 非 RL 的 codebase 就把第 7 類整類標掉，不要硬找。
+**Mark a whole category N/A when it does not apply.** A codebase that is not RL gets category 7 marked off entirely; do not go hunting.
 
-**最後列出靜態檢查看不出來的。** 有五類項目要實際跑一次才知道（SDPA 實際走哪個 backend、權重零位移比例、種子是否覆蓋 dataloader worker、dataloader 是否餓到 GPU、是否走 NVLink）。這些要單獨列出來，不能混在通過裡。
+**Finish by listing what static review cannot see.** Five kinds of item need an actual run (which SDPA backend was used, the fraction of zero-displacement weights, whether seeding reaches the dataloader workers, whether the dataloader starves the GPU, whether NVLink is in play). List them separately; they cannot be folded into the passes.
 
-## 3. 嚴重度
+## 3. Severity
 
-| 級別 | 意思 | 判準 |
+| Level | Meaning | Test |
 |---|---|---|
-| **阻斷** | 這批實驗的結論不可用 | 修好之前不要開跑，也不要相信已經跑出來的數字 |
-| **高** | 數字被系統性影響 | 方向可能還對，但幅度不可信 |
-| **中** | 影響可量測但有限 | 這一輪可以先跑，下一輪之前修掉 |
-| **觀察** | 我不確定，需要你判斷 | agent 看到可疑之處但缺乏領域脈絡 |
+| **Blocker** | The conclusions from this batch are unusable | Do not launch until fixed, and do not trust numbers already produced |
+| **High** | Numbers are systematically affected | The direction may still hold, the magnitude does not |
+| **Medium** | Measurable but bounded | This round can proceed; fix before the next |
+| **Watch** | I am not sure; you need to judge | Something looks off but the agent lacks the domain context |
 
-**「觀察」是刻意留的出口。** agent 看得出成功判準沒有保持幀數要求，但不知道你的任務能不能接受。沒有這個級別，agent 會為了顯得有用而把猜測寫成發現。
+**Watch exists on purpose.** An agent can see that a success criterion has no hold-duration requirement but cannot know whether that is acceptable for this task. Without this level, agents write guesses up as findings in order to look useful.
 
-## 4. 每條發現要有的欄位
+## 4. Fields every finding needs
 
-- **症狀** —— 使用者會觀察到什麼。不要寫「這樣寫不對」，要寫「訓練後期停止進步但 grad norm 正常」。
-- **成因** —— 為什麼會這樣。一兩句，要有機制不要只有標籤。
-- **怎麼確認** —— **一個具體可執行的驗證動作**。比對兩個 rank 的參數雜湊、diff `body_pos`、統計零位移比例。這欄最重要，它讓使用者不必相信報告，可以自己查。
-- **修法** —— 改什麼。
-- **同型案例** —— 查 `reference/precedents.md`，有對應的就附公開 issue 連結。**沒有對應就不要附**，不要為了看起來有根據而硬掛不相關的連結。
+- **Symptom** — what the user would observe. Not "this is written wrong" but "stops improving late in training while grad norm looks normal".
+- **Cause** — why, in a sentence or two, with a mechanism rather than a label.
+- **How to confirm** — **one concrete, runnable check.** Compare parameter hashes across two ranks, diff `body_pos`, count zero-displacement weights. This field matters most: it means the user does not have to trust the report.
+- **Fix** — what to change.
+- **Precedent** — look in `reference/precedents.md` and link the public issue if there is one. **If there is no match, leave it out**; do not attach a loosely related link to look grounded.
 
-## 5. 報告
+## 5. The report
 
-`templates/report.html` 是可直接套用的模板，配色與字體跟 `research-deck` 同一套。格式規格見 `reference/report-format.md`。
+`templates/report.html` is ready to adapt and shares the design system with `research-deck`. Format spec in `reference/report-format.md`.
 
-結構由上而下：判決（一句人話，不是統計數字）→ 四格計數 → Tier 0 閘門表 → 發現（依嚴重度）→ 覆蓋矩陣 → 靜態查不到的部分。
+Top to bottom: the verdict (a plain sentence, not a count) → four tallies → the Tier 0 gate table → findings by severity → the coverage matrix → what static review could not reach.
 
-**判決要寫成一句人話。** 不是「發現 7 個問題」，是「不要開跑，因為多卡的梯度沒同步而且 checkpoint 可能沒載進去，這批實驗的結論不可用」。使用者掃一眼就要知道要不要往下讀。
+**The verdict is a sentence in plain language.** Not "7 issues found" but "do not launch: the multi-GPU gradients are not synchronised and the checkpoint may not have loaded, so the conclusions from this batch are unusable". The reader should know from one glance whether to keep reading.
 
-## 6. 收錄新案例
+## 6. Adding precedents
 
-看到新的公開 issue 就往 `reference/precedents.md` 加。收錄標準：**公開、可驗證、而且是靜默失敗**。安裝錯誤、版本衝突、CUDA OOM 不收 —— 那些會自己報錯，不需要 review 來抓。
+Append new public issues to `reference/precedents.md` as you find them. Criteria: **public, verifiable, and a silent failure.** Installation errors, version conflicts and CUDA OOM do not qualify — those announce themselves and need no review to catch.
 
-## 7. 檔案
+## 7. Files
 
-- `reference/checklist.md` —— 十一類約 60 項，每項「症狀 → 怎麼查 → 正解」
-- `reference/precedents.md` —— 每條檢查對應的真實案例
-- `reference/report-format.md` —— 報告格式規格
-- `templates/report.html` —— 可直接改的報告模板
+- `reference/checklist.md` — around 60 items in eleven categories, each as symptom → how to check → fix
+- `reference/precedents.md` — the real case behind each check
+- `reference/report-format.md` — report spec
+- `templates/report.html` — the report template

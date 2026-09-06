@@ -5,3 +5,6 @@ __pycache__/
 node_modules/
 out/
 *.pptx
+
+# grill-deeper 的知識庫：含內部脈絡，不進版控
+.grill/

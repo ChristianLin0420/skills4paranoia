@@ -1,145 +1,155 @@
 ---
 name: grill-deeper
-description: 拷問一個計畫、設計或決定，直到設計樹上每個分支都被走過 —— 而且會記住你這個人。用 frontier 排程問題，跨 session 累積你的詞彙、已定案的決定、開放假設、環境約束，以及你答不出來的那幾類問題，所以問題越用越深、越用越貼近你的工作。兩種模式：找洞用預設，砍東西用依序拷問（質疑需求 → 刪除 → 簡化 → 加速 → 自動化，不准跳步）。Use when someone wants their plan, design, hypothesis or decision interrogated before committing to it, says 幫我挑戰這個 / 這樣想對嗎 / 有沒有漏掉什麼, or asks what they decided before and why.
+description: >-
+  Interrogate a plan, design or decision until every branch of it has been visited — and
+  remember the person you are interrogating. Questions are scheduled on a design tree, and a
+  store accumulates your vocabulary, settled decisions, open assumptions, constraints, and the
+  kinds of question you go vague on, so the questions get sharper and more specific to your work
+  each time. Two modes: the default hunts holes, the ordered mode cuts (question the
+  requirement, delete, simplify, accelerate, automate, no skipping). Use when someone wants
+  their plan, design, hypothesis or decision stress-tested before committing to it, says
+  challenge this / is this right / what am I missing, or asks what they decided before and why.
 ---
 
 # grill-deeper
 
-拷問到設計樹上每個分支都被走過，然後記住這次學到什麼。
+Interrogate until every branch of the design tree has been visited, then remember what this session taught you.
 
-> 設計樹與 frontier 的機制取自 [mattpocock/skills](https://github.com/mattpocock/skills) 的 `grilling`（MIT）。這裡加上的是跨 session 的記憶層。
+> The design-tree and frontier mechanism is taken from `grilling` in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT). What this adds is a memory layer that persists across sessions.
 
-## 設計樹與 frontier
+**Language.** Write in whatever language the user writes in. These instructions are in English because English is this repo's source language, not because the output must be English. A Chinese user gets Chinese questions and a Chinese summary; the structure is identical either way.
 
-把要拷問的東西攤成一棵**設計樹**：每個決定會分岔出依賴它的決定。
+## The design tree and the frontier
 
-**frontier** 是前置條件都已確定、現在就問得了的那一圈問題 —— 你不必猜任何還沒聽到的答案就能問。
+Lay the thing out as a **design tree**: every decision branches into the decisions that hang off it.
 
-**一輪問完整個 frontier。** 編號、每題附上你建議的答案，然後等使用者回覆。答案會重塑這棵樹：已確定的決定把 frontier 往外推，解鎖原本依賴它們的問題。重算 frontier，問下一輪。
+The **frontier** is the ring of questions whose prerequisites are already settled — the ones you can ask *now* without guessing at answers you have not heard yet.
 
-**答案依賴另一個本輪還開著的問題，那它屬於下一輪。** 這條是整個機制的重點，違反它就會問出使用者答不了的問題。
+**Ask the whole frontier in one round.** Number each question, attach your recommended answer, then wait. The answers reshape the tree: settled decisions push the frontier outward and unblock questions that depended on them. Recompute, ask the next round.
 
-**frontier 空了就結束** —— 每個分支都走過，沒有東西被默默假設掉。使用者確認達成共識之前不要動手做任何事。
+**A question whose answer depends on another question still open this round belongs to a later round.** This is the point of the whole mechanism; break it and you ask things the user cannot answer yet.
 
-## 記憶怎麼縮小這棵樹
+**The session ends when the frontier is empty** — every branch visited, nothing silently assumed. Do not act on any of it until the user confirms you have reached a shared understanding.
 
-這是跟無狀態拷問的差別所在。**已知的事實等於已經確定的節點**，所以第一輪的 frontier 從一開始就比較外面。
+## How memory shrinks the tree
 
-| store 裡的東西 | 在樹上是什麼 |
+This is what separates it from stateless interrogation. **A known fact is a settled node**, so the first round's frontier starts further out.
+
+| In the store | On the tree |
 |---|---|
-| `context.md` 的詞彙與約束 | **已確定的節點** —— 不要問，直接拿來用 |
-| `decisions.md` 狀態有效者 | **已確定的節點**；推翻條件成真時重新打開 |
-| `open-questions.md` | **未確定的節點**，一開始就在樹上 |
-| profile 的盲點 | 不改變樹的形狀，改變**同一輪內的順序** |
+| Vocabulary and constraints in `context.md` | **Settled nodes** — do not ask, just use them |
+| Decisions in `decisions.md` still marked active | **Settled**; reopened when the reversal condition fires |
+| `open-questions.md` | **Unsettled nodes**, already on the tree from the start |
+| Blind spots in the profile | Do not reshape the tree; they order questions **within a round** |
 
-具體差別：沒有記憶時第一輪要問「你的評估怎麼做」；有記憶時那個節點已經確定，第一輪直接問「這次的擾動參數要沿用上次的 ±3cm 嗎」。**同樣一輪，深了兩層。**
+Concretely: with no store, round one asks "how does your evaluation work". With one, that node is already settled and round one asks "does the perturbation stay at last time's ±3cm". **Same round, two levels deeper.**
 
-每次開場掃一遍過期的節點，它們從已確定變回未確定、回到 frontier —— 但**一輪最多重新打開一個**，不要變成盤點大會。
+Each session also sweeps for stale entries (rules below). A stale node goes from settled back to unsettled and rejoins the frontier — but **reopen at most one per round**, or the session turns into an inventory review.
 
-## 問題格式
+## Question format
 
 ```
-❓ **Q1** — **<標題>**：<問題本體，可以多段，可以給選項>
+❓ **Q1** — **<title>**: <body, may be several paragraphs, may offer choices>
 
-➡️ <你建議的答案>
+➡️ <your recommended answer>
 
 ---
 
-❓ **Q2** — **<標題>**：<...>
+❓ **Q2** — **<title>**: <...>
 
-➡️ <你建議的答案>
+➡️ <your recommended answer>
 ```
 
-建議答案讓使用者可以「除了 Q3 都同意」，一輪推進一大段。
+The recommended answer lets the user say "yes to all but Q3" and move a long way in one round.
 
-**盲點題例外：不給建議答案。** profile 顯示這一類他每次都含糊時，給建議答案等於幫他繞過去 —— 那正是你要他面對的地方。只問，不給台階。
+**Exception for blind-spot questions: give no recommended answer.** When the profile shows this is a category the user goes vague on, supplying an answer is exactly how they skate past the thing they need to face. Ask, and offer no ledge.
 
-## 事實自己查
+## Finding facts is your job
 
-**找事實是你的工作，永遠不是使用者的。** frontier 上的問題需要環境裡的事實（檔案、設定、run 紀錄）時自己去找，不要問使用者他查得到的東西。
+**Never the user's.** When a question on the frontier needs a fact from the environment — a file, a config, a run record — go and get it. Do not ask the user for anything you could look up.
 
-**不要因此阻塞**：正在進行的查找是一個未確定的前置條件，所以只有下游問題等它，frontier 上其餘的照問。
+**Do not block on it**: a running lookup is an unsettled prerequisite, so only the questions downstream of it wait. Ask the rest of the frontier now.
 
-查到的事實寫進 `context.md`。**查過一次就不要再查第二次** —— 這是記憶層最直接的回報。
+Write what you find into `context.md`. **Look something up once and it never gets looked up again** — this is the memory layer's most direct payoff.
 
-## 兩種模式
+## Two modes
 
-**預設** —— 設計樹加 frontier，用來找洞。節點的六種類型見 `reference/lines-of-attack.md`。
+**Default** — design tree and frontier, for hunting holes. The six kinds of node are in `reference/lines-of-attack.md`.
 
-**依序拷問** —— 使用者說「用馬斯克那套」「從第一原理問」「幫我砍」時切換。五步嚴格順序、不准跳步，見 `reference/musk-order.md`。這個模式暫時放下設計樹，因為它的順序是固定的、不由依賴關係決定。
+**Ordered** — switch when the user says "use the Musk algorithm", "from first principles", or "help me cut". Five steps in strict order, no skipping: see `reference/musk-order.md`. This mode sets the design tree aside, because its order is fixed rather than derived from dependencies.
 
-砍東西用依序拷問，**還在長的想法不要用**，那套會把嫩芽砍死。
+Use the ordered mode to cut. **Do not use it on an idea that is still growing** — it is built to remove things and it will kill a seedling.
 
-## 跟 plan mode 怎麼搭
+## Pairing with plan mode
 
-**先拷問，再 plan。** plan mode 一旦產出實作計畫，你就錨定在那個實作上，之後的拷問只會質疑「這樣實作對不對」，不會質疑「這東西該不該存在」。
+**Grill first, then plan.** Once plan mode produces an implementation you anchor on it, and every later question attacks whether the implementation is right rather than whether the thing should exist at all.
 
-兩個限制：**plan mode 是唯讀的**，`.grill/` 的寫回會失敗，所以拷問要在 plan mode 之外做。拷問完的摘要直接餵進 plan mode 當輸入，plan 的品質會差很多。
+Two practical limits: **plan mode is read-only**, so writeback to `.grill/` will fail — do the grilling outside it. And feed the closing summary into plan mode as input; the plan comes out noticeably better when the requirements have already been cut once.
 
-例外：計畫已經存在（別人給的、或你上次做的），直接拷問它。
+Exception: the plan already exists (someone handed it to you, or you wrote it last week). Then grill the plan.
 
-## 輸入與輸出
+## Input and output
 
-**輸入**：要被拷問的東西（一段話、一份文件、一個 PR、一個還沒動手的想法）。自動讀 `.grill/` 與 `~/.claude/grill/profile.md`。第一次在專案裡先建底，見 `reference/bootstrap.md`。
+**Input**: the thing to be interrogated — a paragraph, a design doc, a PR, an idea you have not started. The store at `<project>/.grill/` and `~/.claude/grill/profile.md` are read automatically. On the first run in a project, bootstrap first: see `reference/bootstrap.md`.
 
-輸入不需要整理好。**半成形的想法正是最該被拷問的狀態**；等你整理好了，你已經投入到捨不得砍了。
+The input does not need to be tidy. **A half-formed idea is exactly the right thing to interrogate**; by the time you have tidied it you are too invested to cut it.
 
-**輸出**：一輪一組問題；frontier 空了之後一份短摘要（站得住的、需要補的、本次寫回了什麼）。副作用是 `.grill/` 最多 5 條更新加一筆 session 紀錄。
+**Output**: one round of questions at a time; once the frontier is empty, a short summary — what holds up, what needs filling in, what got written back. Side effect: at most five entries into `.grill/` plus one session record.
 
-**不輸出的**：不給答案、不做決定、不產計畫。判斷是你的。
+**What it does not output**: answers, decisions, or a plan. It asks and records; the judgement is the user's.
 
-## 兩層知識
+## Two layers of knowledge
 
-| 層 | 位置 | 存什麼 | 為什麼分開 |
+| Layer | Location | Holds | Why separate |
 |---|---|---|---|
-| 專案 | `<專案>/.grill/` | 詞彙、決定、開放假設、環境約束 | 跟著專案 |
-| 全域 | `~/.claude/grill/profile.md` | 盲點、慣用的迴避方式、重複踩的坑 | **跟著人走**，換專案甚至換工作都還在 |
+| Project | `<project>/.grill/` | Vocabulary, decisions, open assumptions, constraints | Belongs to the project |
+| Global | `~/.claude/grill/profile.md` | Blind spots, habitual deflections, repeated pitfalls | **Follows the person** across projects and jobs |
 
-`.grill/` **必須加進 `.gitignore`**。裡面會有內部專案名、算力配額、未發表結果。結構見 `reference/store.md`。
+`.grill/` **must be in `.gitignore`**. It will hold internal project names, compute quotas and unpublished results. Structure in `reference/store.md`.
 
-## 回答品質與寫回
+## Answer quality and writeback
 
-每題記下乾脆／含糊／不知道：
+Mark every question crisp, vague, or unknown:
 
-| 標記 | 判準 |
+| Mark | Test |
 |---|---|
-| 乾脆 | 具體的數字、名稱、檔案位置、或明確的取捨 |
-| 含糊 | 只給類別或形容詞：「差不多」「應該可以」「還在調」 |
-| 不知道 | 明講不知道或之後再說 |
+| Crisp | A specific number, name, file location, or an explicit trade-off |
+| Vague | Only a category or an adjective: "roughly", "should be fine", "still tuning" |
+| Unknown | Says outright they do not know, or defers |
 
-**「不知道」比「含糊」健康。** 前者可以行動，後者會讓錯誤的信心留下來。使用者說不知道時不要追殺。
+**Unknown is healthier than vague.** Unknown is actionable; vague leaves misplaced confidence standing. Do not press someone who says they do not know.
 
-**寫回最多 5 條。** 挑最能改變下次問題的：新詞彙、剛定案的決定、被推翻的假設、明顯的盲點。
+**Write back at most five entries.** Pick the ones that will change the next session's questions: new vocabulary, a decision just settled, an assumption overturned, a clear blind spot.
 
-**同一個盲點連三次沒進展就不再問。** 第四次改說一次「這是第四次了，要不要直接花時間處理它」然後放下。拷問工具最容易的死法是變成嘮叨，一嘮叨你就不開了，那就零價值。
+**Stop raising a blind spot after the third time with no progress.** On the fourth, say once: "this is the fourth time — shall we just deal with it", then drop it. The way an interrogation tool dies is by nagging, and once you stop opening it, it is worth nothing.
 
-## 決定記在這裡
+## Decisions live here
 
-每個非顯而易見的決定記四樣：**決定、當時的替代方案、什麼證據會推翻它、日期。**
+Record four things for every non-obvious decision: **the decision, the alternative considered, what evidence would reverse it, and the date.**
 
-第三欄是關鍵，而且它也是過期判準：**時間不會讓決定過期，推翻條件成真才會。**
+The third field is the important one, and it is also how a decision expires: **age does not stale a decision, its reversal condition coming true does.**
 
-## 記憶會腐爛
+## Memory rots
 
-沒有維護的知識庫會讓 skill 很有自信地問一個前提已經過期的問題，那比不知道更糟。
+An unmaintained store lets the skill ask confident questions from premises that expired, which is worse than knowing nothing.
 
-| 類型 | 什麼時候標成待確認 |
+| Type | Marked for reconfirmation when |
 |---|---|
-| 事實／詞彙 | 90 天沒被重新確認 |
-| 決定 | 不因時間過期；推翻條件成真時過期 |
-| 開放假設 | 60 天沒有結論 → 問一次「還開著嗎」 |
-| 盲點 | 只看最近 10 次 session，更早的自動淡出 |
+| Fact / vocabulary | 90 days without reconfirmation |
+| Decision | Never by age; when its reversal condition fires |
+| Open assumption | 60 days unresolved → ask once whether it is still open |
+| Blind spot | Only the last 10 sessions count; older ones fade out |
 
-## 這不是什麼
+## What this is not
 
-- **不是會議記錄。** 只存會改變下次問題的東西，不存逐字稿。
-- **不是專案管理。** 不追進度、不列 todo。
-- **不替你做決定。**
+- **Not meeting minutes.** Store only what will change the next session's questions, never a transcript.
+- **Not project management.** No progress tracking, no todos.
+- **Not a decision-maker.**
 
-## 檔案
+## Files
 
-- `reference/store.md` —— 兩層知識的結構與欄位
-- `reference/lines-of-attack.md` —— 設計樹上會出現的六種節點
-- `reference/musk-order.md` —— 依序拷問模式
-- `reference/bootstrap.md` —— 第一次在專案裡建底
-- `templates/` —— `.grill/` 與 profile 的初始骨架
+- `reference/store.md` — structure and fields of both layers
+- `reference/lines-of-attack.md` — the six kinds of node that appear on the tree
+- `reference/musk-order.md` — the ordered mode
+- `reference/bootstrap.md` — first run in a project
+- `templates/` — starting skeletons for `.grill/` and the profile
