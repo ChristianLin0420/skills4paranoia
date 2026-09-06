@@ -3,7 +3,8 @@ name: deck-design-system
 description: >-
   The visual specification for decks — a low-saturation light palette, a small-type scale built
   for density, a 16:9 grid with exact geometry, and the IBM Plex typeset. Read this before
-  producing or reviewing any slide visual, deck colour, typography or layout geometry.
+  producing or reviewing any slide visual, deck colour, typography or layout geometry. Chinese
+  triggers: 簡報配色 / 字級 / 版面規格 / 檢查投影片外觀.
 ---
 
 # deck-design-system

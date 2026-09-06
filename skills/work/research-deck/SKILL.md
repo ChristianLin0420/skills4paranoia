@@ -7,7 +7,7 @@ description: >-
   solution, results) with everything after it as evidence. Figures the user supplies are placed
   as-is; figures whose underlying data exists are redrawn to the theme so the styling stays
   uniform. Use when someone points at a folder of experiment material and wants slides, a deck
-  or a presentation out of it.
+  or a presentation out of it. Chinese triggers: 做簡報 / 做一份投影片 / 幫我把實驗結果做成報告 / 週報 / 進度回顧.
 ---
 
 # research-deck

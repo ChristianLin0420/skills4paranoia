@@ -6,7 +6,7 @@ description: >-
   footnote. Read before plotting any experimental result. Covers the decision of whether to
   redraw a figure from its underlying data or place the one the user already has. Use when
   plotting experiment results, training curves, ablations, benchmark comparisons, or success-
-  rate matrices for a paper or a deck.
+  rate matrices for a paper or a deck. Chinese triggers: 畫訓練曲線 / 畫消融表 / 成功率矩陣 / 這張圖該重畫還是直接貼.
 ---
 
 # research-figures

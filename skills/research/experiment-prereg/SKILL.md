@@ -10,7 +10,8 @@ description: >-
   gap significant / let us just try it. This does NOT design the experiment — for choosing the
   design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power
   analysis, use a dedicated experimental-design or statistical-power skill. For the code rather
-  than the protocol, use vla-code-review.
+  than the protocol, use vla-code-review. Chinese triggers: 要跑幾個 seed / 這樣比較公平嗎 / 這個差距算不算顯著 /
+  先跑跑看 / 這個實驗該怎麼定義成功.
 ---
 
 # experiment-prereg

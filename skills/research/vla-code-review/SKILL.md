@@ -7,7 +7,8 @@ description: >-
   silently returns an untrained model, evaluation state leaking between episodes, a success
   criterion that fires early. Produces a visual review report. Use when reviewing a robot-
   learning, VLA, world-model or RL codebase before launching an expensive training run, or when
-  reproduced numbers do not match expectations.
+  reproduced numbers do not match expectations. Chinese triggers: 幫我看訓練程式碼 / 為什麼重現不出論文的數字 /
+  檢查有沒有靜默的錯 / 開跑前幫我檢查.
 ---
 
 # vla-code-review

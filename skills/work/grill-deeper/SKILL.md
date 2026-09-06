@@ -9,6 +9,7 @@ description: >-
   requirement, delete, simplify, accelerate, automate, no skipping). Use when someone wants
   their plan, design, hypothesis or decision stress-tested before committing to it, says
   challenge this / is this right / what am I missing, or asks what they decided before and why.
+  Chinese triggers: 幫我挑戰這個 / 拷問我 / 這樣想對嗎 / 有沒有漏掉什麼 / 我當初為什麼這樣決定 / 用馬斯克那套問我 / 幫我砍.
 ---
 
 # grill-deeper
