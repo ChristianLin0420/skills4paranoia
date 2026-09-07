@@ -100,6 +100,7 @@ Doing the research itself.
 |---|---|
 | [`experiment-prereg`](skills/research/experiment-prereg) | Pin the measurement contract and freeze it |
 | [`vla-code-review`](skills/research/vla-code-review) | Hunts the engineering failures that never raise and only make the numbers worse |
+| [`baseline-repro`](skills/research/baseline-repro) | Bisects a gap against a published number and ledgers every axis on which the two setups differ, before anyone says "does not reproduce" |
 
 Complementary: one covers whether you defined what "right" means, the other whether the code is quietly wrong.
 

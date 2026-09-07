@@ -19,6 +19,8 @@
     "presentation",
     "codebase-onboarding",
     "visualization",
+    "reproduction",
+    "baseline",
     "design-system"
   ],
   "skills": [
@@ -28,6 +30,7 @@
     "./skills/work/research-figures",
     "./skills/work/codebase-onboarding",
     "./skills/research/experiment-prereg",
-    "./skills/research/vla-code-review"
+    "./skills/research/vla-code-review",
+    "./skills/research/baseline-repro"
   ]
 }
