@@ -108,6 +108,20 @@ Complementary: one covers whether you defined what "right" means, the other whet
 
 More in [skills/research/README.md](skills/research/README.md).
 
+### `invest/`
+
+Holding a position you can defend.
+
+> **Nothing here is investment advice.** These skills do not value anything, judge whether a price is attractive, size a position, or say what to buy or sell — they take reasoning you already hold and put it into a form that can be wrong. Every worked example is mock; the companies do not exist. Not a substitute for a licensed adviser.
+
+| Skill | What it covers |
+|---|---|
+| [`thesis-prereg`](skills/invest/thesis-prereg) | Freeze the thesis, its falsifiers and both exits before buying, then detect drift at review — the falsification horizon must be shorter than the holding horizon |
+
+The public finance catalogues are institutional work product or screeners wired to a data subscription. Neither is the discipline layer for someone holding for years, and a list of candidates was never the binding constraint.
+
+More in [skills/invest/README.md](skills/invest/README.md).
+
 ## tools/
 
 `tools/deck-renderer` is a working Python reference implementation (markdown → `.pptx` plus an SVG preview). **It is not part of the skills and is not copied on install.** It exists because the geometry in the skills came from it, and because it can verify what an agent produces.

@@ -21,7 +21,10 @@
     "visualization",
     "reproduction",
     "baseline",
-    "design-system"
+    "design-system",
+    "investing",
+    "value-investing",
+    "thesis"
   ],
   "skills": [
     "./skills/work/grill-deeper",
@@ -31,6 +34,7 @@
     "./skills/work/codebase-onboarding",
     "./skills/research/experiment-prereg",
     "./skills/research/vla-code-review",
-    "./skills/research/baseline-repro"
+    "./skills/research/baseline-repro",
+    "./skills/invest/thesis-prereg"
   ]
 }
