@@ -94,6 +94,8 @@ When a row reads `differs` and closing it moves your number, you have your answe
 
 ## Files
 
+- `examples/input.md` — what a real request looks like, untidy
+- `examples/repro-ledger.md` — the same one filled in: bisection, twenty rows, verdict
 - `reference/axes.md` — the delta axes, and which ones actually move numbers
 - `reference/bisection.md` — running the 2×2, and what each cell rules out
 - `templates/ledger.md` — the ledger
