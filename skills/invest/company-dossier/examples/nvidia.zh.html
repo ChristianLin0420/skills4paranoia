@@ -41,6 +41,34 @@ h2{font-size:15px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
           color:var(--ink3);margin-bottom:3px}
 .three .unanswered{color:var(--warn)}
 
+/* orientation — a reader who has never opened one of these starts here */
+.orient{background:var(--sunk);border:1px solid var(--rule);border-radius:3px;padding:14px 17px;margin:0 0 8px}
+.orient p{margin:0 0 8px;font-size:13.5px;line-height:1.6;color:var(--ink2)}
+.orient ol{margin:0;padding-left:19px;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.orient b{color:var(--ink)}
+
+/* one question at a time */
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(410px,1fr));gap:18px}
+.mcard{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:14px 16px 13px}
+.mcard .q{font-size:16px;font-weight:500;line-height:1.4;margin:0 0 11px}
+.mcard .row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+            padding-bottom:11px;border-bottom:1px solid var(--rule-soft);margin-bottom:11px}
+.mcard .big{font-family:var(--mono);font-size:25px;font-weight:500;font-variant-numeric:tabular-nums;
+            color:var(--accent-deep);line-height:1}
+.mcard .nm{font-size:12px;color:var(--ink3)}
+.mcard .med{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.mcard .spark{margin-left:auto}
+.mcard .spark svg{display:block}
+.how{font-size:13.5px;line-height:1.62;color:var(--ink2)}
+.how b{color:var(--ink);font-weight:500}
+.notell{margin-top:11px;padding-top:9px;border-top:1px dashed var(--rule);
+        font-size:12.5px;line-height:1.55;color:var(--ink3)}
+.notell .h{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink3);
+           display:block;margin-bottom:3px}
+.src{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:8px}
+.gl2{border-bottom:1px dotted var(--accent);cursor:help}
+.look{background:var(--accent-wash);border-left:2px solid var(--accent);padding:7px 10px;
+      margin:0 0 9px;font-size:12px;line-height:1.5;color:var(--accent-deep)}
 .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
 .chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:12px 14px 8px}
 .chart h3{font-size:13.5px;font-weight:500;margin:0 0 2px}
@@ -98,23 +126,28 @@ footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-
   <p class="sub mono" id="meta"></p>
   <div id="banner"></div>
 
-  <h2>What this is</h2>
+  <div class="orient" id="orient"></div>
+
+  <h2 id="h-what"></h2>
   <ul class="three" id="three"></ul>
 
-  <h2>The numbers</h2>
+  <h2 id="h-q"></h2>
+  <div class="mcards" id="mcards"></div>
+
+  <h2 id="h-series"></h2>
   <div class="charts" id="charts"></div>
 
-  <h2 id="rsh">Restatements</h2>
+  <h2 id="h-rest"></h2>
   <div id="rs"></div>
 
-  <h2>People, and what the plan pays for</h2>
+  <h2 id="h-people"></h2>
   <div id="people"></div>
 
-  <h2>Filings read</h2>
+  <h2 id="h-filings"></h2>
   <div id="filings"></div>
 </main>
 
-<aside><h2 style="margin-top:0" id="ptitle">Provenance</h2><div id="panel"></div></aside>
+<aside><h2 style="margin-top:0" id="ptitle"></h2><div id="panel"></div></aside>
 
 <footer><span>company-dossier · what the filings say, nothing more</span><span class="mono" id="foot"></span></footer>
 </div>
@@ -147,6 +180,811 @@ const DOSSIER = {
   {
    "q": "哪一個變數決定它做得好不好",
    "a": "最大的那幾個 AI 運算買家會不會繼續擴張預算。10-K 把銷售集中度列為風險因子；FY2026 的結果 &mdash;&mdash; 2,159 億美元營收、60.4% 營業利益率 &mdash;&mdash; 就是這個依賴關係往有利方向走時的樣子。"
+  }
+ ],
+ "ui": {
+  "what": "這是什麼",
+  "question": "一次一個問題",
+  "series": "同樣的數字，拉成長期序列",
+  "rest": "Restatements：事後被改過的數字",
+  "people": "人，以及薪酬計畫在獎勵什麼",
+  "filings": "讀過的申報文件",
+  "prov": "來源",
+  "notell": "它不告訴你什麼",
+  "sourced": "已溯源",
+  "coverage": "涵蓋範圍",
+  "notSupported": "未完全支持",
+  "readFrom": "讀自",
+  "why": "為什麼會變",
+  "annual": "年度計畫掛在",
+  "lt": "長期計畫掛在",
+  "board": "董事會",
+  "maxq": "如果計畫按上限給付，管理層必須做了什麼？",
+  "thName": "姓名",
+  "thRole": "職務",
+  "thSince": "起任",
+  "thNote": "註",
+  "thAccn": "Accession",
+  "thForm": "表別",
+  "thPeriod": "期間",
+  "thFiled": "申報日",
+  "thSeries": "序列",
+  "thValue": "數值",
+  "thFrom": "出處",
+  "empty": "將游標移到任一張圖，右側會列出該會計年度每一條序列的值，以及各自讀自哪一份申報文件。",
+  "noRest": "沒有任何期間被發現有超過一個回報值。",
+  "notIn": "這份檔案裡沒有的東西",
+  "notInBody": "XBRL 之前的會計年度、第一次申報之前的所有年份，以及任何無法追溯到 accession number 的數字。缺口就顯示成缺口。",
+  "noYear": "這份檔案中沒有這個會計年度的數字：FY"
+ },
+ "orientation": {
+  "lead": "如果你沒讀過財報，這份檔案是設計成可以照順序讀、而且隨時停下的。下面每一段都不假設上面那一段已經完全看懂。",
+  "order": [
+   "<b>這是什麼</b> &mdash;&mdash; 三句話說完賣什麼、錢怎麼進來、哪個變數決定它做得好不好。",
+   "<b>一次一個問題</b> &mdash;&mdash; 十個數字，每個都寫成一個白話問題，附上怎麼讀，以及同樣重要的：<b>它不告訴你什麼</b>。",
+   "<b>長期序列</b> &mdash;&mdash; 同樣的數字拉到十九年。游標移到任一張圖，所有圖會同時標出同一個會計年度。",
+   "<b>Restatements、人、申報文件</b> &mdash;&mdash; 哪些數字事後被改過、薪酬計畫在獎勵什麼、以及這份檔案讀過的每一份文件。"
+  ]
+ },
+ "metrics": [
+  {
+   "q": "它能不能想收多少就收多少？",
+   "name": "毛利率",
+   "value": "71.1%",
+   "median": "19 年中位數 56.9%",
+   "pts": [
+    [
+     2008,
+     45.6
+    ],
+    [
+     2009,
+     34.3
+    ],
+    [
+     2010,
+     35.4
+    ],
+    [
+     2011,
+     39.8
+    ],
+    [
+     2012,
+     51.4
+    ],
+    [
+     2013,
+     52.0
+    ],
+    [
+     2014,
+     54.9
+    ],
+    [
+     2015,
+     55.5
+    ],
+    [
+     2016,
+     56.1
+    ],
+    [
+     2017,
+     58.8
+    ],
+    [
+     2018,
+     59.9
+    ],
+    [
+     2019,
+     61.2
+    ],
+    [
+     2020,
+     62.0
+    ],
+    [
+     2021,
+     62.3
+    ],
+    [
+     2022,
+     64.9
+    ],
+    [
+     2023,
+     56.9
+    ],
+    [
+     2024,
+     72.7
+    ],
+    [
+     2025,
+     75.0
+    ],
+    [
+     2026,
+     71.1
+    ]
+   ],
+   "how": "每 100 元營收，<b>扣掉直接製造成本後還剩 71 元</b>。比水準更重要的是穩定度：能撐過景氣下行的毛利率，通常代表客戶接受這個價格而不是去比價。逐年往下滑的則是相反，不管營收線長什麼樣。",
+   "notell": "它不告訴你這個價格<i>撐不撐得住</i>。毛利率高有可能只是競爭者還沒到。它也完全不涵蓋業務、研發、廠房的成本 &mdash;&mdash; 那些在更下面。"
+  },
+  {
+   "q": "一筆銷售最後有多少變成利潤？",
+   "name": "淨利率",
+   "value": "55.6%",
+   "median": "中位數 19.5%；兩個虧損年",
+   "pts": [
+    [
+     2008,
+     19.5
+    ],
+    [
+     2009,
+     -0.9
+    ],
+    [
+     2010,
+     -2.0
+    ],
+    [
+     2011,
+     7.1
+    ],
+    [
+     2012,
+     14.5
+    ],
+    [
+     2013,
+     13.1
+    ],
+    [
+     2014,
+     10.7
+    ],
+    [
+     2015,
+     13.5
+    ],
+    [
+     2016,
+     12.3
+    ],
+    [
+     2017,
+     24.1
+    ],
+    [
+     2018,
+     31.4
+    ],
+    [
+     2019,
+     35.3
+    ],
+    [
+     2020,
+     25.6
+    ],
+    [
+     2021,
+     26.0
+    ],
+    [
+     2022,
+     36.2
+    ],
+    [
+     2023,
+     16.2
+    ],
+    [
+     2024,
+     48.8
+    ],
+    [
+     2025,
+     55.8
+    ],
+    [
+     2026,
+     55.6
+    ]
+   ],
+   "how": "扣掉所有東西之後剩下的 &mdash;&mdash; 成本、研發、稅、利息。Buffett 與 Clark 把<b>持續高於 20%</b> 的淨利率視為持久優勢的跡象，<b>持續低於 10%</b> 則是競爭激烈到沒有人守得住優勢的產業特徵。要看整條序列而不是最後一年：撐起這個判斷的是持續性。",
+   "notell": "單一年份什麼都證明不了，而且極高的數字可能來自一次性事件 &mdash;&mdash; 處分、稅務和解、迴轉。另外高毛利會招來新進者；它描述的是今天，不是承諾。",
+   "src": "門檻出處：Buffett &amp; Clark《Warren Buffett and the Interpretation of Financial Statements》"
+  },
+  {
+   "q": "利潤有沒有變成現金？",
+   "name": "營運現金流 &divide; 淨利",
+   "value": "86%",
+   "median": "19 年中位數 129%",
+   "pts": [
+    [
+     2008,
+     159.3
+    ],
+    [
+     2009,
+     -831.3
+    ],
+    [
+     2010,
+     -717.4
+    ],
+    [
+     2011,
+     267.0
+    ],
+    [
+     2012,
+     156.5
+    ],
+    [
+     2013,
+     146.5
+    ],
+    [
+     2014,
+     189.8
+    ],
+    [
+     2015,
+     143.6
+    ],
+    [
+     2016,
+     191.4
+    ],
+    [
+     2017,
+     100.4
+    ],
+    [
+     2018,
+     114.9
+    ],
+    [
+     2019,
+     90.4
+    ],
+    [
+     2020,
+     170.3
+    ],
+    [
+     2021,
+     134.4
+    ],
+    [
+     2022,
+     93.4
+    ],
+    [
+     2023,
+     129.1
+    ],
+    [
+     2024,
+     94.4
+    ],
+    [
+     2025,
+     87.9
+    ],
+    [
+     2026,
+     85.6
+    ]
+   ],
+   "how": "利潤是一種看法，現金是事實。高於 100% 代表收到的現金多於帳上的利潤 &mdash;&mdash; 通常來自很久以前買的資產的折舊。<b>要看的是持續低於 100% 的情況</b>：利潤認列得比客戶付款快、或存貨在堆積、或成本被資本化了。原因永遠在某個具體的地方。",
+   "notell": "在高速成長的年份，單一年低於 100% 是正常的 &mdash;&mdash; 應收與存貨會隨營收先增加，現金後到。重點是持續性，不是那一次下凹。"
+  },
+  {
+   "q": "一個所有者實際上能拿走多少？",
+   "name": "Owner earnings（保守版）",
+   "value": "$116.9bn",
+   "median": "同期淨利為 $120.1bn",
+   "pts": [
+    [
+     2010,
+     51.1
+    ],
+    [
+     2011,
+     342.2
+    ],
+    [
+     2012,
+     646.6
+    ],
+    [
+     2022,
+     9950.0
+    ],
+    [
+     2023,
+     4079.0
+    ],
+    [
+     2024,
+     30199.0
+    ],
+    [
+     2025,
+     71508.0
+    ],
+    [
+     2026,
+     116868.0
+    ]
+   ],
+   "how": "Buffett 自己的算法，出自 1986 年股東信：<b>申報盈餘，加回折舊與其他非現金費用，減去為維持競爭地位所必需的資本支出</b>。最後那一項 &mdash;&mdash; 維持性資本支出 &mdash;&mdash; 從來不會被單獨揭露，所以保守的替代做法是把<i>全部</i>資本支出都減掉。對成長中的公司來說這會高估扣除額，而那正是該犯錯的方向。",
+   "notell": "這裡只有資本支出有揭露的那八年（見下方的缺口）。它也不等於自由現金流：它沒有計入營運資金變動，而 Buffett 的定義在那筆變動是維持地位所需時是要計入的。",
+   "src": "定義出處：Berkshire Hathaway 1986 年股東信附錄"
+  },
+  {
+   "q": "光是維持現狀就要花多少？",
+   "name": "資本支出 &divide; 營運現金流",
+   "value": "5.9%",
+   "median": "中位數 12.6%，僅 8 年",
+   "pts": [
+    [
+     2010,
+     15.9
+    ],
+    [
+     2011,
+     14.5
+    ],
+    [
+     2012,
+     15.3
+    ],
+    [
+     2022,
+     10.7
+    ],
+    [
+     2023,
+     32.5
+    ],
+    [
+     2024,
+     3.8
+    ],
+    [
+     2025,
+     5.0
+    ],
+    [
+     2026,
+     5.9
+    ]
+   ],
+   "how": "一門生意如果必須把大部分營運現金再投回去才能原地踏步，留給所有者的就不多。<b>低而穩定是好的情況。</b> 要跟上面那張現金轉換一起讀：<b>高轉換加低再投入</b>，就是一門養得起自己的生意的樣子。",
+   "notell": "這條序列有一段<b>真實的缺口，FY2013&ndash;FY2021</b>：那幾年兩個資本支出 tag 在 10-K 裡都沒有年度數字，所以中位數是八年而不是十九年。它也分不出哪些支出是為了成長、哪些是為了活下去。"
+  },
+  {
+   "q": "它用股東的錢賺到什麼？",
+   "name": "股東權益報酬率 ROE",
+   "value": "76.3%",
+   "median": "19 年中位數 22.9%",
+   "pts": [
+    [
+     2008,
+     30.5
+    ],
+    [
+     2009,
+     -1.3
+    ],
+    [
+     2010,
+     -2.6
+    ],
+    [
+     2011,
+     8.0
+    ],
+    [
+     2012,
+     14.0
+    ],
+    [
+     2013,
+     11.7
+    ],
+    [
+     2014,
+     9.9
+    ],
+    [
+     2015,
+     14.3
+    ],
+    [
+     2016,
+     13.7
+    ],
+    [
+     2017,
+     28.9
+    ],
+    [
+     2018,
+     40.8
+    ],
+    [
+     2019,
+     44.3
+    ],
+    [
+     2020,
+     22.9
+    ],
+    [
+     2021,
+     25.6
+    ],
+    [
+     2022,
+     36.6
+    ],
+    [
+     2023,
+     19.8
+    ],
+    [
+     2024,
+     69.2
+    ],
+    [
+     2025,
+     91.9
+    ],
+    [
+     2026,
+     76.3
+    ]
+   ],
+   "how": "利潤除以股東的出資。<b>在沒有大量舉債支撐的情況下</b>連續多年維持高水準，才是有意義的組合 &mdash;&mdash; 這也是為什麼它一定要跟負債那張卡一起看。用很小、而且是借來撐起來的權益基礎做出高報酬，跟沒有槓桿的高報酬是兩種東西。",
+   "notell": "權益是帳面數字，會因為庫藏股而縮小，於是這個比率上升但生意本身沒有變好。看到它上升時，先對照股數與負債那兩張卡再下判斷。"
+  },
+  {
+   "q": "負債會不會拖垮它？",
+   "name": "利息 &divide; 營業利益",
+   "value": "0.8%",
+   "median": "負債權益比 0.05，中位數 0.2",
+   "pts": [
+    [
+     2008,
+     0.0
+    ],
+    [
+     2011,
+     1.2
+    ],
+    [
+     2012,
+     0.5
+    ],
+    [
+     2013,
+     0.5
+    ],
+    [
+     2014,
+     2.0
+    ],
+    [
+     2015,
+     6.1
+    ],
+    [
+     2016,
+     6.3
+    ],
+    [
+     2017,
+     3.0
+    ],
+    [
+     2018,
+     1.9
+    ],
+    [
+     2019,
+     1.5
+    ],
+    [
+     2020,
+     1.8
+    ],
+    [
+     2021,
+     4.1
+    ],
+    [
+     2022,
+     2.4
+    ],
+    [
+     2023,
+     6.2
+    ],
+    [
+     2024,
+     0.8
+    ]
+   ],
+   "how": "在任何東西輪到所有者之前，營業利益有多少已經被預定走了。Buffett 與 Clark 認為在同一個產業裡，<b>把最小比例的營業利益付成利息</b>的那家公司通常就是有優勢的那家，並提到消費類生意在 15% 以下算舒服。負債權益比是它的搭檔數字 &mdash;&mdash; 資產負債表有多少是借來的。",
+   "notell": "它完全不告訴你債務<i>什麼時候到期</i>。同樣的比率，全部明年到期跟分散在十年到期是兩個完全不同的處境。到期日在申報文件裡，不在這個數字裡。",
+   "src": "門檻出處：Buffett &amp; Clark《Interpretation of Financial Statements》"
+  },
+  {
+   "q": "你的那一份有沒有被稀釋？",
+   "name": "稀釋股數，FY2008 &rarr; FY2026",
+   "value": "1.01&times;",
+   "median": "FY2026 庫藏股為淨利的 33%",
+   "pts": [
+    [
+     2008,
+     24269
+    ],
+    [
+     2009,
+     21925
+    ],
+    [
+     2010,
+     21983
+    ],
+    [
+     2011,
+     23547
+    ],
+    [
+     2012,
+     24655
+    ],
+    [
+     2013,
+     24998
+    ],
+    [
+     2014,
+     23800
+    ],
+    [
+     2015,
+     22523
+    ],
+    [
+     2016,
+     22760
+    ],
+    [
+     2017,
+     25960
+    ],
+    [
+     2018,
+     25280
+    ],
+    [
+     2019,
+     25000
+    ],
+    [
+     2020,
+     24720
+    ],
+    [
+     2021,
+     25100
+    ],
+    [
+     2022,
+     25350
+    ],
+    [
+     2023,
+     25070
+    ],
+    [
+     2024,
+     24940
+    ],
+    [
+     2025,
+     24804
+    ],
+    [
+     2026,
+     24514
+    ]
+   ],
+   "how": "這一頁其他每個數字量的都是公司，<b>這一個量的是你</b>。如果利潤翻倍而股數也翻倍，所有者回到原點。這裡十八年下來股數幾乎沒變 &mdash;&mdash; 因員工酬勞而發行的股份，被庫藏股幾乎剛好抵銷。",
+   "notell": "股數持平不是免費的：買回庫藏股的現金本來可以用在別處，而那筆錢花得好不好取決於買回的價格，這個數字裡沒有帶價格。另外這條序列跨了四種申報基準、經過修正才可用 &mdash;&mdash; 見 Restatements。"
+  },
+  {
+   "q": "它虧過錢嗎？",
+   "name": "虧損年數",
+   "value": "19 年中的 2 年",
+   "median": "FY2009 與 FY2010",
+   "pts": [
+    [
+     2008,
+     19.5
+    ],
+    [
+     2009,
+     -0.9
+    ],
+    [
+     2010,
+     -2.0
+    ],
+    [
+     2011,
+     7.1
+    ],
+    [
+     2012,
+     14.5
+    ],
+    [
+     2013,
+     13.1
+    ],
+    [
+     2014,
+     10.7
+    ],
+    [
+     2015,
+     13.5
+    ],
+    [
+     2016,
+     12.3
+    ],
+    [
+     2017,
+     24.1
+    ],
+    [
+     2018,
+     31.4
+    ],
+    [
+     2019,
+     35.3
+    ],
+    [
+     2020,
+     25.6
+    ],
+    [
+     2021,
+     26.0
+    ],
+    [
+     2022,
+     36.2
+    ],
+    [
+     2023,
+     16.2
+    ],
+    [
+     2024,
+     48.8
+    ],
+    [
+     2025,
+     55.8
+    ],
+    [
+     2026,
+     55.6
+    ]
+   ],
+   "how": "長期沒有虧損是比較樸素的持久性跡象之一，因為那代表這門生意撐過了那段期間發生的所有事、而且不需要被救。<b>要看的是那些虧損年有什麼共通點</b>，然後問那個條件會不會再來。",
+   "notell": "十九年是一到兩個循環，不算多。一門生意可以很久不虧錢，同時距離虧錢只差一個衝擊；這份紀錄是證據，不是保證。"
+  },
+  {
+   "q": "毛利有多少投回研發？",
+   "name": "研發費用 &divide; 毛利",
+   "value": "12.1%",
+   "median": "19 年中位數 41.8%",
+   "pts": [
+    [
+     2008,
+     37.0
+    ],
+    [
+     2009,
+     72.9
+    ],
+    [
+     2010,
+     77.2
+    ],
+    [
+     2011,
+     60.2
+    ],
+    [
+     2012,
+     48.8
+    ],
+    [
+     2013,
+     51.5
+    ],
+    [
+     2014,
+     58.9
+    ],
+    [
+     2015,
+     52.3
+    ],
+    [
+     2016,
+     47.3
+    ],
+    [
+     2017,
+     36.0
+    ],
+    [
+     2018,
+     30.9
+    ],
+    [
+     2019,
+     33.1
+    ],
+    [
+     2020,
+     41.8
+    ],
+    [
+     2021,
+     37.7
+    ],
+    [
+     2022,
+     30.1
+    ],
+    [
+     2023,
+     47.8
+    ],
+    [
+     2024,
+     19.6
+    ],
+    [
+     2025,
+     13.2
+    ],
+    [
+     2026,
+     12.1
+    ]
+   ],
+   "how": "研發是留在牌桌上的成本，而它佔比大的地方，優勢必須在每一個產品週期重新賺一次。這個比率下降可能代表生意成長得比研發帳單快 &mdash;&mdash; 也可能代表它在防守上花得更少了。<b>要跟毛利率一起讀</b>：高研發配上升的毛利，跟高研發配下滑的毛利，是兩個完全不同的故事。",
+   "notell": "它完全不告訴你這筆錢花得好不好。研發是投入，而它的產出不會出現在財務報表的任何一行。"
   }
  ],
  "charts": [
@@ -396,7 +1234,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "看形狀，不要看最後一點：成長是穩定、循環，還是階梯狀；以及利潤是跟著營收走還是落後。"
   },
   {
    "id": "mgn",
@@ -764,7 +1603,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "三條線本來應該一起動。當毛利率撐住但營業利益率下滑，成本就出在毛利以下 &mdash;&mdash; 業務、研發或管理。"
   },
   {
    "id": "cash",
@@ -1066,7 +1906,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "問題在藍線相對灰線的位置。藍線連續幾年低於灰線，代表利潤沒有變成現金。"
   },
   {
    "id": "rnd",
@@ -1314,7 +2155,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "研發是留在牌桌上的成本，庫藏股是還給股東的現金。兩者哪一個長得快，說明公司認為自己需要什麼。"
   },
   {
    "id": "sh",
@@ -1443,7 +2285,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "平的才是好情況。這條線往上，代表這一頁其他所有東西裡屬於你的那一份正在變小。"
   },
   {
    "id": "bs",
@@ -1703,7 +2546,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "現金對股東權益。一門養得起自己的生意，權益成長時不需要負債出力。"
   },
   {
    "id": "px",
@@ -1838,7 +2682,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "股價放在這裡不是為了被預測。它在這裡，是為了讓經營歷史可以跟當時市場付的價格並排著讀。"
   }
  ],
  "restatements": [
@@ -1947,19 +2792,73 @@ const DOSSIER = {
 
 const $ = s => document.querySelector(s);
 const C = DOSSIER.company;
+// UI strings live in the data so a Chinese dossier is Chinese in its chrome too,
+// not Chinese prose inside an English frame.
+const U = Object.assign({
+  what:"What this is", question:"One question at a time", series:"The same figures as long series",
+  rest:"Restatements", people:"People, and what the plan pays for", filings:"Filings read",
+  prov:"Provenance", notell:"WHAT IT DOES NOT TELL YOU", sourced:"SOURCED", coverage:"COVERAGE",
+  notSupported:"NOT FULLY SUPPORTED", readFrom:"READ FROM", why:"WHY IT MOVED",
+  annual:"ANNUAL PLAN PAYS ON", lt:"LONG-TERM PLAN PAYS ON", board:"BOARD",
+  maxq:"IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?",
+  thName:"Name", thRole:"Role", thSince:"Since", thNote:"Note",
+  thAccn:"Accession", thForm:"Form", thPeriod:"Period", thFiled:"Filed",
+  thSeries:"Series", thValue:"Value", thFrom:"from",
+  empty:"Hover any chart for that fiscal year across every series, each with the filing it was read from.",
+  noRest:"No period was found reported with more than one value.",
+  notIn:"what is not in this file", notInBody:"Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an accession number. A gap is shown as a gap.",
+  noYear:"No reported figure for FY"
+}, DOSSIER.ui || {});
+for (const [id, k] of [["h-what","what"],["h-q","question"],["h-series","series"],
+     ["h-rest","rest"],["h-people","people"],["h-filings","filings"],["ptitle","prov"]])
+  $("#" + id).textContent = U[k];
 $("#ttl").textContent = C.name + " (" + C.ticker + ")";
 $("#meta").innerHTML = ["CIK " + C.cik, C.sic, "FY ends " + C.fyEnd,
                         "first filing " + C.firstFiling, "as of " + DOSSIER.asOf].join(" · ");
 $("#foot").textContent = C.ticker + " · " + DOSSIER.asOf;
 $("#banner").innerHTML =
   '<div class="banner' + (DOSSIER.verified ? " ok" : "") + '"><span class="t">' +
-  (DOSSIER.verified ? "SOURCED" : "COVERAGE") + '</span><p style="margin:0">' +
+  (DOSSIER.verified ? U.sourced : U.coverage) + '</span><p style="margin:0">' +
   DOSSIER.coverage + (DOSSIER.note ? " " + DOSSIER.note : "") + '</p></div>';
+
+/* ── orientation ─────────────────────────────────────────────────────────── */
+if (DOSSIER.orientation)
+  $("#orient").innerHTML = '<p>' + DOSSIER.orientation.lead + '</p><ol><li>' +
+    DOSSIER.orientation.order.join("</li><li>") + '</li></ol>';
+
+/* ── one question at a time ──────────────────────────────────────────────── */
+// A number with no reading instruction is not information for someone who has not
+// seen one before. Every card is: the question in plain words, the figure, how to
+// read it, and — the part that keeps this from becoming a scoring system — what it
+// does not tell you.
+function spark(pts, w, h) {
+  const v = pts.map(p => p[1]).filter(x => x !== null);
+  if (v.length < 2) return "";
+  const lo = Math.min(...v), hi = Math.max(...v), n = pts.length;
+  const X = i => i / (n - 1) * (w - 2) + 1;
+  const Y = y => h - 2 - (y - lo) / ((hi - lo) || 1) * (h - 4);
+  let d = "", started = false;
+  pts.forEach((p, i) => { if (p[1] === null) return;
+    d += (started ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1) + " "; started = true; });
+  const last = pts[pts.length - 1];
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".65"/>' +
+    (last[1] !== null ? '<circle cx="' + X(n - 1).toFixed(1) + '" cy="' + Y(last[1]).toFixed(1) +
+      '" r="2.4" fill="var(--accent)"/>' : '') + '</svg>';
+}
+$("#mcards").innerHTML = (DOSSIER.metrics || []).map(m =>
+  '<div class="mcard"><p class="q">' + m.q + '</p>' +
+  '<div class="row"><span class="big">' + m.value + '</span>' +
+  '<span class="nm">' + m.name + (m.median ? '<br><span class="med">' + m.median + '</span>' : '') + '</span>' +
+  '<span class="spark">' + spark(m.pts || [], 108, 30) + '</span></div>' +
+  '<div class="how">' + m.how + '</div>' +
+  '<div class="notell"><span class="h">' + U.notell + '</span>' + m.notell + '</div>' +
+  (m.src ? '<div class="src">' + m.src + '</div>' : '') + '</div>').join("");
 
 /* ── the three sentences ─────────────────────────────────────────────────── */
 $("#three").innerHTML = DOSSIER.sentences.map(s =>
   '<li><span class="q">' + s.q + '</span>' + s.a +
-  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">NOT FULLY SUPPORTED</div>' +
+  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">' + U.notSupported + '</div>' +
             s.flag + '</div>' : '') + '</li>').join("");
 
 /* ── one chart engine, so every chart reads the same ─────────────────────── */
@@ -2033,7 +2932,8 @@ function draw(c) {
   g += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) +
        '" fill="transparent" data-hit="' + c.id + '" data-x0="' + x0 + '" data-x1="' + x1 +
        '" data-l="' + L + '" data-w="' + (W - L - R) + '"/>';
-  return '<div class="chart"><h3>' + c.title + '</h3><p class="cap">' + c.cap +
+  return '<div class="chart"><h3>' + c.title + '</h3>' +
+         (c.look ? '<div class="look">' + c.look + '</div>' : '') + '<p class="cap">' + c.cap +
          (c.marks || []).map(m => ' &middot; <b>' + m.x + ':</b> ' + m.label).join("") + '</p>' +
          '<svg viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg><div class="leg">' +
          c.series.map(s => '<span class="' + (off[c.id + s.name] ? "off" : "") + '" data-t="' + c.id + s.name +
@@ -2069,19 +2969,18 @@ function year(fy) {
     }
   $("#ptitle").innerHTML = 'FY<span class="yr">' + fy + '</span>';
   $("#panel").innerHTML = !rows.length
-    ? '<p class="empty">No reported figure for FY' + fy + ' in this file. A gap is shown as a gap.</p>'
-    : '<table><tr><th>Series</th><th style="text-align:right">Value</th></tr>' +
+    ? '<p class="empty">' + U.noYear + fy + '</p>'
+    : '<table><tr><th>' + U.thSeries + '</th><th style="text-align:right">' + U.thValue + '</th></tr>' +
       rows.map(r => '<tr><td>' + r[0] + (r[3] ? '<div style="font-size:10px;color:var(--ink3);' +
         'font-family:var(--mono);margin-top:1px">' + r[3] + '</div>' : '') +
         '</td><td class="num">' + r[1] + '</td></tr>').join("") + '</table>' +
-      '<div class="blk"><div class="h">READ FROM</div>' +
+      '<div class="blk"><div class="h">' + U.readFrom + '</div>' +
       [...new Set(rows.map(r => r[2]).filter(Boolean))].map(a =>
         '<div class="mono" style="font-size:11.5px">' + a + '</div>').join("") + '</div>';
 }
 
 /* ── provenance panel ────────────────────────────────────────────────────── */
-const EMPTY = '<p class="empty">Hover any point for the value, the fiscal period, and the filing it was read from.' +
-  '<br><br>Every figure in this file carries an accession number. One that cannot be sourced is not drawn.</p>';
+const EMPTY = '<p class="empty">' + U.empty + '</p>';
 function point(d) {
   const c = DOSSIER.charts.find(x => x.id === d.c);
   const src = (DOSSIER.filings[0] || {});
@@ -2097,31 +2996,28 @@ function point(d) {
 
 /* ── restatements, people, filings ───────────────────────────────────────── */
 $("#rs").innerHTML = !DOSSIER.restatements.length
-  ? '<p class="empty">No period was found reported with more than one value. Checked across every tagged concept.</p>'
+  ? '<p class="empty">' + U.noRest + '</p>'
   : DOSSIER.restatements.map(r =>
-      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>from</th></tr>' +
+      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>' + U.thFrom + '</th></tr>' +
       r.values.map(v => '<tr><td class="num">' + v.val + '</td><td class="mono" style="font-size:11.5px">' +
         v.accn + '</td><td style="font-size:12px;color:var(--ink2)">' + v.fy + '</td></tr>').join("") +
-      '</table><div class="trap"><div class="h">WHY IT MOVED</div>' + r.why + '</div>').join("");
+      '</table><div class="trap"><div class="h">' + U.why + '</div>' + r.why + '</div>').join("");
 
 const P = DOSSIER.people;
 $("#people").innerHTML =
-  '<table><tr><th>Name</th><th>Role</th><th>Since</th><th>Note</th></tr>' +
+  '<table><tr><th>' + U.thName + '</th><th>' + U.thRole + '</th><th>' + U.thSince + '</th><th>' + U.thNote + '</th></tr>' +
   P.execs.map(e => '<tr><td><b class="name">' + e.name + '</b></td><td>' + e.role +
     '</td><td class="mono">' + e.since + '</td><td style="color:var(--ink2)">' + e.note + '</td></tr>').join("") +
   '</table>' +
-  '<div class="blk"><div class="h">ANNUAL PLAN PAYS ON</div>' + P.annual + '</div>' +
-  '<div class="blk"><div class="h">LONG-TERM PLAN PAYS ON</div>' + P.longTerm + '</div>' +
-  '<div class="trap"><div class="h">IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?</div>' +
-  P.question + '</div>' +
-  '<div class="blk"><div class="h">BOARD</div>' + P.board + '</div>';
+  '<div class="blk"><div class="h">' + U.annual + '</div>' + P.annual + '</div>' +
+  '<div class="blk"><div class="h">' + U.lt + '</div>' + P.longTerm + '</div>' +
+  '<div class="trap"><div class="h">' + U.maxq + '</div>' + P.question + '</div>' +
+  '<div class="blk"><div class="h">' + U.board + '</div>' + P.board + '</div>';
 
-$("#filings").innerHTML = '<table><tr><th>Accession</th><th>Form</th><th>Period</th><th>Filed</th></tr>' +
+$("#filings").innerHTML = '<table><tr><th>' + U.thAccn + '</th><th>' + U.thForm + '</th><th>' + U.thPeriod + '</th><th>' + U.thFiled + '</th></tr>' +
   DOSSIER.filings.map(f => '<tr><td class="mono" style="font-size:11.5px">' + f.accn + '</td><td>' +
     f.form + '</td><td class="mono">' + f.period + '</td><td class="mono">' + f.filed + '</td></tr>').join("") +
-  '</table><details><summary>what is not in this file</summary>' +
-  'Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an ' +
-  'accession number. A gap is shown as a gap.</details>';
+  '</table><details><summary>' + U.notIn + '</summary>' + U.notInBody + '</details>';
 
 $("#panel").innerHTML = EMPTY;
 charts();

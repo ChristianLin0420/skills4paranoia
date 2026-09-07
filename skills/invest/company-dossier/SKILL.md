@@ -57,6 +57,7 @@ Most descriptions fail at the second. "It is a leading provider of solutions" an
 | Section | Why it, and not something else |
 |---|---|
 | Three sentences | Above |
+| **One question at a time** | Ten figures, each written as a plain question with how to read it and what it does not tell you. This section comes **before** the charts: interpretation first, then the series. See `reference/metrics.md` |
 | Operating history | Revenue and operating income as far back as the filings go. The **shape** over a decade, not the last three years |
 | Margins | Gross, operating, net, on one axis. A margin series answers questions a revenue series cannot |
 | Cash | Cash from operations against net income. **The gap between them is the tell**; capex and free cash flow beneath |
@@ -81,7 +82,7 @@ This is not a rare event. Scanning one large filer's company facts turns up **25
 
 **Input**: a company — a name, a ticker or a CIK. Optionally a period of interest.
 
-**Output**: `dossier-<ticker>-<date>.html`, one self-contained file, built on `html-design-system`. Interactive: hover a point for the filing behind it, toggle a series, switch absolute against margin, expand a restatement.
+**Output**: `dossier-<ticker>-<date>.html`, one self-contained file, built on `html-design-system`. It opens with an orientation block — how to read it, in what order, and that it can be abandoned at any point — because the reader who needs this most has not read a set of accounts before. Every chrome string is data, so a Chinese dossier is Chinese in its headings too, not Chinese prose inside an English frame. Interactive: hover a point for the filing behind it, toggle a series, switch absolute against margin, expand a restatement.
 
 **Not output**: a valuation, a price target, a rating, a position size.
 
@@ -94,6 +95,7 @@ This is not a rare event. Scanning one large filer's company facts turns up **25
 ## Files
 
 - `reference/sources.md` — the endpoints, what each returns, coverage limits, and the request rules
+- `reference/metrics.md` — the ten questions, how to write a card, and why there is no score
 - `reference/statements.md` — what to chart, restatements, segment breaks
 - `reference/people.md` — reading the proxy: what the plan pays for
 - `templates/dossier.html` — the deliverable

@@ -41,6 +41,34 @@ h2{font-size:15px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
           color:var(--ink3);margin-bottom:3px}
 .three .unanswered{color:var(--warn)}
 
+/* orientation — a reader who has never opened one of these starts here */
+.orient{background:var(--sunk);border:1px solid var(--rule);border-radius:3px;padding:14px 17px;margin:0 0 8px}
+.orient p{margin:0 0 8px;font-size:13.5px;line-height:1.6;color:var(--ink2)}
+.orient ol{margin:0;padding-left:19px;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.orient b{color:var(--ink)}
+
+/* one question at a time */
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(410px,1fr));gap:18px}
+.mcard{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:14px 16px 13px}
+.mcard .q{font-size:16px;font-weight:500;line-height:1.4;margin:0 0 11px}
+.mcard .row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+            padding-bottom:11px;border-bottom:1px solid var(--rule-soft);margin-bottom:11px}
+.mcard .big{font-family:var(--mono);font-size:25px;font-weight:500;font-variant-numeric:tabular-nums;
+            color:var(--accent-deep);line-height:1}
+.mcard .nm{font-size:12px;color:var(--ink3)}
+.mcard .med{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.mcard .spark{margin-left:auto}
+.mcard .spark svg{display:block}
+.how{font-size:13.5px;line-height:1.62;color:var(--ink2)}
+.how b{color:var(--ink);font-weight:500}
+.notell{margin-top:11px;padding-top:9px;border-top:1px dashed var(--rule);
+        font-size:12.5px;line-height:1.55;color:var(--ink3)}
+.notell .h{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink3);
+           display:block;margin-bottom:3px}
+.src{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:8px}
+.gl2{border-bottom:1px dotted var(--accent);cursor:help}
+.look{background:var(--accent-wash);border-left:2px solid var(--accent);padding:7px 10px;
+      margin:0 0 9px;font-size:12px;line-height:1.5;color:var(--accent-deep)}
 .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
 .chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:12px 14px 8px}
 .chart h3{font-size:13.5px;font-weight:500;margin:0 0 2px}
@@ -98,23 +126,28 @@ footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-
   <p class="sub mono" id="meta"></p>
   <div id="banner"></div>
 
-  <h2>What this is</h2>
+  <div class="orient" id="orient"></div>
+
+  <h2 id="h-what"></h2>
   <ul class="three" id="three"></ul>
 
-  <h2>The numbers</h2>
+  <h2 id="h-q"></h2>
+  <div class="mcards" id="mcards"></div>
+
+  <h2 id="h-series"></h2>
   <div class="charts" id="charts"></div>
 
-  <h2 id="rsh">Restatements</h2>
+  <h2 id="h-rest"></h2>
   <div id="rs"></div>
 
-  <h2>People, and what the plan pays for</h2>
+  <h2 id="h-people"></h2>
   <div id="people"></div>
 
-  <h2>Filings read</h2>
+  <h2 id="h-filings"></h2>
   <div id="filings"></div>
 </main>
 
-<aside><h2 style="margin-top:0" id="ptitle">Provenance</h2><div id="panel"></div></aside>
+<aside><h2 style="margin-top:0" id="ptitle"></h2><div id="panel"></div></aside>
 
 <footer><span>company-dossier · what the filings say, nothing more</span><span class="mono" id="foot"></span></footer>
 </div>
@@ -147,6 +180,777 @@ const DOSSIER = {
   {
    "q": "WHAT DECIDES WHETHER IT DOES WELL",
    "a": "Whether the largest buyers of AI compute keep expanding their budgets. The 10-K names concentration of sales as a risk factor; the FY2026 result &mdash; $215.9bn of revenue at a 60.4% operating margin &mdash; is what that dependency looks like when it runs in the company's favour."
+  }
+ ],
+ "ui": {},
+ "orientation": {
+  "lead": "If you have not read a set of accounts before, this file is built to be read in order and abandoned at any point. Nothing below assumes the section above it was fully understood.",
+  "order": [
+   "<b>What this is</b> &mdash; three sentences on what the company sells, how the money arrives, and what decides whether it does well.",
+   "<b>One question at a time</b> &mdash; ten figures, each stated as a plain question with how to read it and, just as importantly, what it does not tell you.",
+   "<b>The long series</b> &mdash; the same numbers over nineteen years. Hover any chart and all of them mark the same fiscal year.",
+   "<b>Restatements, people, filings</b> &mdash; where the numbers moved after the fact, what the pay plan rewards, and every document this was read from."
+  ]
+ },
+ "metrics": [
+  {
+   "q": "Can it charge what it likes?",
+   "name": "Gross margin",
+   "value": "71.1%",
+   "median": "median 56.9% over 19 years",
+   "pts": [
+    [
+     2008,
+     45.6
+    ],
+    [
+     2009,
+     34.3
+    ],
+    [
+     2010,
+     35.4
+    ],
+    [
+     2011,
+     39.8
+    ],
+    [
+     2012,
+     51.4
+    ],
+    [
+     2013,
+     52.0
+    ],
+    [
+     2014,
+     54.9
+    ],
+    [
+     2015,
+     55.5
+    ],
+    [
+     2016,
+     56.1
+    ],
+    [
+     2017,
+     58.8
+    ],
+    [
+     2018,
+     59.9
+    ],
+    [
+     2019,
+     61.2
+    ],
+    [
+     2020,
+     62.0
+    ],
+    [
+     2021,
+     62.3
+    ],
+    [
+     2022,
+     64.9
+    ],
+    [
+     2023,
+     56.9
+    ],
+    [
+     2024,
+     72.7
+    ],
+    [
+     2025,
+     75.0
+    ],
+    [
+     2026,
+     71.1
+    ]
+   ],
+   "how": "Of every $100 of sales, <b>$71 is left after the direct cost of making the thing</b>. What matters more than the level is the steadiness: a margin that holds through a downturn usually means customers accept the price rather than shop around. One that drifts down year after year means the opposite, whatever the revenue line is doing.",
+   "notell": "Nothing about whether the price is <i>sustainable</i>. A margin can be high because a competitor has not arrived yet. It also says nothing about the cost of the sales force, the research or the plant &mdash; those come further down."
+  },
+  {
+   "q": "How much of a sale actually becomes profit?",
+   "name": "Net margin",
+   "value": "55.6%",
+   "median": "median 19.5%; two loss years",
+   "pts": [
+    [
+     2008,
+     19.5
+    ],
+    [
+     2009,
+     -0.9
+    ],
+    [
+     2010,
+     -2.0
+    ],
+    [
+     2011,
+     7.1
+    ],
+    [
+     2012,
+     14.5
+    ],
+    [
+     2013,
+     13.1
+    ],
+    [
+     2014,
+     10.7
+    ],
+    [
+     2015,
+     13.5
+    ],
+    [
+     2016,
+     12.3
+    ],
+    [
+     2017,
+     24.1
+    ],
+    [
+     2018,
+     31.4
+    ],
+    [
+     2019,
+     35.3
+    ],
+    [
+     2020,
+     25.6
+    ],
+    [
+     2021,
+     26.0
+    ],
+    [
+     2022,
+     36.2
+    ],
+    [
+     2023,
+     16.2
+    ],
+    [
+     2024,
+     48.8
+    ],
+    [
+     2025,
+     55.8
+    ],
+    [
+     2026,
+     55.6
+    ]
+   ],
+   "how": "What survives after everything &mdash; costs, research, tax, interest. Buffett and Clark treat a net margin <b>consistently above 20%</b> as a sign of a durable advantage and one <b>consistently below 10%</b> as the mark of a business where competition prevents anyone holding an edge. Read the whole series, not the last year: it is the consistency that carries the claim.",
+   "notell": "A single year proves nothing, and a very high figure can come from a one-off &mdash; a disposal, a tax settlement, a reversal. And a high margin invites entry; it is a description of today, not a promise.",
+   "src": "Thresholds: Buffett &amp; Clark, <i>Warren Buffett and the Interpretation of Financial Statements</i>"
+  },
+  {
+   "q": "Does the profit turn into cash?",
+   "name": "Cash from operations &divide; net income",
+   "value": "86%",
+   "median": "median 129% over 19 years",
+   "pts": [
+    [
+     2008,
+     159.3
+    ],
+    [
+     2009,
+     -831.3
+    ],
+    [
+     2010,
+     -717.4
+    ],
+    [
+     2011,
+     267.0
+    ],
+    [
+     2012,
+     156.5
+    ],
+    [
+     2013,
+     146.5
+    ],
+    [
+     2014,
+     189.8
+    ],
+    [
+     2015,
+     143.6
+    ],
+    [
+     2016,
+     191.4
+    ],
+    [
+     2017,
+     100.4
+    ],
+    [
+     2018,
+     114.9
+    ],
+    [
+     2019,
+     90.4
+    ],
+    [
+     2020,
+     170.3
+    ],
+    [
+     2021,
+     134.4
+    ],
+    [
+     2022,
+     93.4
+    ],
+    [
+     2023,
+     129.1
+    ],
+    [
+     2024,
+     94.4
+    ],
+    [
+     2025,
+     87.9
+    ],
+    [
+     2026,
+     85.6
+    ]
+   ],
+   "how": "Profit is an opinion; cash is a fact. Above 100% means the business collects more cash than it books as profit &mdash; usually depreciation on assets bought long ago. <b>Persistently below 100% is the thing to look at</b>: profit is being recognised faster than customers pay, or inventory is building, or costs are being capitalised. The reason is always somewhere specific.",
+   "notell": "One year below 100% is normal in a year of fast growth &mdash; receivables and inventory rise with sales before the cash arrives. It is the persistence that matters, not the dip."
+  },
+  {
+   "q": "What could an owner actually take out?",
+   "name": "Owner earnings (conservative)",
+   "value": "$116.9bn",
+   "median": "net income was $120.1bn",
+   "pts": [
+    [
+     2010,
+     51.1
+    ],
+    [
+     2011,
+     342.2
+    ],
+    [
+     2012,
+     646.6
+    ],
+    [
+     2022,
+     9950.0
+    ],
+    [
+     2023,
+     4079.0
+    ],
+    [
+     2024,
+     30199.0
+    ],
+    [
+     2025,
+     71508.0
+    ],
+    [
+     2026,
+     116868.0
+    ]
+   ],
+   "how": "Buffett's own measure, from the 1986 letter: <b>reported earnings, plus depreciation and other non-cash charges, less the capital spending the business needs to hold its position</b>. That last piece &mdash; maintenance capital spending &mdash; is never disclosed separately, so the conservative substitute is to subtract <i>all</i> capital spending. That overstates the deduction for a growing company, which is the direction to err in.",
+   "notell": "It exists here only for the eight years where capital expenditure is reported (see the gap below). It is also not free cash flow: it excludes changes in working capital, which Buffett's definition includes when they are needed to hold position.",
+   "src": "Definition: Berkshire Hathaway 1986 shareholder letter, appendix"
+  },
+  {
+   "q": "How much must it spend just to stay in business?",
+   "name": "Capital spending &divide; cash from operations",
+   "value": "5.9%",
+   "median": "median 12.6%, 8 years only",
+   "pts": [
+    [
+     2010,
+     15.9
+    ],
+    [
+     2011,
+     14.5
+    ],
+    [
+     2012,
+     15.3
+    ],
+    [
+     2022,
+     10.7
+    ],
+    [
+     2023,
+     32.5
+    ],
+    [
+     2024,
+     3.8
+    ],
+    [
+     2025,
+     5.0
+    ],
+    [
+     2026,
+     5.9
+    ]
+   ],
+   "how": "A business that must reinvest most of its operating cash to stand still has little left for its owners. <b>Low and stable is the good case.</b> Read it beside the cash-conversion figure above: strong conversion and low reinvestment is what a business that funds itself looks like.",
+   "notell": "This series has a <b>real gap, FY2013&ndash;FY2021</b>: neither capital-expenditure tag carries an annual figure in a 10-K for those years, so the median is over eight years, not nineteen. It also cannot separate spending to grow from spending to survive."
+  },
+  {
+   "q": "What does it earn on the owners' money?",
+   "name": "Return on equity",
+   "value": "76.3%",
+   "median": "median 22.9% over 19 years",
+   "pts": [
+    [
+     2008,
+     30.5
+    ],
+    [
+     2009,
+     -1.3
+    ],
+    [
+     2010,
+     -2.6
+    ],
+    [
+     2011,
+     8.0
+    ],
+    [
+     2012,
+     14.0
+    ],
+    [
+     2013,
+     11.7
+    ],
+    [
+     2014,
+     9.9
+    ],
+    [
+     2015,
+     14.3
+    ],
+    [
+     2016,
+     13.7
+    ],
+    [
+     2017,
+     28.9
+    ],
+    [
+     2018,
+     40.8
+    ],
+    [
+     2019,
+     44.3
+    ],
+    [
+     2020,
+     22.9
+    ],
+    [
+     2021,
+     25.6
+    ],
+    [
+     2022,
+     36.6
+    ],
+    [
+     2023,
+     19.8
+    ],
+    [
+     2024,
+     69.2
+    ],
+    [
+     2025,
+     91.9
+    ],
+    [
+     2026,
+     76.3
+    ]
+   ],
+   "how": "Profit divided by the shareholders' stake. A high figure sustained for years, <b>without much borrowing behind it</b>, is the combination that matters &mdash; which is why it should always be read together with the debt figure. High return on a small, heavily borrowed equity base is a different animal from high return on an unlevered one.",
+   "notell": "Equity is a book number and can be shrunk by buybacks, which raises this ratio without the business improving. Check it against the share count and the debt card before reading anything into a rise."
+  },
+  {
+   "q": "Could debt sink it?",
+   "name": "Interest &divide; operating income",
+   "value": "0.8%",
+   "median": "debt/equity 0.05, median 0.2",
+   "pts": [
+    [
+     2008,
+     0.0
+    ],
+    [
+     2011,
+     1.2
+    ],
+    [
+     2012,
+     0.5
+    ],
+    [
+     2013,
+     0.5
+    ],
+    [
+     2014,
+     2.0
+    ],
+    [
+     2015,
+     6.1
+    ],
+    [
+     2016,
+     6.3
+    ],
+    [
+     2017,
+     3.0
+    ],
+    [
+     2018,
+     1.9
+    ],
+    [
+     2019,
+     1.5
+    ],
+    [
+     2020,
+     1.8
+    ],
+    [
+     2021,
+     4.1
+    ],
+    [
+     2022,
+     2.4
+    ],
+    [
+     2023,
+     6.2
+    ],
+    [
+     2024,
+     0.8
+    ]
+   ],
+   "how": "How much of the operating profit is spoken for before anything reaches the owners. Buffett and Clark suggest that within an industry the company paying the <b>smallest share of operating income as interest</b> is usually the one with the advantage, and cite under 15% as comfortable for consumer businesses. Debt to equity is the companion figure &mdash; how much of the balance sheet is borrowed.",
+   "notell": "Nothing about <i>when</i> the debt is due. A low ratio with the whole balance maturing next year is a different situation from the same ratio spread over a decade. Maturity dates are in the filing, not in this number.",
+   "src": "Threshold: Buffett &amp; Clark, <i>Interpretation of Financial Statements</i>"
+  },
+  {
+   "q": "Is your slice getting smaller?",
+   "name": "Diluted shares, FY2008 &rarr; FY2026",
+   "value": "1.01&times;",
+   "median": "buybacks 33% of net income in FY2026",
+   "pts": [
+    [
+     2008,
+     24269
+    ],
+    [
+     2009,
+     21925
+    ],
+    [
+     2010,
+     21983
+    ],
+    [
+     2011,
+     23547
+    ],
+    [
+     2012,
+     24655
+    ],
+    [
+     2013,
+     24998
+    ],
+    [
+     2014,
+     23800
+    ],
+    [
+     2015,
+     22523
+    ],
+    [
+     2016,
+     22760
+    ],
+    [
+     2017,
+     25960
+    ],
+    [
+     2018,
+     25280
+    ],
+    [
+     2019,
+     25000
+    ],
+    [
+     2020,
+     24720
+    ],
+    [
+     2021,
+     25100
+    ],
+    [
+     2022,
+     25350
+    ],
+    [
+     2023,
+     25070
+    ],
+    [
+     2024,
+     24940
+    ],
+    [
+     2025,
+     24804
+    ],
+    [
+     2026,
+     24514
+    ]
+   ],
+   "how": "Everything else on this page is measured for the company. This is measured for <b>you</b>. If profit doubles and the share count doubles, an owner is where they started. Here the count is essentially unchanged across eighteen years &mdash; issuance for staff compensation has been almost exactly offset by buybacks.",
+   "notell": "A flat share count is not free: the cash spent on buybacks could have gone elsewhere, and whether it was well spent depends on the price paid, which this number does not carry. Note also that the series had to be corrected across four reporting bases &mdash; see Restatements."
+  },
+  {
+   "q": "Has it ever lost money?",
+   "name": "Loss years",
+   "value": "2 of 19",
+   "median": "FY2009 and FY2010",
+   "pts": [
+    [
+     2008,
+     19.5
+    ],
+    [
+     2009,
+     -0.9
+    ],
+    [
+     2010,
+     -2.0
+    ],
+    [
+     2011,
+     7.1
+    ],
+    [
+     2012,
+     14.5
+    ],
+    [
+     2013,
+     13.1
+    ],
+    [
+     2014,
+     10.7
+    ],
+    [
+     2015,
+     13.5
+    ],
+    [
+     2016,
+     12.3
+    ],
+    [
+     2017,
+     24.1
+    ],
+    [
+     2018,
+     31.4
+    ],
+    [
+     2019,
+     35.3
+    ],
+    [
+     2020,
+     25.6
+    ],
+    [
+     2021,
+     26.0
+    ],
+    [
+     2022,
+     36.2
+    ],
+    [
+     2023,
+     16.2
+    ],
+    [
+     2024,
+     48.8
+    ],
+    [
+     2025,
+     55.8
+    ],
+    [
+     2026,
+     55.6
+    ]
+   ],
+   "how": "A long run without a loss is one of the plainer signs of durability, because it means the business survived whatever happened during that run without needing rescue. <b>Look at what the loss years had in common</b> and ask whether that condition can return.",
+   "notell": "Nineteen years is one or two cycles, not many. A business can go a long time without a loss and still be one shock away from one; the record is evidence, not a guarantee."
+  },
+  {
+   "q": "How much of the gross profit goes back into research?",
+   "name": "R&amp;D &divide; gross profit",
+   "value": "12.1%",
+   "median": "median 41.8% over 19 years",
+   "pts": [
+    [
+     2008,
+     37.0
+    ],
+    [
+     2009,
+     72.9
+    ],
+    [
+     2010,
+     77.2
+    ],
+    [
+     2011,
+     60.2
+    ],
+    [
+     2012,
+     48.8
+    ],
+    [
+     2013,
+     51.5
+    ],
+    [
+     2014,
+     58.9
+    ],
+    [
+     2015,
+     52.3
+    ],
+    [
+     2016,
+     47.3
+    ],
+    [
+     2017,
+     36.0
+    ],
+    [
+     2018,
+     30.9
+    ],
+    [
+     2019,
+     33.1
+    ],
+    [
+     2020,
+     41.8
+    ],
+    [
+     2021,
+     37.7
+    ],
+    [
+     2022,
+     30.1
+    ],
+    [
+     2023,
+     47.8
+    ],
+    [
+     2024,
+     19.6
+    ],
+    [
+     2025,
+     13.2
+    ],
+    [
+     2026,
+     12.1
+    ]
+   ],
+   "how": "Research is a cost of staying in the game, and where it is large the advantage has to be re-earned with each product cycle. A falling ratio can mean the business has grown faster than the research bill &mdash; or that it is spending less to defend itself. <b>Read it against the gross margin</b>: heavy research with a rising margin is a different story from heavy research with a falling one.",
+   "notell": "Nothing about whether the money is well spent. Research is an input, and its output does not appear in any line of a financial statement."
   }
  ],
  "charts": [
@@ -396,7 +1200,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Look at the shape, not the last point: whether growth is steady, cyclical or step-shaped, and whether profit follows revenue or lags it."
   },
   {
    "id": "mgn",
@@ -764,7 +1569,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Three lines that should move together. When gross margin holds but operating margin falls, the cost is below the gross line &mdash; sales, research or administration."
   },
   {
    "id": "cash",
@@ -1066,7 +1872,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Where the blue line sits against the grey one is the question. Blue below grey for several years running means profit is not becoming cash."
   },
   {
    "id": "rnd",
@@ -1314,7 +2121,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Research is a cost of staying in the game; buybacks are cash returned. Which of the two grows faster says what the company thinks it needs."
   },
   {
    "id": "sh",
@@ -1443,7 +2251,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Flat is the good case. A rising line means your slice of everything else on this page is shrinking."
   },
   {
    "id": "bs",
@@ -1703,7 +2512,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Cash against equity. A business funding itself shows equity growing without debt doing the work."
   },
   {
    "id": "px",
@@ -1838,7 +2648,8 @@ const DOSSIER = {
       ]
      ]
     }
-   ]
+   ],
+   "look": "Price is not on this page to be predicted. It is here so the operating history can be read next to what the market was paying while it happened."
   }
  ],
  "restatements": [
@@ -1947,19 +2758,73 @@ const DOSSIER = {
 
 const $ = s => document.querySelector(s);
 const C = DOSSIER.company;
+// UI strings live in the data so a Chinese dossier is Chinese in its chrome too,
+// not Chinese prose inside an English frame.
+const U = Object.assign({
+  what:"What this is", question:"One question at a time", series:"The same figures as long series",
+  rest:"Restatements", people:"People, and what the plan pays for", filings:"Filings read",
+  prov:"Provenance", notell:"WHAT IT DOES NOT TELL YOU", sourced:"SOURCED", coverage:"COVERAGE",
+  notSupported:"NOT FULLY SUPPORTED", readFrom:"READ FROM", why:"WHY IT MOVED",
+  annual:"ANNUAL PLAN PAYS ON", lt:"LONG-TERM PLAN PAYS ON", board:"BOARD",
+  maxq:"IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?",
+  thName:"Name", thRole:"Role", thSince:"Since", thNote:"Note",
+  thAccn:"Accession", thForm:"Form", thPeriod:"Period", thFiled:"Filed",
+  thSeries:"Series", thValue:"Value", thFrom:"from",
+  empty:"Hover any chart for that fiscal year across every series, each with the filing it was read from.",
+  noRest:"No period was found reported with more than one value.",
+  notIn:"what is not in this file", notInBody:"Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an accession number. A gap is shown as a gap.",
+  noYear:"No reported figure for FY"
+}, DOSSIER.ui || {});
+for (const [id, k] of [["h-what","what"],["h-q","question"],["h-series","series"],
+     ["h-rest","rest"],["h-people","people"],["h-filings","filings"],["ptitle","prov"]])
+  $("#" + id).textContent = U[k];
 $("#ttl").textContent = C.name + " (" + C.ticker + ")";
 $("#meta").innerHTML = ["CIK " + C.cik, C.sic, "FY ends " + C.fyEnd,
                         "first filing " + C.firstFiling, "as of " + DOSSIER.asOf].join(" · ");
 $("#foot").textContent = C.ticker + " · " + DOSSIER.asOf;
 $("#banner").innerHTML =
   '<div class="banner' + (DOSSIER.verified ? " ok" : "") + '"><span class="t">' +
-  (DOSSIER.verified ? "SOURCED" : "COVERAGE") + '</span><p style="margin:0">' +
+  (DOSSIER.verified ? U.sourced : U.coverage) + '</span><p style="margin:0">' +
   DOSSIER.coverage + (DOSSIER.note ? " " + DOSSIER.note : "") + '</p></div>';
+
+/* ── orientation ─────────────────────────────────────────────────────────── */
+if (DOSSIER.orientation)
+  $("#orient").innerHTML = '<p>' + DOSSIER.orientation.lead + '</p><ol><li>' +
+    DOSSIER.orientation.order.join("</li><li>") + '</li></ol>';
+
+/* ── one question at a time ──────────────────────────────────────────────── */
+// A number with no reading instruction is not information for someone who has not
+// seen one before. Every card is: the question in plain words, the figure, how to
+// read it, and — the part that keeps this from becoming a scoring system — what it
+// does not tell you.
+function spark(pts, w, h) {
+  const v = pts.map(p => p[1]).filter(x => x !== null);
+  if (v.length < 2) return "";
+  const lo = Math.min(...v), hi = Math.max(...v), n = pts.length;
+  const X = i => i / (n - 1) * (w - 2) + 1;
+  const Y = y => h - 2 - (y - lo) / ((hi - lo) || 1) * (h - 4);
+  let d = "", started = false;
+  pts.forEach((p, i) => { if (p[1] === null) return;
+    d += (started ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1) + " "; started = true; });
+  const last = pts[pts.length - 1];
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".65"/>' +
+    (last[1] !== null ? '<circle cx="' + X(n - 1).toFixed(1) + '" cy="' + Y(last[1]).toFixed(1) +
+      '" r="2.4" fill="var(--accent)"/>' : '') + '</svg>';
+}
+$("#mcards").innerHTML = (DOSSIER.metrics || []).map(m =>
+  '<div class="mcard"><p class="q">' + m.q + '</p>' +
+  '<div class="row"><span class="big">' + m.value + '</span>' +
+  '<span class="nm">' + m.name + (m.median ? '<br><span class="med">' + m.median + '</span>' : '') + '</span>' +
+  '<span class="spark">' + spark(m.pts || [], 108, 30) + '</span></div>' +
+  '<div class="how">' + m.how + '</div>' +
+  '<div class="notell"><span class="h">' + U.notell + '</span>' + m.notell + '</div>' +
+  (m.src ? '<div class="src">' + m.src + '</div>' : '') + '</div>').join("");
 
 /* ── the three sentences ─────────────────────────────────────────────────── */
 $("#three").innerHTML = DOSSIER.sentences.map(s =>
   '<li><span class="q">' + s.q + '</span>' + s.a +
-  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">NOT FULLY SUPPORTED</div>' +
+  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">' + U.notSupported + '</div>' +
             s.flag + '</div>' : '') + '</li>').join("");
 
 /* ── one chart engine, so every chart reads the same ─────────────────────── */
@@ -2033,7 +2898,8 @@ function draw(c) {
   g += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) +
        '" fill="transparent" data-hit="' + c.id + '" data-x0="' + x0 + '" data-x1="' + x1 +
        '" data-l="' + L + '" data-w="' + (W - L - R) + '"/>';
-  return '<div class="chart"><h3>' + c.title + '</h3><p class="cap">' + c.cap +
+  return '<div class="chart"><h3>' + c.title + '</h3>' +
+         (c.look ? '<div class="look">' + c.look + '</div>' : '') + '<p class="cap">' + c.cap +
          (c.marks || []).map(m => ' &middot; <b>' + m.x + ':</b> ' + m.label).join("") + '</p>' +
          '<svg viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg><div class="leg">' +
          c.series.map(s => '<span class="' + (off[c.id + s.name] ? "off" : "") + '" data-t="' + c.id + s.name +
@@ -2069,19 +2935,18 @@ function year(fy) {
     }
   $("#ptitle").innerHTML = 'FY<span class="yr">' + fy + '</span>';
   $("#panel").innerHTML = !rows.length
-    ? '<p class="empty">No reported figure for FY' + fy + ' in this file. A gap is shown as a gap.</p>'
-    : '<table><tr><th>Series</th><th style="text-align:right">Value</th></tr>' +
+    ? '<p class="empty">' + U.noYear + fy + '</p>'
+    : '<table><tr><th>' + U.thSeries + '</th><th style="text-align:right">' + U.thValue + '</th></tr>' +
       rows.map(r => '<tr><td>' + r[0] + (r[3] ? '<div style="font-size:10px;color:var(--ink3);' +
         'font-family:var(--mono);margin-top:1px">' + r[3] + '</div>' : '') +
         '</td><td class="num">' + r[1] + '</td></tr>').join("") + '</table>' +
-      '<div class="blk"><div class="h">READ FROM</div>' +
+      '<div class="blk"><div class="h">' + U.readFrom + '</div>' +
       [...new Set(rows.map(r => r[2]).filter(Boolean))].map(a =>
         '<div class="mono" style="font-size:11.5px">' + a + '</div>').join("") + '</div>';
 }
 
 /* ── provenance panel ────────────────────────────────────────────────────── */
-const EMPTY = '<p class="empty">Hover any point for the value, the fiscal period, and the filing it was read from.' +
-  '<br><br>Every figure in this file carries an accession number. One that cannot be sourced is not drawn.</p>';
+const EMPTY = '<p class="empty">' + U.empty + '</p>';
 function point(d) {
   const c = DOSSIER.charts.find(x => x.id === d.c);
   const src = (DOSSIER.filings[0] || {});
@@ -2097,31 +2962,28 @@ function point(d) {
 
 /* ── restatements, people, filings ───────────────────────────────────────── */
 $("#rs").innerHTML = !DOSSIER.restatements.length
-  ? '<p class="empty">No period was found reported with more than one value. Checked across every tagged concept.</p>'
+  ? '<p class="empty">' + U.noRest + '</p>'
   : DOSSIER.restatements.map(r =>
-      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>from</th></tr>' +
+      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>' + U.thFrom + '</th></tr>' +
       r.values.map(v => '<tr><td class="num">' + v.val + '</td><td class="mono" style="font-size:11.5px">' +
         v.accn + '</td><td style="font-size:12px;color:var(--ink2)">' + v.fy + '</td></tr>').join("") +
-      '</table><div class="trap"><div class="h">WHY IT MOVED</div>' + r.why + '</div>').join("");
+      '</table><div class="trap"><div class="h">' + U.why + '</div>' + r.why + '</div>').join("");
 
 const P = DOSSIER.people;
 $("#people").innerHTML =
-  '<table><tr><th>Name</th><th>Role</th><th>Since</th><th>Note</th></tr>' +
+  '<table><tr><th>' + U.thName + '</th><th>' + U.thRole + '</th><th>' + U.thSince + '</th><th>' + U.thNote + '</th></tr>' +
   P.execs.map(e => '<tr><td><b class="name">' + e.name + '</b></td><td>' + e.role +
     '</td><td class="mono">' + e.since + '</td><td style="color:var(--ink2)">' + e.note + '</td></tr>').join("") +
   '</table>' +
-  '<div class="blk"><div class="h">ANNUAL PLAN PAYS ON</div>' + P.annual + '</div>' +
-  '<div class="blk"><div class="h">LONG-TERM PLAN PAYS ON</div>' + P.longTerm + '</div>' +
-  '<div class="trap"><div class="h">IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?</div>' +
-  P.question + '</div>' +
-  '<div class="blk"><div class="h">BOARD</div>' + P.board + '</div>';
+  '<div class="blk"><div class="h">' + U.annual + '</div>' + P.annual + '</div>' +
+  '<div class="blk"><div class="h">' + U.lt + '</div>' + P.longTerm + '</div>' +
+  '<div class="trap"><div class="h">' + U.maxq + '</div>' + P.question + '</div>' +
+  '<div class="blk"><div class="h">' + U.board + '</div>' + P.board + '</div>';
 
-$("#filings").innerHTML = '<table><tr><th>Accession</th><th>Form</th><th>Period</th><th>Filed</th></tr>' +
+$("#filings").innerHTML = '<table><tr><th>' + U.thAccn + '</th><th>' + U.thForm + '</th><th>' + U.thPeriod + '</th><th>' + U.thFiled + '</th></tr>' +
   DOSSIER.filings.map(f => '<tr><td class="mono" style="font-size:11.5px">' + f.accn + '</td><td>' +
     f.form + '</td><td class="mono">' + f.period + '</td><td class="mono">' + f.filed + '</td></tr>').join("") +
-  '</table><details><summary>what is not in this file</summary>' +
-  'Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an ' +
-  'accession number. A gap is shown as a gap.</details>';
+  '</table><details><summary>' + U.notIn + '</summary>' + U.notInBody + '</details>';
 
 $("#panel").innerHTML = EMPTY;
 charts();

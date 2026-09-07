@@ -41,6 +41,34 @@ h2{font-size:15px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
           color:var(--ink3);margin-bottom:3px}
 .three .unanswered{color:var(--warn)}
 
+/* orientation — a reader who has never opened one of these starts here */
+.orient{background:var(--sunk);border:1px solid var(--rule);border-radius:3px;padding:14px 17px;margin:0 0 8px}
+.orient p{margin:0 0 8px;font-size:13.5px;line-height:1.6;color:var(--ink2)}
+.orient ol{margin:0;padding-left:19px;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.orient b{color:var(--ink)}
+
+/* one question at a time */
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(410px,1fr));gap:18px}
+.mcard{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:14px 16px 13px}
+.mcard .q{font-size:16px;font-weight:500;line-height:1.4;margin:0 0 11px}
+.mcard .row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+            padding-bottom:11px;border-bottom:1px solid var(--rule-soft);margin-bottom:11px}
+.mcard .big{font-family:var(--mono);font-size:25px;font-weight:500;font-variant-numeric:tabular-nums;
+            color:var(--accent-deep);line-height:1}
+.mcard .nm{font-size:12px;color:var(--ink3)}
+.mcard .med{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.mcard .spark{margin-left:auto}
+.mcard .spark svg{display:block}
+.how{font-size:13.5px;line-height:1.62;color:var(--ink2)}
+.how b{color:var(--ink);font-weight:500}
+.notell{margin-top:11px;padding-top:9px;border-top:1px dashed var(--rule);
+        font-size:12.5px;line-height:1.55;color:var(--ink3)}
+.notell .h{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink3);
+           display:block;margin-bottom:3px}
+.src{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:8px}
+.gl2{border-bottom:1px dotted var(--accent);cursor:help}
+.look{background:var(--accent-wash);border-left:2px solid var(--accent);padding:7px 10px;
+      margin:0 0 9px;font-size:12px;line-height:1.5;color:var(--accent-deep)}
 .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
 .chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:12px 14px 8px}
 .chart h3{font-size:13.5px;font-weight:500;margin:0 0 2px}
@@ -98,23 +126,28 @@ footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-
   <p class="sub mono" id="meta"></p>
   <div id="banner"></div>
 
-  <h2>What this is</h2>
+  <div class="orient" id="orient"></div>
+
+  <h2 id="h-what"></h2>
   <ul class="three" id="three"></ul>
 
-  <h2>The numbers</h2>
+  <h2 id="h-q"></h2>
+  <div class="mcards" id="mcards"></div>
+
+  <h2 id="h-series"></h2>
   <div class="charts" id="charts"></div>
 
-  <h2 id="rsh">Restatements</h2>
+  <h2 id="h-rest"></h2>
   <div id="rs"></div>
 
-  <h2>People, and what the plan pays for</h2>
+  <h2 id="h-people"></h2>
   <div id="people"></div>
 
-  <h2>Filings read</h2>
+  <h2 id="h-filings"></h2>
   <div id="filings"></div>
 </main>
 
-<aside><h2 style="margin-top:0" id="ptitle">Provenance</h2><div id="panel"></div></aside>
+<aside><h2 style="margin-top:0" id="ptitle"></h2><div id="panel"></div></aside>
 
 <footer><span>company-dossier · what the filings say, nothing more</span><span class="mono" id="foot"></span></footer>
 </div>
@@ -191,19 +224,73 @@ const DOSSIER = {
 
 const $ = s => document.querySelector(s);
 const C = DOSSIER.company;
+// UI strings live in the data so a Chinese dossier is Chinese in its chrome too,
+// not Chinese prose inside an English frame.
+const U = Object.assign({
+  what:"What this is", question:"One question at a time", series:"The same figures as long series",
+  rest:"Restatements", people:"People, and what the plan pays for", filings:"Filings read",
+  prov:"Provenance", notell:"WHAT IT DOES NOT TELL YOU", sourced:"SOURCED", coverage:"COVERAGE",
+  notSupported:"NOT FULLY SUPPORTED", readFrom:"READ FROM", why:"WHY IT MOVED",
+  annual:"ANNUAL PLAN PAYS ON", lt:"LONG-TERM PLAN PAYS ON", board:"BOARD",
+  maxq:"IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?",
+  thName:"Name", thRole:"Role", thSince:"Since", thNote:"Note",
+  thAccn:"Accession", thForm:"Form", thPeriod:"Period", thFiled:"Filed",
+  thSeries:"Series", thValue:"Value", thFrom:"from",
+  empty:"Hover any chart for that fiscal year across every series, each with the filing it was read from.",
+  noRest:"No period was found reported with more than one value.",
+  notIn:"what is not in this file", notInBody:"Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an accession number. A gap is shown as a gap.",
+  noYear:"No reported figure for FY"
+}, DOSSIER.ui || {});
+for (const [id, k] of [["h-what","what"],["h-q","question"],["h-series","series"],
+     ["h-rest","rest"],["h-people","people"],["h-filings","filings"],["ptitle","prov"]])
+  $("#" + id).textContent = U[k];
 $("#ttl").textContent = C.name + " (" + C.ticker + ")";
 $("#meta").innerHTML = ["CIK " + C.cik, C.sic, "FY ends " + C.fyEnd,
                         "first filing " + C.firstFiling, "as of " + DOSSIER.asOf].join(" · ");
 $("#foot").textContent = C.ticker + " · " + DOSSIER.asOf;
 $("#banner").innerHTML =
   '<div class="banner' + (DOSSIER.verified ? " ok" : "") + '"><span class="t">' +
-  (DOSSIER.verified ? "SOURCED" : "COVERAGE") + '</span><p style="margin:0">' +
+  (DOSSIER.verified ? U.sourced : U.coverage) + '</span><p style="margin:0">' +
   DOSSIER.coverage + (DOSSIER.note ? " " + DOSSIER.note : "") + '</p></div>';
+
+/* ── orientation ─────────────────────────────────────────────────────────── */
+if (DOSSIER.orientation)
+  $("#orient").innerHTML = '<p>' + DOSSIER.orientation.lead + '</p><ol><li>' +
+    DOSSIER.orientation.order.join("</li><li>") + '</li></ol>';
+
+/* ── one question at a time ──────────────────────────────────────────────── */
+// A number with no reading instruction is not information for someone who has not
+// seen one before. Every card is: the question in plain words, the figure, how to
+// read it, and — the part that keeps this from becoming a scoring system — what it
+// does not tell you.
+function spark(pts, w, h) {
+  const v = pts.map(p => p[1]).filter(x => x !== null);
+  if (v.length < 2) return "";
+  const lo = Math.min(...v), hi = Math.max(...v), n = pts.length;
+  const X = i => i / (n - 1) * (w - 2) + 1;
+  const Y = y => h - 2 - (y - lo) / ((hi - lo) || 1) * (h - 4);
+  let d = "", started = false;
+  pts.forEach((p, i) => { if (p[1] === null) return;
+    d += (started ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1) + " "; started = true; });
+  const last = pts[pts.length - 1];
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".65"/>' +
+    (last[1] !== null ? '<circle cx="' + X(n - 1).toFixed(1) + '" cy="' + Y(last[1]).toFixed(1) +
+      '" r="2.4" fill="var(--accent)"/>' : '') + '</svg>';
+}
+$("#mcards").innerHTML = (DOSSIER.metrics || []).map(m =>
+  '<div class="mcard"><p class="q">' + m.q + '</p>' +
+  '<div class="row"><span class="big">' + m.value + '</span>' +
+  '<span class="nm">' + m.name + (m.median ? '<br><span class="med">' + m.median + '</span>' : '') + '</span>' +
+  '<span class="spark">' + spark(m.pts || [], 108, 30) + '</span></div>' +
+  '<div class="how">' + m.how + '</div>' +
+  '<div class="notell"><span class="h">' + U.notell + '</span>' + m.notell + '</div>' +
+  (m.src ? '<div class="src">' + m.src + '</div>' : '') + '</div>').join("");
 
 /* ── the three sentences ─────────────────────────────────────────────────── */
 $("#three").innerHTML = DOSSIER.sentences.map(s =>
   '<li><span class="q">' + s.q + '</span>' + s.a +
-  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">NOT FULLY SUPPORTED</div>' +
+  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">' + U.notSupported + '</div>' +
             s.flag + '</div>' : '') + '</li>').join("");
 
 /* ── one chart engine, so every chart reads the same ─────────────────────── */
@@ -277,7 +364,8 @@ function draw(c) {
   g += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) +
        '" fill="transparent" data-hit="' + c.id + '" data-x0="' + x0 + '" data-x1="' + x1 +
        '" data-l="' + L + '" data-w="' + (W - L - R) + '"/>';
-  return '<div class="chart"><h3>' + c.title + '</h3><p class="cap">' + c.cap +
+  return '<div class="chart"><h3>' + c.title + '</h3>' +
+         (c.look ? '<div class="look">' + c.look + '</div>' : '') + '<p class="cap">' + c.cap +
          (c.marks || []).map(m => ' &middot; <b>' + m.x + ':</b> ' + m.label).join("") + '</p>' +
          '<svg viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg><div class="leg">' +
          c.series.map(s => '<span class="' + (off[c.id + s.name] ? "off" : "") + '" data-t="' + c.id + s.name +
@@ -313,19 +401,18 @@ function year(fy) {
     }
   $("#ptitle").innerHTML = 'FY<span class="yr">' + fy + '</span>';
   $("#panel").innerHTML = !rows.length
-    ? '<p class="empty">No reported figure for FY' + fy + ' in this file. A gap is shown as a gap.</p>'
-    : '<table><tr><th>Series</th><th style="text-align:right">Value</th></tr>' +
+    ? '<p class="empty">' + U.noYear + fy + '</p>'
+    : '<table><tr><th>' + U.thSeries + '</th><th style="text-align:right">' + U.thValue + '</th></tr>' +
       rows.map(r => '<tr><td>' + r[0] + (r[3] ? '<div style="font-size:10px;color:var(--ink3);' +
         'font-family:var(--mono);margin-top:1px">' + r[3] + '</div>' : '') +
         '</td><td class="num">' + r[1] + '</td></tr>').join("") + '</table>' +
-      '<div class="blk"><div class="h">READ FROM</div>' +
+      '<div class="blk"><div class="h">' + U.readFrom + '</div>' +
       [...new Set(rows.map(r => r[2]).filter(Boolean))].map(a =>
         '<div class="mono" style="font-size:11.5px">' + a + '</div>').join("") + '</div>';
 }
 
 /* ── provenance panel ────────────────────────────────────────────────────── */
-const EMPTY = '<p class="empty">Hover any point for the value, the fiscal period, and the filing it was read from.' +
-  '<br><br>Every figure in this file carries an accession number. One that cannot be sourced is not drawn.</p>';
+const EMPTY = '<p class="empty">' + U.empty + '</p>';
 function point(d) {
   const c = DOSSIER.charts.find(x => x.id === d.c);
   const src = (DOSSIER.filings[0] || {});
@@ -341,31 +428,28 @@ function point(d) {
 
 /* ── restatements, people, filings ───────────────────────────────────────── */
 $("#rs").innerHTML = !DOSSIER.restatements.length
-  ? '<p class="empty">No period was found reported with more than one value. Checked across every tagged concept.</p>'
+  ? '<p class="empty">' + U.noRest + '</p>'
   : DOSSIER.restatements.map(r =>
-      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>from</th></tr>' +
+      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>' + U.thFrom + '</th></tr>' +
       r.values.map(v => '<tr><td class="num">' + v.val + '</td><td class="mono" style="font-size:11.5px">' +
         v.accn + '</td><td style="font-size:12px;color:var(--ink2)">' + v.fy + '</td></tr>').join("") +
-      '</table><div class="trap"><div class="h">WHY IT MOVED</div>' + r.why + '</div>').join("");
+      '</table><div class="trap"><div class="h">' + U.why + '</div>' + r.why + '</div>').join("");
 
 const P = DOSSIER.people;
 $("#people").innerHTML =
-  '<table><tr><th>Name</th><th>Role</th><th>Since</th><th>Note</th></tr>' +
+  '<table><tr><th>' + U.thName + '</th><th>' + U.thRole + '</th><th>' + U.thSince + '</th><th>' + U.thNote + '</th></tr>' +
   P.execs.map(e => '<tr><td><b class="name">' + e.name + '</b></td><td>' + e.role +
     '</td><td class="mono">' + e.since + '</td><td style="color:var(--ink2)">' + e.note + '</td></tr>').join("") +
   '</table>' +
-  '<div class="blk"><div class="h">ANNUAL PLAN PAYS ON</div>' + P.annual + '</div>' +
-  '<div class="blk"><div class="h">LONG-TERM PLAN PAYS ON</div>' + P.longTerm + '</div>' +
-  '<div class="trap"><div class="h">IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?</div>' +
-  P.question + '</div>' +
-  '<div class="blk"><div class="h">BOARD</div>' + P.board + '</div>';
+  '<div class="blk"><div class="h">' + U.annual + '</div>' + P.annual + '</div>' +
+  '<div class="blk"><div class="h">' + U.lt + '</div>' + P.longTerm + '</div>' +
+  '<div class="trap"><div class="h">' + U.maxq + '</div>' + P.question + '</div>' +
+  '<div class="blk"><div class="h">' + U.board + '</div>' + P.board + '</div>';
 
-$("#filings").innerHTML = '<table><tr><th>Accession</th><th>Form</th><th>Period</th><th>Filed</th></tr>' +
+$("#filings").innerHTML = '<table><tr><th>' + U.thAccn + '</th><th>' + U.thForm + '</th><th>' + U.thPeriod + '</th><th>' + U.thFiled + '</th></tr>' +
   DOSSIER.filings.map(f => '<tr><td class="mono" style="font-size:11.5px">' + f.accn + '</td><td>' +
     f.form + '</td><td class="mono">' + f.period + '</td><td class="mono">' + f.filed + '</td></tr>').join("") +
-  '</table><details><summary>what is not in this file</summary>' +
-  'Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an ' +
-  'accession number. A gap is shown as a gap.</details>';
+  '</table><details><summary>' + U.notIn + '</summary>' + U.notInBody + '</details>';
 
 $("#panel").innerHTML = EMPTY;
 charts();
