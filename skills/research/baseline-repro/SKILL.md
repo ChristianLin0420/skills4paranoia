@@ -96,8 +96,10 @@ When a row reads `differs` and closing it moves your number, you have your answe
 
 ## Files
 
-- `examples/input.md` — what a real request looks like, untidy
-- `examples/repro-ledger.md` — the same one filled in: bisection, twenty rows, verdict
+- `examples/input.en.md`, `examples/input.zh.md` — what a real request looks like, untidy
+- `examples/repro-ledger.en.md`, `examples/repro-ledger.zh.md` — the same one filled in:
+  bisection, twenty rows, verdict. The Chinese pair is the deliverable a Chinese user gets,
+  technical terms left in English the way this field is actually written
 - `reference/axes.md` — the delta axes, and which ones actually move numbers
 - `reference/bisection.md` — running the 2×2, and what each cell rules out
 - `templates/ledger.md` — the ledger

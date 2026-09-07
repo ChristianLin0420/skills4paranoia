@@ -23,7 +23,7 @@ Add a topic by creating a folder under `skills/` and adding the paths to the `sk
 
 **Language.** English is the source language; every skill states that its output follows the user's language. Ask in Chinese and you get Chinese questions, a Chinese report and a Chinese deck, with the same structure.
 
-Concretely, and checked rather than asserted: all eight descriptions carry Chinese trigger phrases alongside the English ones, no two skills share a Chinese trigger term (a router cannot choose between two skills that claim the same sentence), all eight bodies carry the directive to answer in the user's language, and the HTML deliverables name a CJK face in both their sans and monospace stacks — a monospace stack without one renders Chinese as tofu on many machines. Templates and blank forms ship in English only; `experiment-prereg` and `research-deck` also ship a filled Chinese example.
+Concretely, and checked rather than asserted: all eight descriptions carry Chinese trigger phrases alongside the English ones, no two skills share a Chinese trigger term (a router cannot choose between two skills that claim the same sentence), all eight bodies carry the directive to answer in the user's language, and the HTML deliverables name a CJK face in both their sans and monospace stacks — a monospace stack without one renders Chinese as tofu on many machines. Templates and blank forms ship in English only; `experiment-prereg`, `research-deck` and `baseline-repro` also ship a filled Chinese example beside the English one.
 
 ## Installing
 
