@@ -76,4 +76,6 @@ The document is dated and not edited. Reviews append.
 - `reference/fields.md` — every field, and how each one gets fudged
 - `reference/review.md` — the review ritual, and detecting drift
 - `templates/thesis.md` — the document
-- `examples/filled-thesis.en.md`, `.zh.md` — a worked one. **Mock: the company does not exist**
+- `examples/input.en.md`, `.zh.md` — the untidy request that produced it, ending in
+  "what do you think of the thesis" — which the output does not answer
+- `examples/filled-thesis.en.md`, `.zh.md` — the frozen document. **Mock: the company does not exist**

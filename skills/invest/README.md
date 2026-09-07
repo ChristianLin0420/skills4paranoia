@@ -42,4 +42,8 @@ Two honest responses, and "note it and carry on" is not one: give the new reason
 
 A price move is not information about your thesis; it is information about what other people think. Wiring reviews to price is how a portfolio ends up managed by whichever holding is most volatile.
 
-**[`examples/filled-thesis.en.md`](thesis-prereg/examples/filled-thesis.en.md)** — and [`.zh.md`](thesis-prereg/examples/filled-thesis.zh.md) — is one worked through, including the claim that fails the rule and has to be rewritten.
+### The worked pair
+
+[`input.zh.md`](thesis-prereg/examples/input.zh.md) is the untidy request — a distributor at 7× with a fast-growing service segment nobody discloses — and it ends with **"what do you think of the thesis?"**. [`filled-thesis.zh.md`](thesis-prereg/examples/filled-thesis.zh.md) is what comes back, and it **does not answer that question**. It answers a different one: what would have to be true, and how would you know if it were not.
+
+That substitution is the skill. English pair: [`input.en.md`](thesis-prereg/examples/input.en.md), [`filled-thesis.en.md`](thesis-prereg/examples/filled-thesis.en.md).
