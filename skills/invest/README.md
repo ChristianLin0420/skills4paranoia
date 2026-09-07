@@ -25,6 +25,12 @@ Same doctrine as the rest of this repo: pure markdown, no API keys, and the skil
 
 One interactive HTML file per company, built from primary sources: SEC XBRL company facts, the 10-K or 20-F, the DEF 14A. It presents; it does not value, rate or recommend.
 
+### A real one
+
+[`nvidia.zh.html`](company-dossier/examples/nvidia.zh.html) — and [`.en.html`](company-dossier/examples/nvidia.en.html) — is built from live SEC data: 19 fiscal years, seven charts, every figure carrying the accession number it was read from. Hover any chart and all seven draw a crosshair at the same fiscal year while the panel lists that year across every series.
+
+It is worth reading for what it caught. The share-count series mixed **four** bases — thousands, units, post-4-for-1, post-10-for-1 — and the first draft plotted them together, which is precisely the error the file's own restatement section warns about. Basis breaks are now detected from adjacent-year ratios and every adjusted point shows its factor. Corrected, net dilution across eighteen years is **1.01×**. Uncorrected, the chart said nothing at all.
+
 ### Three sentences before any chart
 
 1. What does it sell, and to whom?

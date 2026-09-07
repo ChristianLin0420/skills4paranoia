@@ -97,3 +97,14 @@ This is not a rare event. Scanning one large filer's company facts turns up **25
 - `reference/statements.md` — what to chart, restatements, segment breaks
 - `reference/people.md` — reading the proxy: what the plan pays for
 - `templates/dossier.html` — the deliverable
+- `examples/nvidia.en.html`, `.zh.html` — **a real one**, built from live SEC data: 19 fiscal years,
+  seven charts, every figure carrying its accession number. Not mock, and not a recommendation
+
+## What the NVIDIA example caught
+
+Worth reading for the failures rather than the numbers. Building it turned up four things a naive pull gets wrong, and all four are in `reference/sources.md` because of it:
+
+- **Revenue spans two tags.** `Revenues` through FY2018, `RevenueFromContractWithCustomerExcludingAssessedTax` after. Query one and the series has a hole at the ASC 606 adoption
+- **Capital expenditure has a real gap, FY2013–FY2021.** Neither capex tag carries an annual figure in a 10-K for those years. The series breaks; it is not interpolated
+- **495 concept-periods carry more than one reported value**, and the largest are not accounting errors — they are the 10-for-1 split restating prior-year share counts
+- **The share series mixed four bases** — thousands, units, post-4-for-1, post-10-for-1 — and the first draft of this dossier plotted them together, which is the exact error its own restatement section warns about. Basis breaks are now detected from adjacent-year ratios and the factor is shown on every adjusted point. Corrected, net dilution over eighteen years is **1.01×**; uncorrected the chart was meaningless

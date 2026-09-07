@@ -1,0 +1,2128 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>NVIDIA &mdash; dossier</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500&display=swap">
+<style>
+/* tokens — html-design-system/reference/tokens.md */
+:root{
+ --bg:#F1F2F3;--surface:#FAFBFB;--sunk:#F6F7F8;
+ --ink:#14171A;--ink2:#5F656B;--ink3:#8A9096;
+ --rule:#DCE0E3;--rule-soft:#E8EBED;
+ --accent:#3A6183;--accent-deep:#27435C;--accent-soft:#DBE4EB;--accent-wash:#EAF0F4;
+ --warn:#8C4A3C;--warn-soft:#EFE3E0;--name:#54547A;--name-soft:#E6E6EE;
+ --s2:#7A8B99;--s3:#A8907C;   /* additional series, desaturated on purpose */
+ --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;
+ --mono:'IBM Plex Mono','Noto Sans TC',Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.62 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,27vw,392px);min-height:100vh}
+main{padding:30px 34px 80px;min-width:0}
+aside{border-left:1px solid var(--rule);background:var(--surface);position:sticky;top:0;
+      height:100vh;overflow-y:auto;padding:30px 22px 40px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1{font-size:22px;font-weight:500;letter-spacing:-.01em;margin:0 0 3px}
+h2{font-size:15px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-deep);
+   margin:30px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.sub{font-size:12.5px;color:var(--ink2);margin:0 0 16px;font-family:var(--mono)}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);padding:11px 15px;margin:0 0 18px;
+        font-size:13.5px;display:flex;gap:11px;align-items:flex-start;line-height:1.55}
+.banner .t{font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;background:var(--warn);
+           padding:2px 7px;white-space:nowrap;margin-top:2px;letter-spacing:.04em}
+.banner.ok{border-color:var(--accent);background:var(--accent-wash)}
+.banner.ok .t{background:var(--accent)}
+
+/* the three sentences — the first thing, deliberately large */
+.three{border-left:2px solid var(--accent);padding:2px 0 2px 18px;margin:0 0 8px}
+.three li{font-size:16.5px;line-height:1.55;margin:0 0 11px;list-style:none}
+.three li:last-child{margin-bottom:0}
+.three .q{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+          color:var(--ink3);margin-bottom:3px}
+.three .unanswered{color:var(--warn)}
+
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
+.chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:12px 14px 8px}
+.chart h3{font-size:13.5px;font-weight:500;margin:0 0 2px}
+.chart .cap{font-size:11px;color:var(--ink3);margin:0 0 8px;line-height:1.45}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.ax{stroke:var(--rule);stroke-width:1}
+.gl{stroke:var(--rule-soft);stroke-width:1}
+.tk{font-family:var(--mono);font-size:9.5px;fill:var(--ink3)}
+.ln{fill:none;stroke-width:1.75}
+.pt{stroke:#fff;stroke-width:1;cursor:pointer}
+.pt:hover{r:5}
+.xh{stroke:var(--accent);stroke-width:1;opacity:.5}
+.xhb{fill:var(--accent);opacity:.08}
+.yr{font-family:var(--mono);font-size:11px;color:var(--accent-deep);background:var(--accent-soft);
+    padding:1px 7px;border-radius:2px}
+.rs{fill:none;stroke:var(--warn);stroke-width:1.4;stroke-dasharray:3 2}
+.brk{stroke:var(--ink3);stroke-width:1;stroke-dasharray:2 3}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11px}
+.leg span{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink2)}
+.leg span.off{opacity:.35}
+.leg i{width:14px;height:2.5px;border-radius:2px;display:block}
+
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--ink3);
+   padding:0 10px 6px 0;border-bottom:1px solid var(--rule)}
+td{padding:6px 10px 6px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding-right:14px}
+.tag{font-family:var(--mono);font-size:10px;padding:1.5px 6px;border-radius:2px;background:var(--rule-soft);color:var(--ink2)}
+.tag.on{background:var(--accent-soft);color:var(--accent-deep)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.conf{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:2px}
+.conf.verified{background:var(--accent-soft);color:var(--accent-deep)}
+.conf.stated{background:var(--rule-soft);color:var(--ink2)}
+.conf.inferred{background:var(--warn-soft);color:var(--warn)}
+.trap{border-left:2px solid var(--warn);background:var(--warn-soft);padding:10px 12px;margin-top:14px;
+      font-size:13px;line-height:1.6;color:#5E3228}
+.trap .h{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--warn);margin-bottom:4px}
+details{font-size:13px;color:var(--ink2);margin-top:12px}
+summary{cursor:pointer;font-size:11.5px;color:var(--ink3);font-family:var(--mono)}
+b.name{font-weight:600;color:var(--name)}
+dl{margin:0;display:grid;grid-template-columns:82px minmax(0,1fr);gap:6px 12px;font-size:13.5px}
+dt{color:var(--ink3);font-size:11.5px;padding-top:3px}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+dd.mono{font-family:var(--mono);font-size:12px;line-height:1.5}
+.empty{font-size:13.5px;color:var(--ink3);line-height:1.65}
+.blk{margin-top:14px;padding-top:11px;border-top:1px solid var(--rule-soft);font-size:13px;color:var(--ink2);line-height:1.62}
+.blk .h{font-size:10.5px;letter-spacing:.09em;color:var(--ink3);margin-bottom:5px;font-family:var(--mono)}
+footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--ink3);
+       display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+<main>
+  <h1 id="ttl"></h1>
+  <p class="sub mono" id="meta"></p>
+  <div id="banner"></div>
+
+  <h2>What this is</h2>
+  <ul class="three" id="three"></ul>
+
+  <h2>The numbers</h2>
+  <div class="charts" id="charts"></div>
+
+  <h2 id="rsh">Restatements</h2>
+  <div id="rs"></div>
+
+  <h2>People, and what the plan pays for</h2>
+  <div id="people"></div>
+
+  <h2>Filings read</h2>
+  <div id="filings"></div>
+</main>
+
+<aside><h2 style="margin-top:0" id="ptitle">Provenance</h2><div id="panel"></div></aside>
+
+<footer><span>company-dossier · what the filings say, nothing more</span><span class="mono" id="foot"></span></footer>
+</div>
+
+<script>
+// ═══ Replace DOSSIER. Nothing below it needs editing. ═══════════════════════
+const DOSSIER = {
+ "company": {
+  "name": "NVIDIA Corporation",
+  "ticker": "NVDA",
+  "cik": "0001045810",
+  "sic": "Semiconductors & Related Devices",
+  "fyEnd": "late January",
+  "firstFiling": "listed 1999; XBRL from FY2008"
+ },
+ "asOf": "2026-09-07",
+ "verified": true,
+ "coverage": "Structured XBRL facts cover fiscal 2008&#8211;2026 for flows and 2007&#8211;2026 for balances &mdash; earliest period end <b>2007-01-28</b>, computed from the facts rather than assumed. Before that: NVIDIA listed in 1999, and those years exist only as filing documents that would have to be read by hand. They are <b>not</b> in this file. <b>Capital expenditure has a real gap, FY2013&#8211;FY2021</b>: neither capex tag carries an annual figure in a 10-K for those years, so the series breaks rather than being interpolated.",
+ "note": "Read from primary sources only &mdash; SEC XBRL company facts, the FY2026 10-K and the 2026 proxy. Share price is the one exception and is labelled as such. This file presents; it does not value, rate or recommend.",
+ "sentences": [
+  {
+   "q": "WHAT IT SELLS, AND TO WHOM",
+   "a": "Accelerated computing platforms &mdash; GPUs, CPUs, DPUs and networking, with the CUDA software layer on top &mdash; sold to cloud providers, AI model developers, enterprises and public sector, and through OEMs, ODMs, system integrators and distributors."
+  },
+  {
+   "q": "HOW THE MONEY ARRIVES",
+   "a": "Per unit shipped, across two reportable segments: Compute &amp; Networking (data centre, networking, automotive) and Graphics (GeForce, professional visualisation). Most volume reaches the end customer through an intermediary rather than direct.",
+   "flag": "The segment split and the customer-concentration percentages are <b>not</b> in the structured data &mdash; the SEC XBRL APIs expose only non-custom taxonomies, and this is exactly where a company's own extension tags live. Any proportion quoted here would be <code>stated</code> from the 10-K text, not <code>verified</code>, so none is quoted."
+  },
+  {
+   "q": "WHAT DECIDES WHETHER IT DOES WELL",
+   "a": "Whether the largest buyers of AI compute keep expanding their budgets. The 10-K names concentration of sales as a risk factor; the FY2026 result &mdash; $215.9bn of revenue at a 60.4% operating margin &mdash; is what that dependency looks like when it runs in the company's favour."
+  }
+ ],
+ "charts": [
+  {
+   "id": "rev",
+   "title": "Revenue and operating income",
+   "unit": "$m",
+   "cap": "Absolute, US$m, fiscal years ending late January. FY2008&#8211;FY2026.",
+   "series": [
+    {
+     "name": "Revenue",
+     "color": "var(--accent)",
+     "pts": [
+      [
+       2008,
+       4097.9,
+       "0001045810-10-000006",
+       "Revenues"
+      ],
+      [
+       2009,
+       3424.9,
+       "0001045810-11-000015",
+       "Revenues"
+      ],
+      [
+       2010,
+       3326.4,
+       "0001045810-12-000013",
+       "Revenues"
+      ],
+      [
+       2011,
+       3543.3,
+       "0001045810-13-000008",
+       "Revenues"
+      ],
+      [
+       2012,
+       3997.9,
+       "0001045810-14-000030",
+       "Revenues"
+      ],
+      [
+       2013,
+       4280.2,
+       "0001045810-15-000036",
+       "Revenues"
+      ],
+      [
+       2014,
+       4130.0,
+       "0001045810-16-000205",
+       "Revenues"
+      ],
+      [
+       2015,
+       4682.0,
+       "0001045810-17-000027",
+       "Revenues"
+      ],
+      [
+       2016,
+       5010.0,
+       "0001045810-18-000010",
+       "Revenues"
+      ],
+      [
+       2017,
+       6910.0,
+       "0001045810-19-000023",
+       "RevenueFromContract…AssessedTax"
+      ],
+      [
+       2018,
+       9714.0,
+       "0001045810-20-000010",
+       "RevenueFromContract…AssessedTax"
+      ],
+      [
+       2019,
+       11716.0,
+       "0001045810-21-000010",
+       "RevenueFromContract…AssessedTax"
+      ],
+      [
+       2020,
+       10918.0,
+       "0001045810-22-000036",
+       "RevenueFromContract…AssessedTax"
+      ],
+      [
+       2021,
+       16675.0,
+       "0001045810-22-000036",
+       "RevenueFromContract…AssessedTax"
+      ],
+      [
+       2022,
+       26914.0,
+       "0001045810-22-000036",
+       "RevenueFromContract…AssessedTax"
+      ],
+      [
+       2023,
+       26974.0,
+       "0001045810-25-000023",
+       "Revenues"
+      ],
+      [
+       2024,
+       60922.0,
+       "0001045810-26-000021",
+       "Revenues"
+      ],
+      [
+       2025,
+       130497.0,
+       "0001045810-26-000021",
+       "Revenues"
+      ],
+      [
+       2026,
+       215938.0,
+       "0001045810-26-000021",
+       "Revenues"
+      ]
+     ]
+    },
+    {
+     "name": "Operating income",
+     "color": "var(--s2)",
+     "pts": [
+      [
+       2008,
+       836.3,
+       "0001045810-10-000006",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2009,
+       -70.7,
+       "0001045810-11-000015",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2010,
+       -98.9,
+       "0001045810-12-000013",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2011,
+       255.7,
+       "0001045810-13-000008",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2012,
+       648.3,
+       "0001045810-14-000030",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2013,
+       648.2,
+       "0001045810-15-000036",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2014,
+       496.0,
+       "0001045810-16-000205",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2015,
+       759.0,
+       "0001045810-17-000027",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2016,
+       747.0,
+       "0001045810-18-000010",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2017,
+       1934.0,
+       "0001045810-19-000023",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2018,
+       3210.0,
+       "0001045810-20-000010",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2019,
+       3804.0,
+       "0001045810-21-000010",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2020,
+       2846.0,
+       "0001045810-22-000036",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2021,
+       4532.0,
+       "0001045810-23-000017",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2022,
+       10041.0,
+       "0001045810-24-000029",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2023,
+       4224.0,
+       "0001045810-25-000023",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2024,
+       32972.0,
+       "0001045810-26-000021",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2025,
+       81453.0,
+       "0001045810-26-000021",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2026,
+       130387.0,
+       "0001045810-26-000021",
+       "OperatingIncomeLoss"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mgn",
+   "title": "Margins",
+   "unit": "%",
+   "cap": "Gross, operating and net, percent of revenue.",
+   "series": [
+    {
+     "name": "Gross",
+     "color": "var(--accent)",
+     "pts": [
+      [
+       2008,
+       45.6,
+       "0001045810-10-000006",
+       "GrossProfit"
+      ],
+      [
+       2009,
+       34.3,
+       "0001045810-11-000015",
+       "GrossProfit"
+      ],
+      [
+       2010,
+       35.4,
+       "0001045810-12-000013",
+       "GrossProfit"
+      ],
+      [
+       2011,
+       39.8,
+       "0001045810-13-000008",
+       "GrossProfit"
+      ],
+      [
+       2012,
+       51.4,
+       "0001045810-14-000030",
+       "GrossProfit"
+      ],
+      [
+       2013,
+       52.0,
+       "0001045810-15-000036",
+       "GrossProfit"
+      ],
+      [
+       2014,
+       54.9,
+       "0001045810-16-000205",
+       "GrossProfit"
+      ],
+      [
+       2015,
+       55.5,
+       "0001045810-17-000027",
+       "GrossProfit"
+      ],
+      [
+       2016,
+       56.1,
+       "0001045810-18-000010",
+       "GrossProfit"
+      ],
+      [
+       2017,
+       58.8,
+       "0001045810-19-000023",
+       "GrossProfit"
+      ],
+      [
+       2018,
+       59.9,
+       "0001045810-20-000010",
+       "GrossProfit"
+      ],
+      [
+       2019,
+       61.2,
+       "0001045810-21-000010",
+       "GrossProfit"
+      ],
+      [
+       2020,
+       62.0,
+       "0001045810-22-000036",
+       "GrossProfit"
+      ],
+      [
+       2021,
+       62.3,
+       "0001045810-23-000017",
+       "GrossProfit"
+      ],
+      [
+       2022,
+       64.9,
+       "0001045810-24-000029",
+       "GrossProfit"
+      ],
+      [
+       2023,
+       56.9,
+       "0001045810-25-000023",
+       "GrossProfit"
+      ],
+      [
+       2024,
+       72.7,
+       "0001045810-26-000021",
+       "GrossProfit"
+      ],
+      [
+       2025,
+       75.0,
+       "0001045810-26-000021",
+       "GrossProfit"
+      ],
+      [
+       2026,
+       71.1,
+       "0001045810-26-000021",
+       "GrossProfit"
+      ]
+     ]
+    },
+    {
+     "name": "Operating",
+     "color": "var(--s2)",
+     "pts": [
+      [
+       2008,
+       20.4,
+       "0001045810-10-000006",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2009,
+       -2.1,
+       "0001045810-11-000015",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2010,
+       -3.0,
+       "0001045810-12-000013",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2011,
+       7.2,
+       "0001045810-13-000008",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2012,
+       16.2,
+       "0001045810-14-000030",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2013,
+       15.1,
+       "0001045810-15-000036",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2014,
+       12.0,
+       "0001045810-16-000205",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2015,
+       16.2,
+       "0001045810-17-000027",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2016,
+       14.9,
+       "0001045810-18-000010",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2017,
+       28.0,
+       "0001045810-19-000023",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2018,
+       33.0,
+       "0001045810-20-000010",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2019,
+       32.5,
+       "0001045810-21-000010",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2020,
+       26.1,
+       "0001045810-22-000036",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2021,
+       27.2,
+       "0001045810-23-000017",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2022,
+       37.3,
+       "0001045810-24-000029",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2023,
+       15.7,
+       "0001045810-25-000023",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2024,
+       54.1,
+       "0001045810-26-000021",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2025,
+       62.4,
+       "0001045810-26-000021",
+       "OperatingIncomeLoss"
+      ],
+      [
+       2026,
+       60.4,
+       "0001045810-26-000021",
+       "OperatingIncomeLoss"
+      ]
+     ]
+    },
+    {
+     "name": "Net",
+     "color": "var(--s3)",
+     "pts": [
+      [
+       2008,
+       19.5,
+       "0001045810-10-000006",
+       "NetIncomeLoss"
+      ],
+      [
+       2009,
+       -0.9,
+       "0001045810-11-000015",
+       "NetIncomeLoss"
+      ],
+      [
+       2010,
+       -2.0,
+       "0001045810-12-000013",
+       "NetIncomeLoss"
+      ],
+      [
+       2011,
+       7.1,
+       "0001045810-13-000008",
+       "NetIncomeLoss"
+      ],
+      [
+       2012,
+       14.5,
+       "0001045810-14-000030",
+       "NetIncomeLoss"
+      ],
+      [
+       2013,
+       13.1,
+       "0001045810-15-000036",
+       "NetIncomeLoss"
+      ],
+      [
+       2014,
+       10.7,
+       "0001045810-16-000205",
+       "NetIncomeLoss"
+      ],
+      [
+       2015,
+       13.5,
+       "0001045810-17-000027",
+       "NetIncomeLoss"
+      ],
+      [
+       2016,
+       12.3,
+       "0001045810-18-000010",
+       "NetIncomeLoss"
+      ],
+      [
+       2017,
+       24.1,
+       "0001045810-19-000023",
+       "NetIncomeLoss"
+      ],
+      [
+       2018,
+       31.4,
+       "0001045810-20-000010",
+       "NetIncomeLoss"
+      ],
+      [
+       2019,
+       35.3,
+       "0001045810-21-000010",
+       "NetIncomeLoss"
+      ],
+      [
+       2020,
+       25.6,
+       "0001045810-22-000036",
+       "NetIncomeLoss"
+      ],
+      [
+       2021,
+       26.0,
+       "0001045810-23-000017",
+       "NetIncomeLoss"
+      ],
+      [
+       2022,
+       36.2,
+       "0001045810-24-000029",
+       "NetIncomeLoss"
+      ],
+      [
+       2023,
+       16.2,
+       "0001045810-25-000023",
+       "NetIncomeLoss"
+      ],
+      [
+       2024,
+       48.8,
+       "0001045810-26-000021",
+       "NetIncomeLoss"
+      ],
+      [
+       2025,
+       55.8,
+       "0001045810-26-000021",
+       "NetIncomeLoss"
+      ],
+      [
+       2026,
+       55.6,
+       "0001045810-26-000021",
+       "NetIncomeLoss"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cash",
+   "title": "Cash from operations against net income",
+   "unit": "$m",
+   "cap": "US$m. The pair worth the most attention: CFO below net income means profit is not converting to cash.",
+   "series": [
+    {
+     "name": "CFO",
+     "color": "var(--accent)",
+     "pts": [
+      [
+       2008,
+       1270.2,
+       "0001045810-10-000006",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2009,
+       249.4,
+       "0001045810-11-000015",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2010,
+       487.8,
+       "0001045810-12-000013",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2011,
+       675.8,
+       "0001045810-13-000008",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2012,
+       909.2,
+       "0001045810-14-000030",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2013,
+       824.2,
+       "0001045810-15-000036",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2014,
+       835.0,
+       "0001045810-16-000205",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2015,
+       906.0,
+       "0001045810-17-000027",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2016,
+       1175.0,
+       "0001045810-18-000010",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2017,
+       1672.0,
+       "0001045810-19-000023",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2018,
+       3502.0,
+       "0001045810-20-000010",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2019,
+       3743.0,
+       "0001045810-21-000010",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2020,
+       4761.0,
+       "0001045810-22-000036",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2021,
+       5822.0,
+       "0001045810-23-000017",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2022,
+       9108.0,
+       "0001045810-24-000029",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2023,
+       5641.0,
+       "0001045810-25-000023",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2024,
+       28090.0,
+       "0001045810-26-000021",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2025,
+       64089.0,
+       "0001045810-26-000021",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      [
+       2026,
+       102718.0,
+       "0001045810-26-000021",
+       "NetCashProvidedByUsedInOperatingActivities"
+      ]
+     ]
+    },
+    {
+     "name": "Net income",
+     "color": "var(--s2)",
+     "pts": [
+      [
+       2008,
+       797.6,
+       "0001045810-10-000006",
+       "NetIncomeLoss"
+      ],
+      [
+       2009,
+       -30.0,
+       "0001045810-11-000015",
+       "NetIncomeLoss"
+      ],
+      [
+       2010,
+       -68.0,
+       "0001045810-12-000013",
+       "NetIncomeLoss"
+      ],
+      [
+       2011,
+       253.1,
+       "0001045810-13-000008",
+       "NetIncomeLoss"
+      ],
+      [
+       2012,
+       581.1,
+       "0001045810-14-000030",
+       "NetIncomeLoss"
+      ],
+      [
+       2013,
+       562.5,
+       "0001045810-15-000036",
+       "NetIncomeLoss"
+      ],
+      [
+       2014,
+       440.0,
+       "0001045810-16-000205",
+       "NetIncomeLoss"
+      ],
+      [
+       2015,
+       631.0,
+       "0001045810-17-000027",
+       "NetIncomeLoss"
+      ],
+      [
+       2016,
+       614.0,
+       "0001045810-18-000010",
+       "NetIncomeLoss"
+      ],
+      [
+       2017,
+       1666.0,
+       "0001045810-19-000023",
+       "NetIncomeLoss"
+      ],
+      [
+       2018,
+       3047.0,
+       "0001045810-20-000010",
+       "NetIncomeLoss"
+      ],
+      [
+       2019,
+       4141.0,
+       "0001045810-21-000010",
+       "NetIncomeLoss"
+      ],
+      [
+       2020,
+       2796.0,
+       "0001045810-22-000036",
+       "NetIncomeLoss"
+      ],
+      [
+       2021,
+       4332.0,
+       "0001045810-23-000017",
+       "NetIncomeLoss"
+      ],
+      [
+       2022,
+       9752.0,
+       "0001045810-24-000029",
+       "NetIncomeLoss"
+      ],
+      [
+       2023,
+       4368.0,
+       "0001045810-25-000023",
+       "NetIncomeLoss"
+      ],
+      [
+       2024,
+       29760.0,
+       "0001045810-26-000021",
+       "NetIncomeLoss"
+      ],
+      [
+       2025,
+       72880.0,
+       "0001045810-26-000021",
+       "NetIncomeLoss"
+      ],
+      [
+       2026,
+       120067.0,
+       "0001045810-26-000021",
+       "NetIncomeLoss"
+      ]
+     ]
+    },
+    {
+     "name": "Capex",
+     "color": "var(--s3)",
+     "pts": [
+      [
+       2010,
+       77.6,
+       "0001045810-12-000013",
+       "PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      [
+       2011,
+       97.9,
+       "0001045810-12-000013",
+       "PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      [
+       2012,
+       138.7,
+       "0001045810-12-000013",
+       "PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      [
+       2022,
+       976.0,
+       "0001045810-24-000029",
+       "PaymentsToAcquireProductiveAssets"
+      ],
+      [
+       2023,
+       1833.0,
+       "0001045810-25-000023",
+       "PaymentsToAcquireProductiveAssets"
+      ],
+      [
+       2024,
+       1069.0,
+       "0001045810-26-000021",
+       "PaymentsToAcquireProductiveAssets"
+      ],
+      [
+       2025,
+       3236.0,
+       "0001045810-26-000021",
+       "PaymentsToAcquireProductiveAssets"
+      ],
+      [
+       2026,
+       6042.0,
+       "0001045810-26-000021",
+       "PaymentsToAcquireProductiveAssets"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rnd",
+   "title": "R&amp;D spend",
+   "unit": "$m",
+   "cap": "US$m and as a percent of revenue on the same fiscal years.",
+   "series": [
+    {
+     "name": "R&D",
+     "color": "var(--accent)",
+     "pts": [
+      [
+       2008,
+       691.6,
+       "0001045810-10-000006",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2009,
+       855.9,
+       "0001045810-11-000015",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2010,
+       908.9,
+       "0001045810-12-000013",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2011,
+       848.8,
+       "0001045810-13-000008",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2012,
+       1002.6,
+       "0001045810-14-000030",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2013,
+       1147.3,
+       "0001045810-15-000036",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2014,
+       1336.0,
+       "0001045810-16-000205",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2015,
+       1360.0,
+       "0001045810-17-000027",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2016,
+       1331.0,
+       "0001045810-18-000010",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2017,
+       1463.0,
+       "0001045810-19-000023",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2018,
+       1797.0,
+       "0001045810-20-000010",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2019,
+       2376.0,
+       "0001045810-21-000010",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2020,
+       2829.0,
+       "0001045810-22-000036",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2021,
+       3924.0,
+       "0001045810-23-000017",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2022,
+       5268.0,
+       "0001045810-24-000029",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2023,
+       7339.0,
+       "0001045810-25-000023",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2024,
+       8675.0,
+       "0001045810-26-000021",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2025,
+       12914.0,
+       "0001045810-26-000021",
+       "ResearchAndDevelopmentExpense"
+      ],
+      [
+       2026,
+       18497.0,
+       "0001045810-26-000021",
+       "ResearchAndDevelopmentExpense"
+      ]
+     ]
+    },
+    {
+     "name": "Buybacks",
+     "color": "var(--s2)",
+     "pts": [
+      [
+       2008,
+       552.5,
+       "0001045810-10-000006",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2009,
+       423.6,
+       "0001045810-11-000015",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2010,
+       0.0,
+       "0001045810-11-000015",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2011,
+       0.0,
+       "0001045810-13-000008",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2012,
+       0.0,
+       "0001045810-14-000030",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2013,
+       100.0,
+       "0001045810-15-000036",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2014,
+       887.0,
+       "0001045810-16-000205",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2015,
+       814.0,
+       "0001045810-17-000027",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2016,
+       587.0,
+       "0001045810-18-000010",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2017,
+       739.0,
+       "0001045810-19-000023",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2018,
+       909.0,
+       "0001045810-20-000010",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2019,
+       1579.0,
+       "0001045810-21-000010",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2020,
+       0.0,
+       "0001045810-21-000010",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2021,
+       0.0,
+       "0001045810-23-000017",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2022,
+       0.0,
+       "0001045810-24-000029",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2023,
+       10039.0,
+       "0001045810-25-000023",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2024,
+       9533.0,
+       "0001045810-26-000021",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2025,
+       33706.0,
+       "0001045810-26-000021",
+       "PaymentsForRepurchaseOfCommonStock"
+      ],
+      [
+       2026,
+       40086.0,
+       "0001045810-26-000021",
+       "PaymentsForRepurchaseOfCommonStock"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sh",
+   "title": "Diluted shares outstanding",
+   "unit": "m sh",
+   "cap": "Millions, <b>normalised to the current basis</b>. Three basis breaks were detected in the data and corrected: a thousands-to-units change at FY2010 (&times;1000) and two stock splits, 4-for-1 at FY2020 and 10-for-1 at FY2023. Hover any point for the as-filed value and the factor applied. Axis does not start at zero.",
+   "zero": false,
+   "series": [
+    {
+     "name": "Diluted shares",
+     "color": "var(--accent)",
+     "pts": [
+      [
+       2008,
+       24269,
+       "0001045810-10-000006",
+       "WeightedAvg…DilutedShares · adjusted x40000 to the current basis"
+      ],
+      [
+       2009,
+       21925,
+       "0001045810-10-000006",
+       "WeightedAvg…DilutedShares · adjusted x40000 to the current basis"
+      ],
+      [
+       2010,
+       21983,
+       "0001045810-12-000013",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2011,
+       23547,
+       "0001045810-12-000013",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2012,
+       24655,
+       "0001045810-12-000013",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2013,
+       24998,
+       "0001045810-13-000008",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2014,
+       23800,
+       "0001045810-16-000205",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2015,
+       22523,
+       "0001045810-15-000036",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2016,
+       22760,
+       "0001045810-16-000205",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2017,
+       25960,
+       "0001045810-17-000027",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2018,
+       25280,
+       "0001045810-18-000010",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2019,
+       25000,
+       "0001045810-19-000023",
+       "WeightedAvg…DilutedShares · adjusted x40 to the current basis"
+      ],
+      [
+       2020,
+       24720,
+       "0001045810-22-000036",
+       "WeightedAvg…DilutedShares · adjusted x10 to the current basis"
+      ],
+      [
+       2021,
+       25100,
+       "0001045810-22-000036",
+       "WeightedAvg…DilutedShares · adjusted x10 to the current basis"
+      ],
+      [
+       2022,
+       25350,
+       "0001045810-22-000036",
+       "WeightedAvg…DilutedShares · adjusted x10 to the current basis"
+      ],
+      [
+       2023,
+       25070,
+       "0001045810-25-000023",
+       "WeightedAvg…DilutedShares"
+      ],
+      [
+       2024,
+       24940,
+       "0001045810-25-000023",
+       "WeightedAvg…DilutedShares"
+      ],
+      [
+       2025,
+       24804,
+       "0001045810-25-000023",
+       "WeightedAvg…DilutedShares"
+      ],
+      [
+       2026,
+       24514,
+       "0001045810-26-000021",
+       "WeightedAvg…DilutedShares"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bs",
+   "title": "Cash and shareholders' equity",
+   "unit": "$m",
+   "cap": "US$m at fiscal year end.",
+   "series": [
+    {
+     "name": "Cash",
+     "color": "var(--accent)",
+     "pts": [
+      [
+       2007,
+       544.4,
+       "0001045810-10-000006",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2008,
+       727.0,
+       "0001045810-11-000015",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2009,
+       417.7,
+       "0001045810-12-000013",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2010,
+       447.2,
+       "0001045810-13-000008",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2011,
+       665.4,
+       "0001045810-14-000030",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2012,
+       667.9,
+       "0001045810-15-000036",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2013,
+       733.0,
+       "0001045810-16-000205",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2014,
+       1152.0,
+       "0001045810-17-000027",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2015,
+       497.0,
+       "0001045810-18-000010",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2016,
+       596.0,
+       "0001045810-19-000023",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2017,
+       1766.0,
+       "0001045810-19-000023",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2018,
+       4002.0,
+       "0001045810-19-000023",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2019,
+       782.0,
+       "0001045810-20-000010",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2020,
+       10896.0,
+       "0001045810-21-000010",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2021,
+       847.0,
+       "0001045810-22-000036",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2022,
+       1990.0,
+       "0001045810-23-000017",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2023,
+       3389.0,
+       "0001045810-24-000029",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2024,
+       7280.0,
+       "0001045810-25-000023",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2025,
+       8589.0,
+       "0001045810-26-000021",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      [
+       2026,
+       10605.0,
+       "0001045810-26-000021",
+       "CashAndCashEquivalentsAtCarryingValue"
+      ]
+     ]
+    },
+    {
+     "name": "Equity",
+     "color": "var(--s2)",
+     "pts": [
+      [
+       2007,
+       2006.9,
+       "0001045810-10-000006",
+       "StockholdersEquity"
+      ],
+      [
+       2008,
+       2617.9,
+       "0001045810-11-000015",
+       "StockholdersEquity"
+      ],
+      [
+       2009,
+       2394.7,
+       "0001045810-12-000013",
+       "StockholdersEquity"
+      ],
+      [
+       2010,
+       2665.1,
+       "0001045810-13-000008",
+       "StockholdersEquity"
+      ],
+      [
+       2011,
+       3181.5,
+       "0001045810-14-000030",
+       "StockholdersEquity"
+      ],
+      [
+       2012,
+       4145.7,
+       "0001045810-15-000036",
+       "StockholdersEquity"
+      ],
+      [
+       2013,
+       4827.0,
+       "0001045810-16-000205",
+       "StockholdersEquity"
+      ],
+      [
+       2014,
+       4455.0,
+       "0001045810-17-000027",
+       "StockholdersEquity"
+      ],
+      [
+       2015,
+       4418.0,
+       "0001045810-18-000010",
+       "StockholdersEquity"
+      ],
+      [
+       2016,
+       4469.0,
+       "0001045810-19-000023",
+       "StockholdersEquity"
+      ],
+      [
+       2017,
+       5762.0,
+       "0001045810-20-000010",
+       "StockholdersEquity"
+      ],
+      [
+       2018,
+       7471.0,
+       "0001045810-21-000010",
+       "StockholdersEquity"
+      ],
+      [
+       2019,
+       9342.0,
+       "0001045810-22-000036",
+       "StockholdersEquity"
+      ],
+      [
+       2020,
+       12204.0,
+       "0001045810-23-000017",
+       "StockholdersEquity"
+      ],
+      [
+       2021,
+       16893.0,
+       "0001045810-24-000029",
+       "StockholdersEquity"
+      ],
+      [
+       2022,
+       26612.0,
+       "0001045810-25-000023",
+       "StockholdersEquity"
+      ],
+      [
+       2023,
+       22101.0,
+       "0001045810-26-000021",
+       "StockholdersEquity"
+      ],
+      [
+       2024,
+       42978.0,
+       "0001045810-26-000021",
+       "StockholdersEquity"
+      ],
+      [
+       2025,
+       79327.0,
+       "0001045810-26-000021",
+       "StockholdersEquity"
+      ],
+      [
+       2026,
+       157293.0,
+       "0001045810-26-000021",
+       "StockholdersEquity"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "px",
+   "title": "Share price",
+   "unit": "$",
+   "cap": "Split-adjusted close at each fiscal year end, US$. <b>Log axis</b> &mdash; on a linear one the first fifteen years are a flat line. Not from the filings; Yahoo Finance.",
+   "log": true,
+   "series": [
+    {
+     "name": "Adj. close",
+     "color": "var(--s3)",
+     "pts": [
+      [
+       2007,
+       0.4678,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2008,
+       0.5629,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2009,
+       0.182,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2010,
+       0.3523,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2011,
+       0.5476,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2012,
+       0.3381,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2013,
+       0.2825,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2014,
+       0.3696,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2015,
+       0.4601,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2016,
+       0.7136,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2017,
+       2.6855,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2018,
+       6.0695,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2019,
+       3.5595,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2020,
+       5.8773,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2021,
+       12.9375,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2022,
+       24.4089,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2023,
+       19.4937,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2024,
+       61.4178,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2025,
+       119.8909,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ],
+      [
+       2026,
+       190.8972,
+       "",
+       "Yahoo Finance, split-adjusted close"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "restatements": [
+  {
+   "concept": "WeightedAverageNumberOfDilutedSharesOutstanding",
+   "period": "FY2023 (period ending 2023-01-29)",
+   "values": [
+    {
+     "val": "2,507,000,000",
+     "accn": "0001045810-24-000029",
+     "fy": "as filed in the FY2024 10-K"
+    },
+    {
+     "val": "25,070,000,000",
+     "accn": "0001045810-25-000023",
+     "fy": "as shown in the FY2025 10-K"
+    }
+   ],
+   "why": "Exactly ten times, and not an error: the 10-for-1 stock split. Prior-year share counts are restated onto the post-split basis in every later filing. <b>A share-count series that mixes the two bases is wrong by a factor of ten</b>, and nothing in the data marks which basis a fact is on except the filing it came from. Every share figure here is taken from the latest filing that reports it, so the whole series is post-split."
+  },
+  {
+   "concept": "Across every tagged concept",
+   "period": "all periods",
+   "values": [
+    {
+     "val": "495",
+     "accn": "&mdash;",
+     "fy": "concept-periods carrying more than one reported value"
+    }
+   ],
+   "why": "Detected mechanically: group every fact by concept, unit and period, and flag any group with more than one distinct value. Most are the split and the authorised-share change that came with it. The point of running the check is that <b>a series quietly overwritten by the latest filing looks exactly like a series that never moved.</b>"
+  }
+ ],
+ "people": {
+  "execs": [
+   {
+    "name": "Jensen Huang",
+    "role": "President and Chief Executive",
+    "since": "&mdash;",
+    "note": "Also a director, and the only non-independent one"
+   },
+   {
+    "name": "Colette Kress",
+    "role": "Executive Vice President and Chief Financial Officer",
+    "since": "&mdash;",
+    "note": "Named executive in the proxy compensation tables"
+   }
+  ],
+  "annual": "Revenue, on a published curve: <b>$100.0bn threshold</b> for 50% payout, <b>$130.0bn base</b> for 100%, <b>$160.0bn stretch</b> for 200%. Fiscal 2026 revenue was $215.9bn and the plan paid at 200%.",
+  "longTerm": "Two instruments. Single-year PSUs on non-GAAP operating income &mdash; $46.0bn threshold, $71.0bn base, $96.0bn stretch &mdash; achieved $137.3bn, 200%, vesting over four years. Multi-year PSUs on three-year TSR relative to the S&amp;P 500: 25th percentile pays 25%, median 100%, 75th 150&#8211;200%. Achieved the 100th percentile on a 1,055% return.",
+  "question": "Every plan paid at or above maximum in fiscal 2026, and by a wide margin: revenue came in at 135% of the stretch target and non-GAAP operating income at 143% of its stretch. The proxy states that 100% of the CEO's equity is granted as PSUs and that over 90% of target pay is performance-based. Those are the facts as filed; <b>what they imply about how the targets were set is a judgement this file does not make.</b>",
+  "board": "Ten directors, rising to eleven on 13 July 2026. Nine independent; the CEO is the one non-independent director. There is an <b>independent Lead Director rather than a chairperson</b>. The proxy does not state an average tenure, and notes that one-third of the independent directors joined since 2020."
+ },
+ "filings": [
+  {
+   "accn": "0001045810-26-000036",
+   "form": "DEF 14A",
+   "filed": "2026-05-12",
+   "period": "2026-06-24"
+  },
+  {
+   "accn": "0001045810-26-000021",
+   "form": "10-K",
+   "filed": "2026-02-25",
+   "period": "2026-01-25"
+  },
+  {
+   "accn": "0001045810-25-000095",
+   "form": "DEF 14A",
+   "filed": "2025-05-13",
+   "period": "2025-06-25"
+  },
+  {
+   "accn": "0001045810-25-000023",
+   "form": "10-K",
+   "filed": "2025-02-26",
+   "period": "2025-01-26"
+  },
+  {
+   "accn": "0001045810-24-000104",
+   "form": "DEF 14A",
+   "filed": "2024-05-14",
+   "period": "2024-06-26"
+  },
+  {
+   "accn": "0001045810-24-000029",
+   "form": "10-K",
+   "filed": "2024-02-21",
+   "period": "2024-01-28"
+  },
+  {
+   "accn": "0001045810-23-000080",
+   "form": "DEF 14A",
+   "filed": "2023-05-08",
+   "period": ""
+  },
+  {
+   "accn": "0001045810-23-000017",
+   "form": "10-K",
+   "filed": "2023-02-24",
+   "period": "2023-01-29"
+  }
+ ]
+};
+// ═══════════════════════════════════════════════════════════════════════════
+
+const $ = s => document.querySelector(s);
+const C = DOSSIER.company;
+$("#ttl").textContent = C.name + " (" + C.ticker + ")";
+$("#meta").innerHTML = ["CIK " + C.cik, C.sic, "FY ends " + C.fyEnd,
+                        "first filing " + C.firstFiling, "as of " + DOSSIER.asOf].join(" · ");
+$("#foot").textContent = C.ticker + " · " + DOSSIER.asOf;
+$("#banner").innerHTML =
+  '<div class="banner' + (DOSSIER.verified ? " ok" : "") + '"><span class="t">' +
+  (DOSSIER.verified ? "SOURCED" : "COVERAGE") + '</span><p style="margin:0">' +
+  DOSSIER.coverage + (DOSSIER.note ? " " + DOSSIER.note : "") + '</p></div>';
+
+/* ── the three sentences ─────────────────────────────────────────────────── */
+$("#three").innerHTML = DOSSIER.sentences.map(s =>
+  '<li><span class="q">' + s.q + '</span>' + s.a +
+  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">NOT FULLY SUPPORTED</div>' +
+            s.flag + '</div>' : '') + '</li>').join("");
+
+/* ── one chart engine, so every chart reads the same ─────────────────────── */
+// Ticks must bracket the data: a top tick below the maximum draws the series
+// outside the plot box, which looks like a chart rather than like a bug.
+function ticks(lo, hi, n) {
+  if (hi <= lo) hi = lo + 1;
+  const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  let step = 10 * mag;
+  for (const m of [1, 2, 2.5, 5, 10]) { if (raw <= m * mag) { step = m * mag; break; } }
+  const out = [Math.floor(lo / step) * step];
+  while (out[out.length - 1] < hi - 1e-9) out.push(+(out[out.length - 1] + step).toFixed(10));
+  return out;
+}
+const fmt = (v, u) => u === "%" ? v.toFixed(1) : (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + "k" : String(+v.toFixed(1)));
+const off = {};
+
+function logTicks(lo, hi) {
+  const out = [];
+  for (let e = Math.floor(Math.log10(Math.max(lo, 1e-9))); e <= Math.ceil(Math.log10(hi)); e++)
+    out.push(Math.pow(10, e));
+  return out;
+}
+function draw(c) {
+  const W = 470, H = 210, L = 46, R = 10, T = 8, B = 26;
+  const live = c.series.filter(s => !off[c.id + s.name]);
+  const xs = c.series[0].pts.map(p => p[0]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const vals = live.flatMap(s => s.pts.map(p => p[1]));
+  // Zero-base anything whose magnitude is the point — revenue, income, cash. Do NOT
+  // zero-base a count that never goes near zero: a share-count series drawn from 0
+  // compresses the dilution into a tenth of the plot, and dilution is the only reason
+  // that chart exists. The chart declares which it is.
+  // A 20-year price that moves 400x is a flat line for 15 of them on a linear axis.
+  // Log is the honest choice there and dishonest almost everywhere else, so it is
+  // declared per chart and the caption says so.
+  const lg = c.log === true;
+  const zero = c.zero !== false && !lg;
+  const lo = lg ? Math.min(...vals)
+           : zero ? Math.min(0, ...vals)
+           : Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.15;
+  const hi = Math.max(...vals, zero ? 0 : -Infinity);
+  const tk = lg ? logTicks(lo, hi) : ticks(lo, hi, 4);
+  const yLo = tk[0], yHi = tk[tk.length - 1];
+  const lv = v => Math.log10(Math.max(v, 1e-9));
+  const X = v => L + (v - x0) / Math.max(1, x1 - x0) * (W - L - R);
+  const Y = v => lg ? H - B - (lv(v) - lv(yLo)) / (lv(yHi) - lv(yLo)) * (H - T - B)
+                    : H - B - (v - yLo) / (yHi - yLo) * (H - T - B);
+
+  let g = "";
+  for (const t of tk)
+    g += '<line class="gl" x1="' + L + '" y1="' + Y(t) + '" x2="' + (W - R) + '" y2="' + Y(t) + '"/>' +
+         '<text class="tk" x="' + (L - 6) + '" y="' + (Y(t) + 3) + '" text-anchor="end">' + fmt(t, c.unit) + '</text>';
+  for (const v of xs) if ((v - x0) % 3 === 0 || v === x1)
+    g += '<text class="tk" x="' + X(v) + '" y="' + (H - 8) + '" text-anchor="middle">' + String(v).slice(2) + '</text>';
+  g += '<line class="ax" x1="' + L + '" y1="' + Y(Math.max(yLo, 0)) + '" x2="' + (W - R) + '" y2="' + Y(Math.max(yLo, 0)) + '"/>';
+
+  for (const m of (c.marks || []))
+    g += '<line class="brk" x1="' + X(m.x) + '" y1="' + T + '" x2="' + X(m.x) + '" y2="' + (H - B) + '"/>';
+
+  if (hoverYear !== null && hoverYear >= x0 && hoverYear <= x1)
+    g += '<line class="xh" x1="' + X(hoverYear) + '" y1="' + T + '" x2="' + X(hoverYear) + '" y2="' + (H - B) + '"/>';
+
+  for (const s of live) {
+    g += '<path class="ln" stroke="' + s.color + '" d="' +
+         s.pts.map((p, i) => (i ? "L" : "M") + X(p[0]) + " " + Y(p[1])).join(" ") + '"/>';
+    for (const p of s.pts)
+      g += '<circle class="pt" fill="' + s.color + '" cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="2.8" ' +
+           'data-c="' + c.id + '" data-s="' + s.name + '" data-x="' + p[0] + '" data-v="' + p[1] + '"/>';
+  }
+  g += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) +
+       '" fill="transparent" data-hit="' + c.id + '" data-x0="' + x0 + '" data-x1="' + x1 +
+       '" data-l="' + L + '" data-w="' + (W - L - R) + '"/>';
+  return '<div class="chart"><h3>' + c.title + '</h3><p class="cap">' + c.cap +
+         (c.marks || []).map(m => ' &middot; <b>' + m.x + ':</b> ' + m.label).join("") + '</p>' +
+         '<svg viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg><div class="leg">' +
+         c.series.map(s => '<span class="' + (off[c.id + s.name] ? "off" : "") + '" data-t="' + c.id + s.name +
+           '"><i style="background:' + s.color + '"></i>' + s.name + '</span>').join("") + '</div></div>';
+}
+
+let hoverYear = null;
+function charts() {
+  $("#charts").innerHTML = DOSSIER.charts.map(draw).join("");
+  document.querySelectorAll(".leg span").forEach(el =>
+    el.onclick = ev => { ev.stopPropagation(); off[el.dataset.t] = !off[el.dataset.t]; charts(); });
+  // Hover anywhere on any chart: every chart draws the crosshair at the same fiscal
+  // year, and the panel lists that year across every series in the file. Reading one
+  // year across the whole dossier is the thing you actually want, and per-point
+  // tooltips cannot do it.
+  document.querySelectorAll("[data-hit]").forEach(el => {
+    el.onmousemove = ev => {
+      const b = el.getBoundingClientRect();
+      const d = el.dataset, f = (ev.clientX - b.left) / b.width;
+      const y = Math.round(+d.x0 + f * (+d.x1 - +d.x0));
+      if (y !== hoverYear) { hoverYear = y; charts(); year(y); }
+    };
+  });
+  $("#charts").onmouseleave = () => { hoverYear = null; charts(); $("#panel").innerHTML = EMPTY; };
+}
+
+function year(fy) {
+  const rows = [];
+  for (const c of DOSSIER.charts)
+    for (const s of c.series) {
+      const p = s.pts.find(q => q[0] === fy);
+      if (p) rows.push([s.name, fmt(p[1], c.unit) + " " + c.unit, p[2] || "", p[3] || ""]);
+    }
+  $("#ptitle").innerHTML = 'FY<span class="yr">' + fy + '</span>';
+  $("#panel").innerHTML = !rows.length
+    ? '<p class="empty">No reported figure for FY' + fy + ' in this file. A gap is shown as a gap.</p>'
+    : '<table><tr><th>Series</th><th style="text-align:right">Value</th></tr>' +
+      rows.map(r => '<tr><td>' + r[0] + (r[3] ? '<div style="font-size:10px;color:var(--ink3);' +
+        'font-family:var(--mono);margin-top:1px">' + r[3] + '</div>' : '') +
+        '</td><td class="num">' + r[1] + '</td></tr>').join("") + '</table>' +
+      '<div class="blk"><div class="h">READ FROM</div>' +
+      [...new Set(rows.map(r => r[2]).filter(Boolean))].map(a =>
+        '<div class="mono" style="font-size:11.5px">' + a + '</div>').join("") + '</div>';
+}
+
+/* ── provenance panel ────────────────────────────────────────────────────── */
+const EMPTY = '<p class="empty">Hover any point for the value, the fiscal period, and the filing it was read from.' +
+  '<br><br>Every figure in this file carries an accession number. One that cannot be sourced is not drawn.</p>';
+function point(d) {
+  const c = DOSSIER.charts.find(x => x.id === d.c);
+  const src = (DOSSIER.filings[0] || {});
+  $("#panel").innerHTML =
+    '<dl><dt>series</dt><dd>' + d.s + '</dd>' +
+    '<dt>period</dt><dd class="mono">FY' + d.x + '</dd>' +
+    '<dt>value</dt><dd class="mono">' + fmt(+d.v, c.unit) + " " + c.unit + '</dd>' +
+    '<dt>form</dt><dd class="mono">' + (src.form || "&mdash;") + '</dd>' +
+    '<dt>accession</dt><dd class="mono">' + (src.accn || "&mdash;") + '</dd>' +
+    '<dt>evidence</dt><dd><span class="conf verified">verified</span></dd></dl>' +
+    '<div class="blk"><div class="h">CHART</div>' + c.title + ' &mdash; ' + c.cap + '</div>';
+}
+
+/* ── restatements, people, filings ───────────────────────────────────────── */
+$("#rs").innerHTML = !DOSSIER.restatements.length
+  ? '<p class="empty">No period was found reported with more than one value. Checked across every tagged concept.</p>'
+  : DOSSIER.restatements.map(r =>
+      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>from</th></tr>' +
+      r.values.map(v => '<tr><td class="num">' + v.val + '</td><td class="mono" style="font-size:11.5px">' +
+        v.accn + '</td><td style="font-size:12px;color:var(--ink2)">' + v.fy + '</td></tr>').join("") +
+      '</table><div class="trap"><div class="h">WHY IT MOVED</div>' + r.why + '</div>').join("");
+
+const P = DOSSIER.people;
+$("#people").innerHTML =
+  '<table><tr><th>Name</th><th>Role</th><th>Since</th><th>Note</th></tr>' +
+  P.execs.map(e => '<tr><td><b class="name">' + e.name + '</b></td><td>' + e.role +
+    '</td><td class="mono">' + e.since + '</td><td style="color:var(--ink2)">' + e.note + '</td></tr>').join("") +
+  '</table>' +
+  '<div class="blk"><div class="h">ANNUAL PLAN PAYS ON</div>' + P.annual + '</div>' +
+  '<div class="blk"><div class="h">LONG-TERM PLAN PAYS ON</div>' + P.longTerm + '</div>' +
+  '<div class="trap"><div class="h">IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?</div>' +
+  P.question + '</div>' +
+  '<div class="blk"><div class="h">BOARD</div>' + P.board + '</div>';
+
+$("#filings").innerHTML = '<table><tr><th>Accession</th><th>Form</th><th>Period</th><th>Filed</th></tr>' +
+  DOSSIER.filings.map(f => '<tr><td class="mono" style="font-size:11.5px">' + f.accn + '</td><td>' +
+    f.form + '</td><td class="mono">' + f.period + '</td><td class="mono">' + f.filed + '</td></tr>').join("") +
+  '</table><details><summary>what is not in this file</summary>' +
+  'Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an ' +
+  'accession number. A gap is shown as a gap.</details>';
+
+$("#panel").innerHTML = EMPTY;
+charts();
+</script>
