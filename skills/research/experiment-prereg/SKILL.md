@@ -5,7 +5,9 @@ description: >-
   primary metric, the minimum detectable effect, what counts as null, the stopping and decision
   rules, and the evaluation protocol. Blocks the pseudoreplication of treating rollouts as
   independent samples. Use before committing GPU time, when designing an ablation or benchmark
-  comparison, or when reproduced numbers do not match and the protocol needs pinning down. Also
+  comparison, or when a comparison's protocol was never written down. To chase a number that
+  disagrees with a published one, start with baseline-repro and come back here to pin whatever it
+  finds unspecified. Also
   answers informal phrasings like how many seeds do I need / is this a fair comparison / is that
   gap significant / let us just try it. This does NOT design the experiment — for choosing the
   design itself (randomisation, blocking, factorial or crossover layouts) or closed-form power

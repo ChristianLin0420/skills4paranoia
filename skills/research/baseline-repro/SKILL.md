@@ -8,7 +8,9 @@ description: >-
   sampling hyperparameters, normalisation statistics, aggregation. Separates three claims that
   get conflated: their number is wrong, you are measuring something else, or their setup has an
   advantage you do not. Use when reproducing a baseline, when a reimplementation lands short, or
-  before writing that something does not reproduce. Chinese triggers: 跑不出論文的數字 / 這個 baseline
+  before writing that something does not reproduce. This is the ENTRY POINT for a number that
+  disagrees with a published one; it hands off to vla-code-review once the gap is localised to
+  your training, and to experiment-prereg for any protocol field the paper leaves unspecified. Chinese triggers: 跑不出論文的數字 / 這個 baseline
   對不上 / 復現不了 / 我的結果比他們低 / 這個數字是怎麼算出來的.
 ---
 

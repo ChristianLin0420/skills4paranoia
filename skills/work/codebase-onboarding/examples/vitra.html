@@ -9,7 +9,9 @@
  --rule:#DCE0E3;--rule-soft:#E8EBED;--accent:#3A6183;--accent-deep:#27435C;
  --accent-soft:#DBE4EB;--accent-wash:#EAF0F4;--warn:#8C4A3C;--warn-soft:#EFE3E0;
  --model:#54547A;--model-soft:#E6E6EE;--bar-bg:#F6F7F8;
- --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;--mono:'IBM Plex Mono',Menlo,monospace;
+ --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;--mono:'IBM Plex Mono','Noto Sans TC',Menlo,monospace;   /* CJK fallback: Noto Sans TC is
+    not monospaced, but CJK glyphs are full-width and align among themselves, and tofu is
+    a worse trade than losing column alignment on a mixed line */
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.62 var(--sans);-webkit-font-smoothing:antialiased}
