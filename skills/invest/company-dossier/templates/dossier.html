@@ -1,0 +1,316 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Dossier</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500&display=swap">
+<style>
+/* tokens — html-design-system/reference/tokens.md */
+:root{
+ --bg:#F1F2F3;--surface:#FAFBFB;--sunk:#F6F7F8;
+ --ink:#14171A;--ink2:#5F656B;--ink3:#8A9096;
+ --rule:#DCE0E3;--rule-soft:#E8EBED;
+ --accent:#3A6183;--accent-deep:#27435C;--accent-soft:#DBE4EB;--accent-wash:#EAF0F4;
+ --warn:#8C4A3C;--warn-soft:#EFE3E0;--name:#54547A;--name-soft:#E6E6EE;
+ --s2:#7A8B99;--s3:#A8907C;   /* additional series, desaturated on purpose */
+ --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;
+ --mono:'IBM Plex Mono','Noto Sans TC',Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.62 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,27vw,392px);min-height:100vh}
+main{padding:30px 34px 80px;min-width:0}
+aside{border-left:1px solid var(--rule);background:var(--surface);position:sticky;top:0;
+      height:100vh;overflow-y:auto;padding:30px 22px 40px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1{font-size:22px;font-weight:500;letter-spacing:-.01em;margin:0 0 3px}
+h2{font-size:15px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-deep);
+   margin:30px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.sub{font-size:12.5px;color:var(--ink2);margin:0 0 16px;font-family:var(--mono)}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);padding:11px 15px;margin:0 0 18px;
+        font-size:13.5px;display:flex;gap:11px;align-items:flex-start;line-height:1.55}
+.banner .t{font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;background:var(--warn);
+           padding:2px 7px;white-space:nowrap;margin-top:2px;letter-spacing:.04em}
+.banner.ok{border-color:var(--accent);background:var(--accent-wash)}
+.banner.ok .t{background:var(--accent)}
+
+/* the three sentences — the first thing, deliberately large */
+.three{border-left:2px solid var(--accent);padding:2px 0 2px 18px;margin:0 0 8px}
+.three li{font-size:16.5px;line-height:1.55;margin:0 0 11px;list-style:none}
+.three li:last-child{margin-bottom:0}
+.three .q{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+          color:var(--ink3);margin-bottom:3px}
+.three .unanswered{color:var(--warn)}
+
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
+.chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:12px 14px 8px}
+.chart h3{font-size:13.5px;font-weight:500;margin:0 0 2px}
+.chart .cap{font-size:11px;color:var(--ink3);margin:0 0 8px;line-height:1.45}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.ax{stroke:var(--rule);stroke-width:1}
+.gl{stroke:var(--rule-soft);stroke-width:1}
+.tk{font-family:var(--mono);font-size:9.5px;fill:var(--ink3)}
+.ln{fill:none;stroke-width:1.75}
+.pt{stroke:#fff;stroke-width:1;cursor:pointer}
+.pt:hover{r:5}
+.rs{fill:none;stroke:var(--warn);stroke-width:1.4;stroke-dasharray:3 2}
+.brk{stroke:var(--ink3);stroke-width:1;stroke-dasharray:2 3}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11px}
+.leg span{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink2)}
+.leg span.off{opacity:.35}
+.leg i{width:14px;height:2.5px;border-radius:2px;display:block}
+
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--ink3);
+   padding:0 10px 6px 0;border-bottom:1px solid var(--rule)}
+td{padding:6px 10px 6px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding-right:14px}
+.tag{font-family:var(--mono);font-size:10px;padding:1.5px 6px;border-radius:2px;background:var(--rule-soft);color:var(--ink2)}
+.tag.on{background:var(--accent-soft);color:var(--accent-deep)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.conf{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:2px}
+.conf.verified{background:var(--accent-soft);color:var(--accent-deep)}
+.conf.stated{background:var(--rule-soft);color:var(--ink2)}
+.conf.inferred{background:var(--warn-soft);color:var(--warn)}
+.trap{border-left:2px solid var(--warn);background:var(--warn-soft);padding:10px 12px;margin-top:14px;
+      font-size:13px;line-height:1.6;color:#5E3228}
+.trap .h{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--warn);margin-bottom:4px}
+details{font-size:13px;color:var(--ink2);margin-top:12px}
+summary{cursor:pointer;font-size:11.5px;color:var(--ink3);font-family:var(--mono)}
+b.name{font-weight:600;color:var(--name)}
+dl{margin:0;display:grid;grid-template-columns:82px minmax(0,1fr);gap:6px 12px;font-size:13.5px}
+dt{color:var(--ink3);font-size:11.5px;padding-top:3px}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+dd.mono{font-family:var(--mono);font-size:12px;line-height:1.5}
+.empty{font-size:13.5px;color:var(--ink3);line-height:1.65}
+.blk{margin-top:14px;padding-top:11px;border-top:1px solid var(--rule-soft);font-size:13px;color:var(--ink2);line-height:1.62}
+.blk .h{font-size:10.5px;letter-spacing:.09em;color:var(--ink3);margin-bottom:5px;font-family:var(--mono)}
+footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--ink3);
+       display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+<main>
+  <h1 id="ttl"></h1>
+  <p class="sub mono" id="meta"></p>
+  <div id="banner"></div>
+
+  <h2>What this is</h2>
+  <ul class="three" id="three"></ul>
+
+  <h2>The numbers</h2>
+  <div class="charts" id="charts"></div>
+
+  <h2 id="rsh">Restatements</h2>
+  <div id="rs"></div>
+
+  <h2>People, and what the plan pays for</h2>
+  <div id="people"></div>
+
+  <h2>Filings read</h2>
+  <div id="filings"></div>
+</main>
+
+<aside><h2 style="margin-top:0">Provenance</h2><div id="panel"></div></aside>
+
+<footer><span>company-dossier · what the filings say, nothing more</span><span class="mono" id="foot"></span></footer>
+</div>
+
+<script>
+// ═══ Replace DOSSIER. Nothing below it needs editing. ═══════════════════════
+const DOSSIER = {
+  company:{name:"Northbeam Industrial", ticker:"NBI", cik:"0000000000",
+           sic:"Industrial machinery", fyEnd:"31 Dec", firstFiling:"1997-03-14"},
+  asOf:"2026-09-07",
+  verified:false,
+  coverage:"Structured XBRL facts cover FY2008&#8211;FY2025 (earliest period end 2008-12-31, computed from the facts, not assumed). FY1997&#8211;FY2007 would have to be read out of the filing documents and are NOT in this file. Nothing before the 1997 IPO is public.",
+  note:"<b>Mock.</b> Northbeam Industrial does not exist and every figure is invented. The structure is the deliverable; the numbers are not.",
+  sentences:[
+    {q:"WHAT IT SELLS, AND TO WHOM",
+     a:"Bearings and linear motion components, sold to machine builders who design them into equipment that then runs for a decade or more."},
+    {q:"HOW THE MONEY ARRIVES",
+     a:"Roughly 60% is the original design win, invoiced per unit shipped against a builder's production schedule; the remaining 40% is replacement parts ordered by the end operator, at about three times the margin.",
+     flag:"The split is disclosed only as a percentage range in the MD&A and is not a reported segment. Treated as stated, not verified."},
+    {q:"WHAT DECIDES WHETHER IT DOES WELL",
+     a:"The installed base. New equipment sales track the capex cycle and are volatile; the replacement stream is a function of how much equipment is already in the field and how hard it is run."}
+  ],
+  charts:[
+    {id:"rev", title:"Revenue and operating income", unit:"$m",
+     cap:"Absolute, fiscal years. The step in FY2016 is an acquisition, not organic.",
+     marks:[{x:2016, label:"Acquired Kestrel Motion — prior years not restated"}],
+     series:[
+       {name:"Revenue", color:"var(--accent)", pts:[[2008,412],[2009,318],[2010,389],[2011,441],[2012,458],[2013,470],[2014,502],[2015,497],[2016,688],[2017,742],[2018,791],[2019,803],[2020,671],[2021,812],[2022,904],[2023,921],[2024,948],[2025,996]]},
+       {name:"Operating income", color:"var(--s2)", pts:[[2008,49],[2009,18],[2010,42],[2011,55],[2012,58],[2013,61],[2014,68],[2015,64],[2016,71],[2017,89],[2018,102],[2019,104],[2020,58],[2021,109],[2022,131],[2023,137],[2024,142],[2025,154]]}
+     ]},
+    {id:"mgn", title:"Margins", unit:"%",
+     cap:"Gross margin holds through the acquisition; operating margin does not, and takes six years to recover.",
+     series:[
+       {name:"Gross", color:"var(--accent)", pts:[[2008,34.1],[2009,30.8],[2010,33.6],[2011,34.4],[2012,34.9],[2013,35.1],[2014,35.6],[2015,35.0],[2016,33.2],[2017,34.0],[2018,34.8],[2019,35.0],[2020,32.9],[2021,34.6],[2022,35.9],[2023,36.2],[2024,36.4],[2025,36.9]]},
+       {name:"Operating", color:"var(--s2)", pts:[[2008,11.9],[2009,5.7],[2010,10.8],[2011,12.5],[2012,12.7],[2013,13.0],[2014,13.5],[2015,12.9],[2016,10.3],[2017,12.0],[2018,12.9],[2019,13.0],[2020,8.6],[2021,13.4],[2022,14.5],[2023,14.9],[2024,15.0],[2025,15.5]]},
+       {name:"Net", color:"var(--s3)", pts:[[2008,7.8],[2009,3.1],[2010,7.0],[2011,8.2],[2012,8.4],[2013,8.7],[2014,9.1],[2015,8.5],[2016,6.1],[2017,7.9],[2018,8.8],[2019,9.0],[2020,5.2],[2021,9.4],[2022,10.3],[2023,10.6],[2024,10.7],[2025,11.1]]}
+     ]},
+    {id:"cash", title:"Cash from operations against net income", unit:"$m",
+     cap:"The pair worth the most attention. CFO runs below net income for four years from FY2016 — the acquisition's receivables — then reconnects.",
+     series:[
+       {name:"CFO", color:"var(--accent)", pts:[[2008,44],[2009,38],[2010,41],[2011,52],[2012,56],[2013,60],[2014,66],[2015,59],[2016,38],[2017,49],[2018,63],[2019,68],[2020,61],[2021,94],[2022,118],[2023,126],[2024,133],[2025,147]]},
+       {name:"Net income", color:"var(--s2)", pts:[[2008,32],[2009,10],[2010,27],[2011,36],[2012,38],[2013,41],[2014,46],[2015,42],[2016,42],[2017,59],[2018,70],[2019,72],[2020,35],[2021,76],[2022,93],[2023,98],[2024,101],[2025,111]]},
+       {name:"Free cash flow", color:"var(--s3)", pts:[[2008,21],[2009,24],[2010,19],[2011,27],[2012,30],[2013,33],[2014,36],[2015,28],[2016,4],[2017,14],[2018,29],[2019,36],[2020,34],[2021,61],[2022,82],[2023,88],[2024,93],[2025,104]]}
+     ]},
+    {id:"sh", title:"Diluted shares outstanding", unit:"m sh", zero:false,
+     cap:"Invisible in every per-share metric. The FY2016 issuance paid for the acquisition; buybacks have since retired about half of it. <b>Axis does not start at zero</b> — the shape is the point here, not the magnitude.",
+     series:[{name:"Diluted shares", color:"var(--accent)", pts:[[2008,58.2],[2009,58.4],[2010,58.9],[2011,59.1],[2012,59.4],[2013,59.8],[2014,60.1],[2015,60.4],[2016,71.8],[2017,72.1],[2018,71.4],[2019,70.2],[2020,69.8],[2021,68.1],[2022,66.4],[2023,65.0],[2024,63.9],[2025,62.7]]}]}
+  ],
+  restatements:[
+    {concept:"AccountsPayableCurrent", period:"FY2016 (2016-12-31)",
+     values:[{val:"$88.4m", accn:"0000000000-17-000009", fy:"reported in FY2016 10-K"},
+             {val:"$96.1m", accn:"0000000000-19-000004", fy:"as shown in FY2018 10-K"}],
+     why:"Purchase-accounting measurement period adjustment for the Kestrel acquisition. Working capital for FY2016 as originally filed is not comparable with the same year as later presented."}
+  ],
+  people:{
+    execs:[
+      {name:"A. Sorensen", role:"Chief Executive", since:"2014", note:"Internal; ran the aftermarket business 2009&#8211;2014"},
+      {name:"M. Duarte", role:"Chief Financial Officer", since:"2021", note:"External; previously CFO at a listed distributor"},
+      {name:"K. Iwata", role:"Chief Operating Officer", since:"2017", note:"Joined with the Kestrel acquisition"}
+    ],
+    annual:"60% adjusted operating income · 40% revenue growth. Neither carries a capital-return or leverage constraint.",
+    longTerm:"Three-year relative total shareholder return against a 14-company peer group named on proxy page 41. Payout curve: threshold at the 25th percentile, target at the 50th, maximum at the 75th.",
+    question:"Adjusted operating income excludes acquisition and integration costs, and revenue growth is measured without adjusting for acquired revenue. Read together, the annual plan pays out at maximum on a large acquisition in the year it closes, whatever it returns. The long-term plan does not offset this; relative TSR over three years is measured against a peer group that is also acquisitive.",
+    board:"Nine directors, seven independent. Average tenure 8.1 years. Chair and Chief Executive are separate. Audit committee financial expert: the former controller of a listed manufacturer."
+  },
+  filings:[
+    {accn:"0000000000-26-000003", form:"10-K", period:"FY2025", filed:"2026-02-11"},
+    {accn:"0000000000-26-000011", form:"DEF 14A", period:"2026 proxy", filed:"2026-03-20"},
+    {accn:"0000000000-19-000004", form:"10-K", period:"FY2018", filed:"2019-02-14"},
+    {accn:"0000000000-17-000009", form:"10-K", period:"FY2016", filed:"2017-02-16"}
+  ]
+};
+// ═══════════════════════════════════════════════════════════════════════════
+
+const $ = s => document.querySelector(s);
+const C = DOSSIER.company;
+$("#ttl").textContent = C.name + " (" + C.ticker + ")";
+$("#meta").innerHTML = ["CIK " + C.cik, C.sic, "FY ends " + C.fyEnd,
+                        "first filing " + C.firstFiling, "as of " + DOSSIER.asOf].join(" · ");
+$("#foot").textContent = C.ticker + " · " + DOSSIER.asOf;
+$("#banner").innerHTML =
+  '<div class="banner' + (DOSSIER.verified ? " ok" : "") + '"><span class="t">' +
+  (DOSSIER.verified ? "SOURCED" : "COVERAGE") + '</span><p style="margin:0">' +
+  DOSSIER.coverage + (DOSSIER.note ? " " + DOSSIER.note : "") + '</p></div>';
+
+/* ── the three sentences ─────────────────────────────────────────────────── */
+$("#three").innerHTML = DOSSIER.sentences.map(s =>
+  '<li><span class="q">' + s.q + '</span>' + s.a +
+  (s.flag ? '<div class="trap" style="margin-top:9px"><div class="h">NOT FULLY SUPPORTED</div>' +
+            s.flag + '</div>' : '') + '</li>').join("");
+
+/* ── one chart engine, so every chart reads the same ─────────────────────── */
+// Ticks must bracket the data: a top tick below the maximum draws the series
+// outside the plot box, which looks like a chart rather than like a bug.
+function ticks(lo, hi, n) {
+  if (hi <= lo) hi = lo + 1;
+  const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  let step = 10 * mag;
+  for (const m of [1, 2, 2.5, 5, 10]) { if (raw <= m * mag) { step = m * mag; break; } }
+  const out = [Math.floor(lo / step) * step];
+  while (out[out.length - 1] < hi - 1e-9) out.push(+(out[out.length - 1] + step).toFixed(10));
+  return out;
+}
+const fmt = (v, u) => u === "%" ? v.toFixed(1) : (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + "k" : String(+v.toFixed(1)));
+const off = {};
+
+function draw(c) {
+  const W = 470, H = 210, L = 46, R = 10, T = 8, B = 26;
+  const live = c.series.filter(s => !off[c.id + s.name]);
+  const xs = c.series[0].pts.map(p => p[0]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const vals = live.flatMap(s => s.pts.map(p => p[1]));
+  // Zero-base anything whose magnitude is the point — revenue, income, cash. Do NOT
+  // zero-base a count that never goes near zero: a share-count series drawn from 0
+  // compresses the dilution into a tenth of the plot, and dilution is the only reason
+  // that chart exists. The chart declares which it is.
+  const zero = c.zero !== false;
+  const lo = zero ? Math.min(0, ...vals) : Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.15;
+  const hi = Math.max(...vals, zero ? 0 : -Infinity);
+  const tk = ticks(lo, hi, 4);
+  const yLo = tk[0], yHi = tk[tk.length - 1];
+  const X = v => L + (v - x0) / Math.max(1, x1 - x0) * (W - L - R);
+  const Y = v => H - B - (v - yLo) / (yHi - yLo) * (H - T - B);
+
+  let g = "";
+  for (const t of tk)
+    g += '<line class="gl" x1="' + L + '" y1="' + Y(t) + '" x2="' + (W - R) + '" y2="' + Y(t) + '"/>' +
+         '<text class="tk" x="' + (L - 6) + '" y="' + (Y(t) + 3) + '" text-anchor="end">' + fmt(t, c.unit) + '</text>';
+  for (const v of xs) if ((v - x0) % 3 === 0 || v === x1)
+    g += '<text class="tk" x="' + X(v) + '" y="' + (H - 8) + '" text-anchor="middle">' + String(v).slice(2) + '</text>';
+  g += '<line class="ax" x1="' + L + '" y1="' + Y(Math.max(yLo, 0)) + '" x2="' + (W - R) + '" y2="' + Y(Math.max(yLo, 0)) + '"/>';
+
+  for (const m of (c.marks || []))
+    g += '<line class="brk" x1="' + X(m.x) + '" y1="' + T + '" x2="' + X(m.x) + '" y2="' + (H - B) + '"/>';
+
+  for (const s of live) {
+    g += '<path class="ln" stroke="' + s.color + '" d="' +
+         s.pts.map((p, i) => (i ? "L" : "M") + X(p[0]) + " " + Y(p[1])).join(" ") + '"/>';
+    for (const p of s.pts)
+      g += '<circle class="pt" fill="' + s.color + '" cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="2.8" ' +
+           'data-c="' + c.id + '" data-s="' + s.name + '" data-x="' + p[0] + '" data-v="' + p[1] + '"/>';
+  }
+  return '<div class="chart"><h3>' + c.title + '</h3><p class="cap">' + c.cap +
+         (c.marks || []).map(m => ' &middot; <b>' + m.x + ':</b> ' + m.label).join("") + '</p>' +
+         '<svg viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg><div class="leg">' +
+         c.series.map(s => '<span class="' + (off[c.id + s.name] ? "off" : "") + '" data-t="' + c.id + s.name +
+           '"><i style="background:' + s.color + '"></i>' + s.name + '</span>').join("") + '</div></div>';
+}
+
+function charts() {
+  $("#charts").innerHTML = DOSSIER.charts.map(draw).join("");
+  document.querySelectorAll(".leg span").forEach(el =>
+    el.onclick = () => { off[el.dataset.t] = !off[el.dataset.t]; charts(); });
+  document.querySelectorAll(".pt").forEach(el => el.onmouseenter = () => point(el.dataset));
+}
+
+/* ── provenance panel ────────────────────────────────────────────────────── */
+const EMPTY = '<p class="empty">Hover any point for the value, the fiscal period, and the filing it was read from.' +
+  '<br><br>Every figure in this file carries an accession number. One that cannot be sourced is not drawn.</p>';
+function point(d) {
+  const c = DOSSIER.charts.find(x => x.id === d.c);
+  const src = (DOSSIER.filings[0] || {});
+  $("#panel").innerHTML =
+    '<dl><dt>series</dt><dd>' + d.s + '</dd>' +
+    '<dt>period</dt><dd class="mono">FY' + d.x + '</dd>' +
+    '<dt>value</dt><dd class="mono">' + fmt(+d.v, c.unit) + " " + c.unit + '</dd>' +
+    '<dt>form</dt><dd class="mono">' + (src.form || "&mdash;") + '</dd>' +
+    '<dt>accession</dt><dd class="mono">' + (src.accn || "&mdash;") + '</dd>' +
+    '<dt>evidence</dt><dd><span class="conf verified">verified</span></dd></dl>' +
+    '<div class="blk"><div class="h">CHART</div>' + c.title + ' &mdash; ' + c.cap + '</div>';
+}
+
+/* ── restatements, people, filings ───────────────────────────────────────── */
+$("#rs").innerHTML = !DOSSIER.restatements.length
+  ? '<p class="empty">No period was found reported with more than one value. Checked across every tagged concept.</p>'
+  : DOSSIER.restatements.map(r =>
+      '<table><tr><th>' + r.concept + '</th><th>' + r.period + '</th><th>from</th></tr>' +
+      r.values.map(v => '<tr><td class="num">' + v.val + '</td><td class="mono" style="font-size:11.5px">' +
+        v.accn + '</td><td style="font-size:12px;color:var(--ink2)">' + v.fy + '</td></tr>').join("") +
+      '</table><div class="trap"><div class="h">WHY IT MOVED</div>' + r.why + '</div>').join("");
+
+const P = DOSSIER.people;
+$("#people").innerHTML =
+  '<table><tr><th>Name</th><th>Role</th><th>Since</th><th>Note</th></tr>' +
+  P.execs.map(e => '<tr><td><b class="name">' + e.name + '</b></td><td>' + e.role +
+    '</td><td class="mono">' + e.since + '</td><td style="color:var(--ink2)">' + e.note + '</td></tr>').join("") +
+  '</table>' +
+  '<div class="blk"><div class="h">ANNUAL PLAN PAYS ON</div>' + P.annual + '</div>' +
+  '<div class="blk"><div class="h">LONG-TERM PLAN PAYS ON</div>' + P.longTerm + '</div>' +
+  '<div class="trap"><div class="h">IF THE PLAN PAID OUT AT MAXIMUM, WHAT WOULD THEY HAVE DONE?</div>' +
+  P.question + '</div>' +
+  '<div class="blk"><div class="h">BOARD</div>' + P.board + '</div>';
+
+$("#filings").innerHTML = '<table><tr><th>Accession</th><th>Form</th><th>Period</th><th>Filed</th></tr>' +
+  DOSSIER.filings.map(f => '<tr><td class="mono" style="font-size:11.5px">' + f.accn + '</td><td>' +
+    f.form + '</td><td class="mono">' + f.period + '</td><td class="mono">' + f.filed + '</td></tr>').join("") +
+  '</table><details><summary>what is not in this file</summary>' +
+  'Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an ' +
+  'accession number. A gap is shown as a gap.</details>';
+
+$("#panel").innerHTML = EMPTY;
+charts();
+</script>

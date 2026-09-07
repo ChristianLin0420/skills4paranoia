@@ -84,6 +84,7 @@ Communication and record-keeping. These survive a change of role.
 | [`research-deck`](skills/work/research-deck) | Structure and process: problem → solution → results, and how evidence attaches |
 | [`deck-design-system`](skills/work/deck-design-system) | Appearance: palette, type scale, grid, per-layout geometry |
 | [`research-figures`](skills/work/research-figures) | Figures: curves with error bands, matrices, ablation tables, reference lines, conditions footnotes |
+| [`html-design-system`](skills/work/html-design-system) | Tokens and primitives shared by every interactive HTML deliverable, so a third report is not a third stylesheet |
 | [`codebase-onboarding`](skills/work/codebase-onboarding) | Maps the data path through an unfamiliar model repo, with shapes on every edge, and verifies it against a real forward pass. Worked examples for [openvla](skills/work/codebase-onboarding/examples/openvla.html), [openpi](skills/work/codebase-onboarding/examples/openpi.html) and [VITRA](skills/work/codebase-onboarding/examples/vitra.html) |
 
 **[See six sample pages](skills/work/research-deck/examples/preview)** — the front three, and three evidence pages showing the density this aims at.
@@ -116,6 +117,7 @@ Holding a position you can defend.
 
 | Skill | What it covers |
 |---|---|
+| [`company-dossier`](skills/invest/company-dossier) | Everything the filings say about a company in one interactive HTML file, every figure carrying its accession number, restatements shown rather than overwritten |
 | [`thesis-prereg`](skills/invest/thesis-prereg) | Freeze the thesis, its falsifiers and both exits before buying, then detect drift at review — the falsification horizon must be shorter than the holding horizon |
 
 The public finance catalogues are institutional work product or screeners wired to a data subscription. Neither is the discipline layer for someone holding for years, and a list of candidates was never the binding constraint.

@@ -8,6 +8,7 @@ Skills for holding a position you can defend. Unlike `research/`, which is about
 
 | Skill | What it covers | When |
 |---|---|---|
+| [`company-dossier`](company-dossier) | Everything the filings say, in one interactive HTML file, every figure carrying its accession number | Getting from nothing to grounded on a business |
 | [`thesis-prereg`](thesis-prereg) | Freeze the thesis, its falsifiers and both exits before buying; detect drift at review | Before opening a position, and at every scheduled review |
 | `allocation-jobs` | *(next)* Every holding states its job and what would count as failing at it | When the shape of the portfolio is the question |
 | `crisis-indicators` | *(next)* What the historical early-warning indicators are, and how often each cried wolf | When the backdrop, not a position, is the worry |
@@ -19,6 +20,36 @@ The public catalogues are two shapes. [Anthropic's own financial-services repo](
 Neither shape is the discipline layer for someone holding for years. And a screener's output — a list of candidates — was never the binding constraint. **What separates outcomes is whether a thesis can be wrong, and whether you act when it breaks.** That is a writing and reviewing problem, it needs no market-data subscription, and nothing in the catalogues does it.
 
 Same doctrine as the rest of this repo: pure markdown, no API keys, and the skill's job is to make you state something falsifiable rather than to hand you an answer.
+
+## company-dossier
+
+One interactive HTML file per company, built from primary sources: SEC XBRL company facts, the 10-K or 20-F, the DEF 14A. It presents; it does not value, rate or recommend.
+
+### Three sentences before any chart
+
+1. What does it sell, and to whom?
+2. **How does the money actually arrive** — the unit of revenue, who signs the cheque, how often?
+3. What one variable decides whether it does well?
+
+Most descriptions fail at the second, and "a leading provider of solutions" answers none of the three. Where the filings do not support a clean answer, the dossier writes the question and says so — an unanswerable second sentence is the most useful line in the file.
+
+### A figure without an accession number does not go in
+
+The failure mode of an agent asked for a company's history is producing plausible numbers. Every value carries the filing it came from — accession, form, fiscal period, XBRL tag. Same discipline as `codebase-onboarding`'s verification banner, and for the same reason: a plausible fiction is worse than a gap, because you will act on it.
+
+### "From founding to now" is not available, and the file says which years are
+
+Structured XBRL, then documents that must be read by hand, then nothing before the first filing — pre-IPO financials are not public. **Do not assume where XBRL starts; compute it.** The mandate phased in around 2009, but later filings tag their comparative prior years too; checked on one large filer the earliest period end reaches 2006.
+
+### Restatements are shown, not resolved
+
+Company facts carries every version of every period, and most tools take the latest and move on. Scanning one large filer's facts finds **252 concept-periods carrying more than one reported value** — not on revenue, where you would look, but on balance-sheet lines: accounts payable for one year end appearing as both $44.2bn and $49.0bn from two different filings. A clean series that has been quietly overwritten looks exactly like a clean series that was always clean.
+
+Segment re-definitions get the same treatment: the series breaks, because a line drawn across a re-cut is comparing different things.
+
+### What the plan pays for
+
+The people section is not biographies. It is the compensation plan and one question: **if it paid out at maximum, what would management have had to do?** Adjusted EBITDA excluding acquisitions pays for acquiring; revenue growth without a return constraint pays for buying revenue. These are instructions, and they are followed. The dossier states them and does not judge them.
 
 ## thesis-prereg
 

@@ -24,7 +24,10 @@
     "design-system",
     "investing",
     "value-investing",
-    "thesis"
+    "thesis",
+    "design-system",
+    "sec-edgar",
+    "filings"
   ],
   "skills": [
     "./skills/work/grill-deeper",
@@ -35,6 +38,8 @@
     "./skills/research/experiment-prereg",
     "./skills/research/vla-code-review",
     "./skills/research/baseline-repro",
-    "./skills/invest/thesis-prereg"
+    "./skills/invest/thesis-prereg",
+    "./skills/work/html-design-system",
+    "./skills/invest/company-dossier"
   ]
 }

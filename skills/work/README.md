@@ -7,6 +7,7 @@ Communication and record-keeping. Unlike `research/`, these **follow you to a ne
 | [`grill-deeper`](grill-deeper) | Interrogates your plan, and accumulates an understanding of your work |
 | [`codebase-onboarding`](codebase-onboarding) | Maps the data path through a repo you have just met, and verifies the map against a real run |
 | [`research-deck`](research-deck) + [`deck-design-system`](deck-design-system) + [`research-figures`](research-figures) | Research decks |
+| [`html-design-system`](html-design-system) | The shared tokens and primitives every interactive HTML deliverable is built on |
 
 ## grill-deeper
 
