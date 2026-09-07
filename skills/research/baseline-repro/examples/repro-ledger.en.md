@@ -1,115 +1,121 @@
-# Reproduction ledger — Kestrel-VLA (paper Table 3) vs our reimplementation
+> ## ⚠ MOCK EXAMPLE
+> **Kestrel-VLA, TaskSuite-40 and every number below are invented.** There is no such
+> baseline and no such benchmark. What is real is the shape of the failure: the axes,
+> the bisection, and the two conventions that turn out to account for the gap. Do not
+> cite anything here.
 
-> Illustrative. The numbers are made up; the protocol mechanics are the ones that
-> actually bite, and the file references follow the shapes in the three repositories
-> mapped by `codebase-onboarding`.
+# Reproduction — Kestrel-VLA vs our reimplementation
 
-**Their number**: 63.2% avg success, TaskSuite-40, paper Table 3 ("ours, 7B, fine-tuned")
-**Our number**: 51.4%, 40 tasks × 50 episodes × 3 seeds
-**Gap**: 11.8pp
+**Verdict.** We are measuring something else. Two conventions in **our own** eval harness
+account for the gap; the method reproduces.
+63.2% reported · 51.4% measured · 11.8pp gap · 10.5pp recovered by changing two constants
 
-**Before starting.** Three claims, and the opening one is not the one in the request:
-their number being optimistic is the *rare* case, and nothing below has been checked
-yet. Until the ledger says otherwise this is "we are measuring something else".
+**Scope.** Testing one claim: Table 3, "ours, 7B, fine-tuned", 63.2% mean success on
+TaskSuite-40. Not testing their training recipe, their data, or any other row of that table.
+
+---
+
+## What accounts for the gap
+
+Two ordinary conventions compounding. Neither is a mistake, and neither is dramatic —
+which is the usual shape, and the reason "their number is optimistic" was the wrong
+first hypothesis.
+
+| Factor | Theirs | Ours | Cost to close | Recovered |
+|---|---|---|---|---|
+| Episode limit | 400 steps | 300 steps | one constant | 4.8pp |
+| Chunk execution | re-plan each step | replay all 8 open-loop | one loop | 5.7pp |
+| | | | | **10.5pp of 10.9** |
+
+**Episode limit.** Our harness caps every policy at 300 steps so cross-model comparisons
+stay consistent. Any success slower than 300 steps is silently reclassified as a failure,
+and Kestrel's policy is slower than our own baselines, so the cap costs it more than it
+costs us.
+
+**Chunk execution.** They predict 8 actions and re-plan after executing one; we execute
+all 8 before predicting again. Identical weights, different controller — open-loop replay
+cannot recover a grasp that slips at step 2. **This one has no trace in any config.** It
+lives in the shape of the rollout loop, where a config diff would never have found it.
 
 ## Bisection
 
 | Cell | Weights | Harness | Number | Reading |
 |---|---|---|---|---|
-| ① | theirs | theirs | **62.8%** | Environment and machine are sound. Everything below is interpretable |
-| ② | theirs | yours | **51.9%** | **The gap is in our evaluator.** Same policy, 10.9pp lost |
-| ③ | yours | theirs | **62.1%** | Our training is fine — within noise of ① |
-| ④ | yours | yours | 51.4% | ② and ③ account for ④; nothing is interacting |
+| ① | theirs | theirs | **62.8%** | Environment sound; everything below is interpretable |
+| ② | theirs | yours | **51.9%** | **Gap is in our evaluator** — same policy, 10.9pp lost |
+| ③ | yours | theirs | 62.1% | Our training is fine, within noise of ① |
+| ④ | yours | yours | 51.4% | ② and ③ account for ④; nothing interacting |
 
-Two hours of compute. It closed the question the two days were budgeted for: **the
-model was never the problem**, and the training code that had been read twice did not
-need reading a third time.
-
-Everything below is therefore a measurement axis. Training rows are not opened.
+Two hours of compute, against two days budgeted. It closed the question before any of it
+was spent: the model was never the problem, and the training code already read twice did
+not need a third pass. Training rows were therefore never opened.
 
 ## Ledger
 
-`same` = checked and identical · `differs` = checked and different · `unknown` = not determined
+20 rows, 19 closed, all 19 without compute. Only the rows below are worth reading.
 
-| Axis | Theirs | Ours | State | Could explain | Cheapest test |
+| Axis | Theirs | Ours | State | Explains gap | Cheapest test |
 |---|---|---|---|---|---|
-| **Episode limit** | 400 steps | 300 steps | `differs` | **Yes** — truncates slow successes | Config constant · free |
-| **Chunk execution** | re-plan every step | replay all 8 open-loop | `differs` | **Yes** — an 8-step open loop cannot correct | Read the rollout loop · free |
-| Success criterion | in-region ≥10 steps | in-region ≥10 steps | `same` | — | Criterion fn · free |
-| Timeout counted as | failure | failure | `same` | — | Aggregation · free |
-| Episodes per task | 50 | 50 | `same` | — | free |
-| Same initial states | seeded, fixed | seeded, fixed | `same` | — | free |
-| Reset distribution | ±8cm, 0 distractors | ±8cm, 0 distractors | `same` | — | Env config · free |
-| Aggregation | mean over tasks | mean over tasks | `same` | — | free |
-| Seeds | 3 training seeds | 3 training seeds | `same` | — | free |
-| Simulator | SimEnv 2.4 | SimEnv 2.4 | `same` | — | `pip freeze` · free |
-| Assets | their pack v3 | our pack | `unknown` | Possibly | Checksum · 20 min |
-| Camera | 224², fixed pose | 224², fixed pose | `same` | — | free |
-| Control frequency | 5 Hz | 5 Hz | `same` | — | free |
-| Observation space | 1 cam + 7 proprio | 1 cam + 7 proprio | `same` | — | Batch probe · free |
-| Checkpoint identity | released final | released final | `same` | — | Hash · free |
-| EMA or live | no EMA kept | n/a | `same` | — | free |
-| Sampling constants | greedy, 7 tokens | greedy, 7 tokens | `same` | — | Inference script · free |
-| Normalisation stats | `unnorm_key=tasksuite` | same key | `same` | — | Diff the stats file · free |
-| Action space | delta EE, gripper +1 open | same | `same` | — | Print one action · free |
-| Inference precision | bf16 | bf16 | `same` | — | free |
+| Episode limit | 400 steps | 300 steps | `differs` | **yes** | config constant · free |
+| Chunk execution | re-plan each step | 8 open-loop | `differs` | **yes** | read the rollout loop · free |
+| Asset pack | their v3 | ours | `unknown` | possibly | checksum · 20 min |
 
-Nineteen of twenty rows closed without a GPU. Both rows that could explain the gap were
-constants someone could have read on day one.
+<details><summary>17 rows checked and identical</summary>
 
-### The two that differ
+Success criterion (in-region ≥10 steps) · timeout counted as failure · 50 episodes per
+task · seeded fixed initial states · reset ±8cm with no distractors · mean over tasks ·
+3 training seeds · SimEnv 2.4 · camera 224² fixed pose · 5 Hz control · 1 camera and 7
+proprio dims · released final checkpoint · no EMA kept · greedy decoding, 7 tokens ·
+`unnorm_key=tasksuite` · delta EE with gripper +1 open · bf16 inference.
 
-**Episode limit, 400 vs 300.** Our harness caps every policy at 300 steps so runs stay
-comparable across models — a reasonable house rule that silently reclassifies any
-success slower than 300 steps as a failure. Kestrel's policy is slower than our own
-baselines, so the cap costs it more.
-
-**Chunk execution.** They predict 8 actions and re-plan after executing one. We execute
-all 8 before predicting again. Identical weights, different controller: open-loop replay
-cannot correct for a grasp that slips at step 2. This is the axis with no trace in any
-config — it lives in the shape of the rollout loop, and diffing configs would never
-have surfaced it.
+</details>
 
 ## Closing them
 
-| Change | Number |
+| | |
 |---|---|
-| baseline (cell ②) | 51.9% |
+| cell ② baseline | 51.9% |
 | + episode limit 300 → 400 | 56.7% |
 | + receding horizon | **62.4%** |
 
-62.4% against their 63.2%, with ① at 62.8%. The residual 0.8pp sits inside the spread
-of three seeds and does not need explaining.
+62.4% against their 63.2%, with ① at 62.8%. The residual 0.8pp is inside the spread of
+three seeds and does not need explaining.
 
-## Verdict
+## What was easy · what was difficult
 
-- [x] **We are measuring something else.** Episode limit and chunk execution differ and
-      close 10.5 of the 10.9pp that cell ② localised to our harness. This is not a
-      disagreement about the method.
-- [ ] Accounted for by a single axis
-- [ ] Their setup has an advantage
-- [ ] Real disagreement
-- [ ] Cannot be attributed
+**Easy** — weights and code both released, so cell ① could be run at all. Their eval
+entry point takes a checkpoint path and nothing else. `pip freeze` matched on the first try.
+
+**Difficult** — the two axes that mattered are both **absences**: an episode limit the
+paper does not state, and an execution mode that appears in neither paper nor config. Both
+were found by reading their rollout loop against ours, which is not a diff any tool
+produces. Budget half a day for that read on the next one.
+
+## Where this bites beyond the one number
+
+Both conventions are **house rules in our harness, not mistakes** — and they apply to every
+model that harness has ever run. Every internal cross-model comparison we have published
+carries the same 300-step cap and the same open-loop execution, and both penalise slower
+policies uniformly. Defensible as a house rule; indefensible as an unstated one.
+
+We found this because one comparison happened to be against a public number with public
+weights. Nothing would have surfaced it otherwise.
+
+## Action items
+
+| # | Action | Owner | By |
+|---|---|---|---|
+| 1 | Emit episode limit and execution mode in the harness's result metadata, so a number cannot travel without them | eval owner | next harness release |
+| 2 | Re-check past comparisons where the losing policy was the slower one | me | end of month |
+| 3 | Close the asset-pack row, or record that it stays open | me | with (2) |
 
 ## Still unknown
 
-- **Asset pack version.** Not closed. It cannot account for the remaining 0.8pp at the
-  precision three seeds give, so it stays open rather than being called `same`.
+**Asset pack version.** Not closed. At the precision three seeds give it cannot account
+for the residual 0.8pp, so it stays `unknown` rather than being written `same`.
 
-## What this changes beyond the one number
+---
 
-Both differing axes are **house rules in our harness, not mistakes** — and they apply to
-every model we have ever run through it. Every cross-model comparison we have published
-internally carries the same 300-step cap and the same open-loop execution, which
-penalises slower policies uniformly. That is defensible as a house rule and indefensible
-as an unstated one.
-
-Two follow-ups, neither of which was the question asked:
-
-1. Put the episode limit and the execution mode in the harness's reported metadata, so a
-   number cannot travel without them.
-2. Re-check any past comparison where the losing policy was the slower one.
-
-The issue-tracker reports of a low number are consistent with this and do not corroborate
-the paper being optimistic — the same house rules are common. Nothing here supports
-writing that Kestrel-VLA does not reproduce, and the draft sentence saying so was cut.
+The issue-tracker reports of a low number are consistent with this and do **not**
+corroborate the paper being optimistic — the same house rules are common. Nothing here
+supports writing that Kestrel-VLA does not reproduce; the draft sentence saying so was cut.

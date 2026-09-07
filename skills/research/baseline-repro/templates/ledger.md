@@ -1,8 +1,24 @@
-# Reproduction ledger — <paper / baseline> vs <your setup>
+# Reproduction — <baseline> vs <ours>
 
-**Their number**: <value> on <benchmark>, from <paper §x / repo README / table N>
-**Your number**: <value>, <n> episodes × <n> seeds
-**Gap**: <value>
+**Verdict.** <One sentence. The reader should be able to stop here.>
+<their number> reported · <yours> measured · <gap> · <what accounts for it>
+
+**Scope.** Testing <the exact claim, table and row>. Not testing <what you are not>.
+
+---
+
+## What accounts for the gap
+
+<Contributing factors, not a root cause. Two ordinary things compounding is the
+common case; one dramatic thing is not.>
+
+| Factor | Theirs | Ours | Cost to close | Recovered |
+|---|---|---|---|---|
+| | | | | |
+| | | | | **total** |
+
+<One short paragraph per factor: what it is, and why it costs what it costs.
+Name the ones with no trace in any config — those are the ones a diff misses.>
 
 ## Bisection
 
@@ -13,46 +29,50 @@
 | ③ | yours | theirs | | |
 | ④ | yours | yours | | |
 
-<!-- Not run? Say which and why. An unrun cell is not a passing cell. -->
+<Which half it localised the gap to, and what that saved. An unrun cell is not a
+passing cell — say which and why.>
 
 ## Ledger
 
-`same` = checked and identical · `differs` = checked and different · `unknown` = not determined
+<n> of <n> rows closed, <n> without compute. Full table below; only rows that are
+not `same` are worth reading.
 
-| Axis | Theirs | Yours | State | Could explain the gap | Cheapest test |
+| Axis | Theirs | Ours | State | Explains gap | Cheapest test |
 |---|---|---|---|---|---|
-| Success criterion | | | | | |
-| Episode limit | | | | | |
-| Episodes per task | | | | | |
-| Reset distribution | | | | | |
-| Aggregation | | | | | |
-| Seeds | | | | | |
-| Simulator version | | | | | |
-| Assets | | | | | |
-| Camera | | | | | |
-| Control frequency | | | | | |
-| Observation space | | | | | |
-| Checkpoint identity | | | | | |
-| EMA or live weights | | | | | |
-| Sampling constants | | | | | |
-| Chunk execution | | | | | |
-| Normalisation statistics | | | | | |
-| Action space convention | | | | | |
-| Inference precision | | | | | |
+| | | | `differs` | | |
+| | | | `unknown` | | |
 
-<!-- Add training rows only once the bisection puts the gap there. -->
+<details><summary><n> rows checked and identical</summary>
 
-## Verdict
+<Name them in one line each, or one comma-separated line. They are evidence that
+the ledger was actually worked, and they are not worth a reader's attention.>
 
-<!-- Exactly one. -->
+</details>
 
-- [ ] **Accounted for** — <axis> was `differs`; closing it moved the number to <value>
-- [ ] **I am measuring something else** — <axes> differ and account for the gap; not a disagreement about the method
-- [ ] **Their setup has an advantage** — <what>; not available to me, and named
-- [ ] **Real disagreement** — ledger empty, gap survives ①. Reported with this ledger attached
-- [ ] **Cannot be attributed** — <n> rows still `unknown`; code or weights unavailable
+## What was easy · what was difficult
+
+<Two lists, kept separate because they are co-dependent rather than opposite:
+released weights can make the start trivial while an unstated eval convention
+makes the middle expensive. This is what tells the next person what to budget.>
+
+**Easy** —
+**Difficult** —
+
+## Where this bites beyond the one number
+
+<The findings that outlive this comparison. A house rule in your own harness
+applies to every model that harness has ever run; a convention you inferred from
+one repo you will infer again.>
+
+## Action items
+
+| # | Action | Owner | By |
+|---|---|---|---|
+| 1 | | | |
+
+<Each one traceable to a factor above. No owner and no date is a wish.>
 
 ## Still unknown
 
-<!-- Every row that stayed `unknown` and could account for the gap. If this list is
-     non-empty, "does not reproduce" is not available as a verdict. -->
+<Every row left `unknown` that could account for the gap. While this list is
+non-empty, "does not reproduce" is not an available verdict.>

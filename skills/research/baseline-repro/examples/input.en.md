@@ -1,5 +1,7 @@
 # What you hand the skill
 
+> **⚠ Mock.** Kestrel-VLA and TaskSuite-40 do not exist. The shape of the request is real.
+
 Real inputs are this untidy. The skill does not need it tidier — a large part of its
 job is turning "we get a worse number" into a list of things that can be checked.
 

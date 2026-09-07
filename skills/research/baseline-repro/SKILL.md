@@ -83,7 +83,23 @@ When a row reads `differs` and closing it moves your number, you have your answe
 
 **Input**: the reported number and where it is reported, their repo if there is one, your setup, and your number.
 
-**Output**: `repro-ledger.md` — the bisection result, the ledger, the verdict, and what stayed unknown.
+**Output**: `repro-ledger.md`, and it is **front-loaded** — the same doctrine `research-deck` applies to a
+deck. The verdict and the scope are the first two lines; a reader who stops there has the answer. Everything
+below is evidence for it.
+
+| Section | Carries |
+|---|---|
+| **Verdict** | One sentence, then reported · measured · gap · what accounts for it |
+| **Scope** | The exact claim under test — table, row, number — and what is *not* under test |
+| **What accounts for the gap** | Contributing factors, plural. Two ordinary conventions compounding is the usual shape; one dramatic cause is not |
+| **Bisection** | The four cells, and which half they localised it to |
+| **Ledger** | A roll-up line, then only the rows that are not `same`. The identical ones collapse into a `<details>` — they are evidence the ledger was worked, not something to read |
+| **What was easy · what was difficult** | Kept separate, because they are co-dependent rather than opposite: released weights can make the start trivial while an unstated convention makes the middle expensive. This is what tells the next person what to budget |
+| **Where this bites beyond one number** | What outlives this comparison. A house rule in your own harness applies to every model it has ever run |
+| **Action items** | Owner and date on each. Without both it is a wish |
+| **Still unknown** | Every `unknown` row that could account for the gap |
+
+Seventeen rows reading `same / — / free` are 85% of a table and none of its information. Roll them up.
 
 **Not output**: a judgement about the paper's honesty. The ledger either accounts for the gap or does not.
 
