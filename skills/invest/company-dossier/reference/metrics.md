@@ -51,3 +51,22 @@ It also means owner earnings only exists for the years capital expenditure is re
 **Name the companion card.** Return on equity without the debt card is misleading; capex intensity without cash conversion is half a picture; research intensity without gross margin says nothing. Each card names the one it must be read beside.
 
 **Charts get a line too.** Above each chart, one sentence on what to look for — the shape, not the last point. A chart caption that only restates the axis labels is wasted.
+
+## One chart at a time
+
+Seven small charts side by side is a contact sheet: everything is present and nothing is readable. The dossier shows **one large chart with the others a tab away**, and under it two boxes:
+
+| Box | Carries |
+|---|---|
+| **What to look for on this chart** | The general skill — what shape means what, and which line to read against which. True of any company |
+| **Where the company stands** | This company, on this dimension, in figures with their medians. Descriptive only |
+
+The pairing is the point: the first box teaches the reading, the second applies it, and keeping them apart stops the general lesson being mistaken for a judgement about this business.
+
+## The panel is grouped, not listed
+
+Hovering a chart fills the side panel with that fiscal year across every series. Thirteen numbers in one column is a list; the same figures under headings answer questions:
+
+**Size — how big is it** · **Profitability — how much it keeps** · **Cash — what actually arrives** · **Reinvestment and returns** · **Ownership — your slice** · **Balance sheet** · **Market**
+
+Every row carries its XBRL tag underneath, and a year with no reported figure says **not reported** rather than being left blank — a blank reads as zero.

@@ -69,9 +69,22 @@ h2{font-size:15px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
 .gl2{border-bottom:1px dotted var(--accent);cursor:help}
 .look{background:var(--accent-wash);border-left:2px solid var(--accent);padding:7px 10px;
       margin:0 0 9px;font-size:12px;line-height:1.5;color:var(--accent-deep)}
-.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
-.chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:12px 14px 8px}
-.chart h3{font-size:13.5px;font-weight:500;margin:0 0 2px}
+/* one chart at a time, large, with the others a click away */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tabs button{font:inherit;font-size:12.5px;padding:6px 13px;border:1px solid var(--rule);
+             background:var(--bg);color:var(--ink2);cursor:pointer;border-radius:3px}
+.tabs button:hover{border-color:var(--accent)}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chart{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:15px 18px 10px}
+.chart h3{font-size:17px;font-weight:500;margin:0 0 3px}
+.ctx{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.ctx .box{border:1px solid var(--rule);border-radius:3px;padding:12px 14px;background:var(--surface)}
+.ctx .box.now{background:var(--accent-wash);border-color:var(--accent-soft)}
+.ctx .h{font-family:var(--mono);font-size:10px;letter-spacing:.09em;color:var(--ink3);margin-bottom:6px}
+.ctx .box.now .h{color:var(--accent-deep)}
+.ctx p{margin:0;font-size:13.5px;line-height:1.62;color:var(--ink2)}
+.ctx .box.now p{color:var(--accent-deep)}
+@media (max-width:900px){.ctx{grid-template-columns:1fr}}
 .chart .cap{font-size:11px;color:var(--ink3);margin:0 0 8px;line-height:1.45}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
 .ax{stroke:var(--rule);stroke-width:1}
@@ -114,6 +127,15 @@ dt{color:var(--ink3);font-size:11.5px;padding-top:3px}
 dd{margin:0;min-width:0;overflow-wrap:anywhere}
 dd.mono{font-family:var(--mono);font-size:12px;line-height:1.5}
 .empty{font-size:13.5px;color:var(--ink3);line-height:1.65}
+.pg{margin:0 0 15px}
+.pg .gh{font-size:10px;letter-spacing:.1em;color:var(--accent-deep);font-weight:600;
+        padding-bottom:4px;border-bottom:1px solid var(--accent-soft);margin-bottom:7px}
+.pr{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0}
+.pr .l{font-size:13px;color:var(--ink)}
+.pr .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;
+       color:var(--accent-deep);white-space:nowrap}
+.pr .v.na{color:var(--ink3)}
+.pt2{font-family:var(--mono);font-size:9.5px;color:var(--ink3);margin-top:-1px}
 .blk{margin-top:14px;padding-top:11px;border-top:1px solid var(--rule-soft);font-size:13px;color:var(--ink2);line-height:1.62}
 .blk .h{font-size:10.5px;letter-spacing:.09em;color:var(--ink3);margin-bottom:5px;font-family:var(--mono)}
 footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--ink3);
@@ -135,7 +157,10 @@ footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-
   <div class="mcards" id="mcards"></div>
 
   <h2 id="h-series"></h2>
-  <div class="charts" id="charts"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="chart"></div>
+  <div class="ctx"><div class="box"><div class="h" id="lookh"></div><p id="lookp"></p></div>
+    <div class="box now"><div class="h" id="nowh"></div><p id="nowp"></p></div></div>
 
   <h2 id="h-rest"></h2>
   <div id="rs"></div>
@@ -215,8 +240,21 @@ const DOSSIER = {
   "noRest": "沒有任何期間被發現有超過一個回報值。",
   "notIn": "這份檔案裡沒有的東西",
   "notInBody": "XBRL 之前的會計年度、第一次申報之前的所有年份，以及任何無法追溯到 accession number 的數字。缺口就顯示成缺口。",
-  "noYear": "這份檔案中沒有這個會計年度的數字：FY"
+  "noYear": "這份檔案中沒有這個會計年度的數字：FY",
+  "gOther": "市場",
+  "na": "未揭露",
+  "lookh": "這張圖要看什麼",
+  "nowh": "這家公司目前的狀況"
  },
+ "groupOrder": [
+  "規模 — 這門生意多大",
+  "獲利品質 — 留得住多少",
+  "現金 — 實際進來多少",
+  "投入與回饋",
+  "股權 — 你的那一份",
+  "資產負債",
+  "市場"
+ ],
  "orientation": {
   "lead": "如果你沒讀過財報，這份檔案是設計成可以照順序讀、而且隨時停下的。下面每一段都不假設上面那一段已經完全看懂。",
   "order": [
@@ -1112,7 +1150,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "Revenues"
       ]
-     ]
+     ],
+     "group": "規模 — 這門生意多大",
+     "tagShort": "Revenues"
     },
     {
      "name": "營業利益",
@@ -1232,9 +1272,12 @@ const DOSSIER = {
        "0001045810-26-000021",
        "OperatingIncomeLoss"
       ]
-     ]
+     ],
+     "group": "規模 — 這門生意多大",
+     "tagShort": "OperatingIncomeLoss"
     }
    ],
+   "now": "營收從 FY2008 的 41 億美元複利成長到 <b>FY2026 的 2,159 億美元</b>。營業利益成長更快，從 8 億到 1,304 億，所以兩條線的距離是<b>拉開</b>而不是平行 —— 利潤成長快過銷售。",
    "look": "看形狀，不要看最後一點：成長是穩定、循環，還是階梯狀；以及利潤是跟著營收走還是落後。"
   },
   {
@@ -1361,7 +1404,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "GrossProfit"
       ]
-     ]
+     ],
+     "group": "獲利品質 — 留得住多少",
+     "tagShort": "GrossProfit"
     },
     {
      "name": "營業利益率",
@@ -1481,7 +1526,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "OperatingIncomeLoss"
       ]
-     ]
+     ],
+     "group": "獲利品質 — 留得住多少",
+     "tagShort": "OperatingIncomeLoss"
     },
     {
      "name": "淨利率",
@@ -1601,9 +1648,12 @@ const DOSSIER = {
        "0001045810-26-000021",
        "NetIncomeLoss"
       ]
-     ]
+     ],
+     "group": "獲利品質 — 留得住多少",
+     "tagShort": "NetIncomeLoss"
     }
    ],
+   "now": "毛利率 <b>71.1%</b>，對照 19 年中位數 56.9%；營業利益率 <b>60.4%</b>，對照中位數 22.9%。三條線都在或接近各自區間的頂端，而兩個虧損年（FY2009、FY2010）是唯一落在零以下的點。",
    "look": "三條線本來應該一起動。當毛利率撐住但營業利益率下滑，成本就出在毛利以下 &mdash;&mdash; 業務、研發或管理。"
   },
   {
@@ -1730,7 +1780,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "NetCashProvidedByUsedInOperatingActivities"
       ]
-     ]
+     ],
+     "group": "現金 — 實際進來多少",
+     "tagShort": "NetCashProvidedByUsedInOperatingActivities"
     },
     {
      "name": "淨利",
@@ -1850,7 +1902,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "NetIncomeLoss"
       ]
-     ]
+     ],
+     "group": "規模 — 這門生意多大",
+     "tagShort": "NetIncomeLoss"
     },
     {
      "name": "資本支出",
@@ -1904,9 +1958,12 @@ const DOSSIER = {
        "0001045810-26-000021",
        "PaymentsToAcquireProductiveAssets"
       ]
-     ]
+     ],
+     "group": "現金 — 實際進來多少",
+     "tagShort": "PaymentsToAcquirePropertyPlantAndEquipment"
     }
    ],
+   "now": "營運現金流 <b>1,027 億美元</b>，對照淨利 1,201 億 —— 轉換率 86%，低於 19 年中位數 129%。資本支出 60 億，佔營運現金 <b>5.9%</b>，對照有揭露的那八年中位數 12.6%。",
    "look": "問題在藍線相對灰線的位置。藍線連續幾年低於灰線，代表利潤沒有變成現金。"
   },
   {
@@ -2033,7 +2090,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "ResearchAndDevelopmentExpense"
       ]
-     ]
+     ],
+     "group": "投入與回饋",
+     "tagShort": "ResearchAndDevelopmentExpense"
     },
     {
      "name": "庫藏股",
@@ -2153,9 +2212,12 @@ const DOSSIER = {
        "0001045810-26-000021",
        "PaymentsForRepurchaseOfCommonStock"
       ]
-     ]
+     ],
+     "group": "投入與回饋",
+     "tagShort": "PaymentsForRepurchaseOfCommonStock"
     }
    ],
+   "now": "研發 <b>185 億美元，佔毛利 12.1%</b>，對照 19 年中位數 41.8% —— 這個比率下降是因為<b>毛利成長得比研發帳單快</b>，不是因為支出減少。庫藏股 401 億，<b>佔淨利 33%</b>。",
    "look": "研發是留在牌桌上的成本，庫藏股是還給股東的現金。兩者哪一個長得快，說明公司認為自己需要什麼。"
   },
   {
@@ -2283,9 +2345,12 @@ const DOSSIER = {
        "0001045810-26-000021",
        "WeightedAvg…DilutedShares"
       ]
-     ]
+     ],
+     "group": "股權 — 你的那一份",
+     "tagShort": "WeightedAvg…DilutedShares"
     }
    ],
+   "now": "稀釋股數 <b>24,514m，十八年前是 24,269m —— 1.01 倍</b>。因員工酬勞發行的股份，被庫藏股幾乎剛好抵銷。這條序列跨了四種申報基準、經過修正才能說出這句話。",
    "look": "平的才是好情況。這條線往上，代表這一頁其他所有東西裡屬於你的那一份正在變小。"
   },
   {
@@ -2418,7 +2483,9 @@ const DOSSIER = {
        "0001045810-26-000021",
        "CashAndCashEquivalentsAtCarryingValue"
       ]
-     ]
+     ],
+     "group": "資產負債",
+     "tagShort": "CashAndCashEquivalentsAtCarryingValue"
     },
     {
      "name": "股東權益",
@@ -2544,9 +2611,12 @@ const DOSSIER = {
        "0001045810-26-000021",
        "StockholdersEquity"
       ]
-     ]
+     ],
+     "group": "資產負債",
+     "tagShort": "StockholdersEquity"
     }
    ],
+   "now": "會計年度結束時現金 <b>106 億美元</b>，股東權益 <b>1,573 億美元</b>。長期負債對權益 <b>0.05</b>，對照中位數 0.2；利息只佔營業利益 <b>0.8%</b>。",
    "look": "現金對股東權益。一門養得起自己的生意，權益成長時不需要負債出力。"
   },
   {
@@ -2680,9 +2750,12 @@ const DOSSIER = {
        "",
        "Yahoo Finance, split-adjusted close"
       ]
-     ]
+     ],
+     "group": "市場",
+     "tagShort": "Yahoo Finance, split-adjusted close"
     }
    ],
+   "now": "FY2026 年度結束時的還原收盤價為 <b>190.90 美元</b>，FY2007 年度結束時是 0.47 美元。此圖為對數軸；線性軸上前十五年跟零分不出來。",
    "look": "股價放在這裡不是為了被預測。它在這裡，是為了讓經營歷史可以跟當時市場付的價格並排著讀。"
   }
  ],
@@ -2804,6 +2877,8 @@ const U = Object.assign({
   thName:"Name", thRole:"Role", thSince:"Since", thNote:"Note",
   thAccn:"Accession", thForm:"Form", thPeriod:"Period", thFiled:"Filed",
   thSeries:"Series", thValue:"Value", thFrom:"from",
+  lookh:"WHAT TO LOOK FOR ON THIS CHART", nowh:"WHERE THE COMPANY STANDS",
+  gOther:"Other", na:"not reported",
   empty:"Hover any chart for that fiscal year across every series, each with the filing it was read from.",
   noRest:"No period was found reported with more than one value.",
   notIn:"what is not in this file", notInBody:"Pre-XBRL fiscal years, anything before the first filing, and any figure that could not be traced to an accession number. A gap is shown as a gap.",
@@ -2883,7 +2958,7 @@ function logTicks(lo, hi) {
   return out;
 }
 function draw(c) {
-  const W = 470, H = 210, L = 46, R = 10, T = 8, B = 26;
+  const W = 880, H = 330, L = 62, R = 14, T = 12, B = 30;
   const live = c.series.filter(s => !off[c.id + s.name]);
   const xs = c.series[0].pts.map(p => p[0]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs);
@@ -2912,8 +2987,8 @@ function draw(c) {
   for (const t of tk)
     g += '<line class="gl" x1="' + L + '" y1="' + Y(t) + '" x2="' + (W - R) + '" y2="' + Y(t) + '"/>' +
          '<text class="tk" x="' + (L - 6) + '" y="' + (Y(t) + 3) + '" text-anchor="end">' + fmt(t, c.unit) + '</text>';
-  for (const v of xs) if ((v - x0) % 3 === 0 || v === x1)
-    g += '<text class="tk" x="' + X(v) + '" y="' + (H - 8) + '" text-anchor="middle">' + String(v).slice(2) + '</text>';
+  for (const v of xs) if ((v - x0) % 2 === 0 || v === x1)
+    g += '<text class="tk" x="' + X(v) + '" y="' + (H - 8) + '" text-anchor="middle">' + String(v) + '</text>';
   g += '<line class="ax" x1="' + L + '" y1="' + Y(Math.max(yLo, 0)) + '" x2="' + (W - R) + '" y2="' + Y(Math.max(yLo, 0)) + '"/>';
 
   for (const m of (c.marks || []))
@@ -2926,7 +3001,7 @@ function draw(c) {
     g += '<path class="ln" stroke="' + s.color + '" d="' +
          s.pts.map((p, i) => (i ? "L" : "M") + X(p[0]) + " " + Y(p[1])).join(" ") + '"/>';
     for (const p of s.pts)
-      g += '<circle class="pt" fill="' + s.color + '" cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="2.8" ' +
+      g += '<circle class="pt" fill="' + s.color + '" cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="3.4" ' +
            'data-c="' + c.id + '" data-s="' + s.name + '" data-x="' + p[0] + '" data-v="' + p[1] + '"/>';
   }
   g += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) +
@@ -2940,9 +3015,16 @@ function draw(c) {
            '"><i style="background:' + s.color + '"></i>' + s.name + '</span>').join("") + '</div></div>';
 }
 
-let hoverYear = null;
+let hoverYear = null, tab = 0;
 function charts() {
-  $("#charts").innerHTML = DOSSIER.charts.map(draw).join("");
+  $("#tabs").innerHTML = DOSSIER.charts.map((c, i) =>
+    '<button class="' + (i === tab ? "on" : "") + '" data-i="' + i + '">' + c.title + '</button>').join("");
+  $("#chart").innerHTML = draw(DOSSIER.charts[tab]);
+  const c = DOSSIER.charts[tab];
+  $("#lookh").textContent = U.lookh; $("#lookp").innerHTML = c.look || "";
+  $("#nowh").textContent = U.nowh;   $("#nowp").innerHTML = c.now || "";
+  document.querySelectorAll(".tabs button").forEach(el =>
+    el.onclick = () => { tab = +el.dataset.i; hoverYear = null; charts(); $("#panel").innerHTML = EMPTY; });
   document.querySelectorAll(".leg span").forEach(el =>
     el.onclick = ev => { ev.stopPropagation(); off[el.dataset.t] = !off[el.dataset.t]; charts(); });
   // Hover anywhere on any chart: every chart draws the crosshair at the same fiscal
@@ -2957,26 +3039,33 @@ function charts() {
       if (y !== hoverYear) { hoverYear = y; charts(); year(y); }
     };
   });
-  $("#charts").onmouseleave = () => { hoverYear = null; charts(); $("#panel").innerHTML = EMPTY; };
+  $("#chart").onmouseleave = () => { hoverYear = null; charts(); $("#panel").innerHTML = EMPTY; };
 }
 
+// Thirteen numbers in one column is a list, not a reading. Grouped by what they are
+// FOR — how big, how profitable, how much cash, whose capital, what the market paid —
+// the same figures answer questions instead of sitting next to each other.
 function year(fy) {
-  const rows = [];
+  const groups = new Map();
+  const accns = new Set();
   for (const c of DOSSIER.charts)
     for (const s of c.series) {
       const p = s.pts.find(q => q[0] === fy);
-      if (p) rows.push([s.name, fmt(p[1], c.unit) + " " + c.unit, p[2] || "", p[3] || ""]);
+      const g = s.group || U.gOther;
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push([s.name, p ? fmt(p[1], c.unit) + " " + c.unit : null, s.tagShort || ""]);
+      if (p && p[2]) accns.add(p[2]);
     }
   $("#ptitle").innerHTML = 'FY<span class="yr">' + fy + '</span>';
-  $("#panel").innerHTML = !rows.length
-    ? '<p class="empty">' + U.noYear + fy + '</p>'
-    : '<table><tr><th>' + U.thSeries + '</th><th style="text-align:right">' + U.thValue + '</th></tr>' +
-      rows.map(r => '<tr><td>' + r[0] + (r[3] ? '<div style="font-size:10px;color:var(--ink3);' +
-        'font-family:var(--mono);margin-top:1px">' + r[3] + '</div>' : '') +
-        '</td><td class="num">' + r[1] + '</td></tr>').join("") + '</table>' +
-      '<div class="blk"><div class="h">' + U.readFrom + '</div>' +
-      [...new Set(rows.map(r => r[2]).filter(Boolean))].map(a =>
-        '<div class="mono" style="font-size:11.5px">' + a + '</div>').join("") + '</div>';
+  const order = (DOSSIER.groupOrder || [...groups.keys()]).filter(g => groups.has(g));
+  $("#panel").innerHTML = order.map(g =>
+    '<div class="pg"><div class="gh">' + g + '</div>' +
+    groups.get(g).map(r => '<div class="pr"><span class="l">' + r[0] +
+      (r[2] ? '<div class="pt2">' + r[2] + '</div>' : '') + '</span>' +
+      '<span class="v' + (r[1] === null ? ' na' : '') + '">' + (r[1] === null ? U.na : r[1]) +
+      '</span></div>').join("") + '</div>').join("") +
+    (accns.size ? '<div class="blk"><div class="h">' + U.readFrom + '</div>' +
+      [...accns].map(a => '<div class="mono" style="font-size:11.5px">' + a + '</div>').join("") + '</div>' : '');
 }
 
 /* ── provenance panel ────────────────────────────────────────────────────── */

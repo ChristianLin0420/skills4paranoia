@@ -82,7 +82,7 @@ This is not a rare event. Scanning one large filer's company facts turns up **25
 
 **Input**: a company — a name, a ticker or a CIK. Optionally a period of interest.
 
-**Output**: `dossier-<ticker>-<date>.html`, one self-contained file, built on `html-design-system`. It opens with an orientation block — how to read it, in what order, and that it can be abandoned at any point — because the reader who needs this most has not read a set of accounts before. Every chrome string is data, so a Chinese dossier is Chinese in its headings too, not Chinese prose inside an English frame. Interactive: hover a point for the filing behind it, toggle a series, switch absolute against margin, expand a restatement.
+**Output**: `dossier-<ticker>-<date>.html`, one self-contained file, built on `html-design-system`. It opens with an orientation block — how to read it, in what order, and that it can be abandoned at any point — because the reader who needs this most has not read a set of accounts before. Every chrome string is data, so a Chinese dossier is Chinese in its headings too, not Chinese prose inside an English frame. Interactive: one large chart at a time with the rest a tab away, each carrying what to look for on it and where the company stands; hover anywhere and every series' figure for that fiscal year appears in the side panel, grouped by what the numbers are for rather than listed.
 
 **Not output**: a valuation, a price target, a rating, a position size.
 
