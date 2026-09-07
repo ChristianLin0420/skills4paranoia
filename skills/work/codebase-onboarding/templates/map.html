@@ -8,7 +8,7 @@
  --bg:#F1F2F3;--surface:#FAFBFB;--ink:#14171A;--ink2:#5F656B;--ink3:#8A9096;
  --rule:#DCE0E3;--rule-soft:#E8EBED;--accent:#3A6183;--accent-deep:#27435C;
  --accent-soft:#DBE4EB;--accent-wash:#EAF0F4;--warn:#8C4A3C;--warn-soft:#EFE3E0;
- --model:#54547A;--model-soft:#E6E6EE;
+ --model:#54547A;--model-soft:#E6E6EE;--bar-bg:#F6F7F8;
  --sans:'IBM Plex Sans','Noto Sans TC',sans-serif;--mono:'IBM Plex Mono',Menlo,monospace;
 }
 *{box-sizing:border-box}
@@ -54,6 +54,7 @@ svg.wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-
 .wires path{fill:none;stroke:var(--rule);stroke-width:1.25}
 .wires path.lit{stroke:var(--accent);stroke-width:1.75}
 .wires path.half{stroke:var(--accent);opacity:.5}
+.wires path.ctrl{stroke-dasharray:2 3;opacity:.72}
 .wires text.half,.wires circle.half,.wires rect.half{opacity:.5}
 .wires path.dim{opacity:.13}
 .wires path.grad{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 3}
@@ -111,10 +112,31 @@ svg.wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-
 .gmark.s{background:var(--warn);color:#fff}
 .node .k{font-size:10.5px;letter-spacing:.06em;color:var(--ink3);font-family:var(--mono)}
 .node .n{font-size:14.5px;font-weight:500;margin:2px 0 3px;line-height:1.35;word-break:break-word}
-.node.bar{border-color:var(--ink3);background:#F6F7F8}
+.node.bar{border-color:var(--ink3);background:var(--bar-bg)}
 .node.bar .n{font-size:15.5px}
 .node.bar .row2{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
 .node.bar .row2 .m{flex:1 1 260px}
+/* a header on one line keeps the parts near the top, so an arriving edge lands on
+   the part rather than on a card with the part buried far below it */
+.bhead{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0 0 9px}
+.bhead .k{flex:0 0 auto}
+.bhead .n{font-size:15px;font-weight:500;margin:0}
+.bhead .m{font-size:11.5px;color:var(--ink2);font-family:var(--mono)}
+.bhead .tags{margin:0 0 0 auto}
+.parts{display:grid;align-items:stretch}
+.part{border:1px solid var(--rule);border-radius:3px;padding:8px 10px;background:var(--bg);min-width:0}
+.part .pl{font-size:12.5px;font-weight:500;line-height:1.3}
+.part .pd{font-family:var(--mono);font-size:10.5px;color:var(--ink2);margin-top:3px;line-height:1.4}
+.part .tags{margin-top:7px}
+/* what binds the parts, drawn between them rather than described underneath */
+.plink{display:flex;flex-direction:column;align-items:center;justify-content:center;
+       padding:0 14px;min-width:132px;max-width:210px}
+.lnkline{width:100%;height:0;border-top:1px dashed var(--accent);opacity:.55;position:relative;margin-bottom:11px}
+.lnkline::after{content:"\21C4";position:absolute;left:50%;top:-10px;transform:translateX(-50%);
+                background:var(--bar-bg);padding:0 6px;font-size:14px;color:var(--accent);opacity:1;line-height:1}
+.lnktx{font-size:10.5px;line-height:1.4;color:var(--ink2);text-align:center}
+.join{margin-top:10px;padding-top:8px;border-top:1px dashed var(--rule);text-align:center;
+      font-size:11px;color:var(--ink3)}
 .node .m{font-size:11.5px;color:var(--ink2);font-family:var(--mono);word-break:break-word;line-height:1.45}
 .node .tags{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
 b.mdl{font-weight:600;color:var(--model)}
@@ -185,6 +207,7 @@ footer{grid-column:1/-1;padding:14px 34px;border-top:1px solid var(--rule);font-
     <span><i class="sw w"></i>worth a second look</span>
     <span>click a node to pin its path &middot; click the background to clear</span>
     <span>click a loss term to see what learns from it</span>
+    <span>dashed edge = a mask or index, not the tensor</span>
   </div>
 
   <div class="graph" id="graph"><svg class="wires" id="wires"></svg></div>
@@ -351,13 +374,38 @@ function render() {
       n.params === "quantised" ? '<span class="tag warn">4-bit</span>' : "",
       n.paths && n.paths.length === 1 ? '<span class="tag only">' + n.paths[0] + ' only</span>' : ""
     ].join("");
+    // A module whose inputs are routed internally — two experts sharing one
+    // attention, a q/kv split, a router — is drawn with its parts exposed, so an
+    // edge can land on the part it actually reaches instead of on the module as a
+    // whole. Without this the map claims every input is interchangeable.
+    const pbox = pt => '<div class="part" data-part="' + pt.id + '">' +
+      '<div class="pl">' + mark(pt.label) + '</div>' +
+      (pt.meta ? '<div class="pd">' + mark(pt.meta) + '</div>' : '') +
+      (pt.params ? '<div class="tags"><span class="tag' +
+        (pt.params === "trained" ? '' : ' frozen') + '">' + pt.params + '</span></div>' : '') + '</div>';
+    // Two parts put what binds them in the gap between them; more than two would
+    // repeat it n-1 times, so it goes underneath instead.
+    const pair = n.parts && n.parts.length === 2;
+    const link = txt => '<div class="plink"><div class="lnkline"></div>' +
+      (txt ? '<div class="lnktx">' + mark(txt) + '</div>' : '') + '</div>';
+    const parts = !n.parts ? '' :
+      '<div class="parts" style="grid-template-columns:' +
+        (pair ? 'minmax(0,1fr) auto minmax(0,1fr)'
+              : 'repeat(' + n.parts.length + ',minmax(0,1fr))') + ';gap:' + (pair ? '0' : '10px') + '">' +
+      (pair ? pbox(n.parts[0]) + link(n.join) + pbox(n.parts[1])
+            : n.parts.map(pbox).join("")) + '</div>' +
+      (!pair && n.join ? '<div class="join">' + mark(n.join) + '</div>' : '');
     const inner = n.span
-      ? '<div class="row2"><div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) +
-        '</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div>'
+      ? (n.parts
+          ? '<div class="bhead"><span class="k">' + n.kind.toUpperCase() + '</span>' +
+            '<span class="n">' + mark(n.name) + '</span><span class="m">' + mark(n.meta) + '</span>' +
+            (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div>'
+          : '<div class="row2"><div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) +
+            '</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div>') + parts
       : '<div class="n">' + mark(n.name) + '</div><div class="m">' + mark(n.meta) + '</div>' +
         (tags ? '<div class="tags">' + tags + '</div>' : '');
     return '<div class="' + cls + '" data-id="' + n.id + '">' + (n.watch ? '<i class="bang"></i>' : '') +
-           gmark + '<div class="k">' + n.kind.toUpperCase() + '</div>' + inner + '</div>';
+           gmark + (n.parts ? '' : '<div class="k">' + n.kind.toUpperCase() + '</div>') + inner + '</div>';
   };
 
   // Nodes sharing a cell are a chain when an edge joins them and a fan when not —
@@ -366,7 +414,10 @@ function render() {
     : '<div class="cell ' + (linked(ids) ? "chain" : "fan") + '">' +
       topo(ids).map(i => card(N[i])).join("") + '</div>';
 
-  const stage = st => {
+  // A stage label that only repeats its group's name says nothing twice. The row
+  // keeps its position; it just loses the redundant slab.
+  const stage = (st, groupLabel) => {
+    const dup = groupLabel && (groupLabel === st || groupLabel.endsWith(" " + st));
     const ns = MAP.nodes.filter(n => n.stage === st);
     if (!ns.length) return "";
     const spans = ns.filter(n => n.span);
@@ -380,12 +431,12 @@ function render() {
               lanes.map(l => cell(laned.filter(n => n.lane === l.id).map(n => n.id))).join("") + '</div>';
     if (free.length)
       body += '<div class="free">' + topo(free.map(n => n.id)).map(i => card(N[i])).join("") + '</div>';
-    return '<div class="stg"><div class="slab">' + st + '</div><div>' + body + '</div></div>';
+    return '<div class="stg"><div class="slab">' + (dup ? '' : st) + '</div><div>' + body + '</div></div>';
   };
 
   const groups = (MAP.groups && MAP.groups.length) ? MAP.groups : [{ label: "", stages: MAP.stages }];
   const html = groups.map(gp => {
-    const inner = gp.stages.map(stage).join("");
+    const inner = gp.stages.map(st => stage(st, gp.label)).join("");
     if (!inner) return "";
     const cnt = MAP.nodes.filter(x => gp.stages.includes(x.stage) && onPath(x)).length;
     const usesLanes = lanes.length && gp.stages.some(st => MAP.nodes.some(x => x.stage === st && x.lane));
@@ -472,10 +523,15 @@ function wires() {
   // Only detour when something is actually in the way. Testing "is any card between
   // these two rows" sent every edge to the gutter the moment lanes existed, because
   // a card in a different lane is between them vertically and blocks nothing.
+  // The two cards an edge belongs to are never obstacles. Once an edge terminates on
+  // a part *inside* a card, the card itself sits between the endpoints and would
+  // otherwise send its own incoming wires out to a gutter.
   const rowBetween = (a, b) => boxes.some(c =>
+    c.id !== a.id && c.id !== b.id &&
     c.top > a.bot + 2 && c.bot < b.top - 2 &&
     c.r > Math.min(a.x, b.x) - 10 && c.l < Math.max(a.x, b.x) + 10);
   const cardBetween = (a, b) => boxes.some(c =>
+    c.id !== a.id && c.id !== b.id &&
     sideBySide(c, a) && c.l > Math.min(a.r, b.r) - 2 && c.r < Math.max(a.l, b.l) + 2);
 
   const c  = traced() ? cone(traced()) : null;
@@ -518,21 +574,84 @@ function wires() {
     const cell = row && row.children[i];
     if (cell) { const r = cell.getBoundingClientRect(); laneCol[l.id] = r.left - gb.left + r.width / 2; }
   });
+  // x of a named part, so an edge lands under the sub-unit it reaches. The wire
+  // still meets the card's own edge — nothing is drawn across a card — but its
+  // column says which part it belongs to.
+  const portBox = (id, port) => {
+    if (!port) return null;
+    const el = g.querySelector('[data-id="' + id + '"] [data-part="' + port + '"]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {l: r.left - gb.left, r: r.right - gb.left, x: r.left - gb.left + r.width / 2,
+            top: r.top - gb.top, bot: r.bottom - gb.top};
+  };
   const anchor = (self, other, at) =>
     !N[self.id] || !N[self.id].span ? self.x
     : clamp(at && laneCol[at] !== undefined ? laneCol[at] : other.x, self.l + 20, self.r - 20);
+
+  // Several edges arriving at one node all aimed at its centre make an X out of
+  // what is really a fan. Spread them across the target's own width — or across
+  // the width of the port they name — in the order of where they come from, and
+  // the crossing disappears without moving a single node.
+  const key = (id, port) => id + "\u0000" + (port || "");
+  const groups = {in: {}, out: {}};
+  for (const e of MAP.edges) {
+    if (!box(e.from) || !box(e.to)) continue;
+    if (e.at) continue;          // an explicit lane hint is a decision; do not fan it away
+    (groups.in[key(e.to, e.toPort)] ||= []).push(e);
+    (groups.out[key(e.from, e.fromPort)] ||= []).push(e);
+  }
+  const centre = (id, port) => (portBox(id, port) || box(id)).x;
+  const slot = {};
+  for (const dir of ["in", "out"]) {
+    for (const k in groups[dir]) {
+      const list = groups[dir][k];
+      if (list.length < 2) continue;                 // one edge stays dead vertical
+      const [id, port] = k.split("\u0000");
+      const bx = portBox(id, port) || box(id);
+      const far = e => centre(dir === "in" ? e.from : e.to, dir === "in" ? e.fromPort : e.toPort);
+      list.sort((p, q) => far(p) - far(q));
+      // Spread only across the span the other ends already occupy, clamped into the
+      // target. Fanning across the target's full width instead pushes an edge side-
+      // ways into a neighbouring column, and it then has to detour round whatever is
+      // parked there — trading one crossing for a longer one.
+      const pad = Math.min(20, (bx.r - bx.l) / (list.length + 1));
+      const lo = bx.l + pad, hi = bx.r - pad, gap = 14;
+      // Put each edge directly above or below where it is going, and only push
+      // neighbours apart when they would land on top of each other. Spreading them
+      // evenly instead moves an edge off its own target's column, and it then reads
+      // as blocked and detours round something it was never going to hit.
+      const even = hi - lo < gap * (list.length - 1);
+      let prev = -Infinity;
+      list.forEach((e, i) => {
+        const want = even ? lo + (hi - lo) * (i / Math.max(1, list.length - 1))
+                          : Math.max(lo, Math.min(hi, far(e)));
+        const x = Math.min(hi, Math.max(want, prev + gap));
+        slot[dir + key(e.from, e.fromPort) + key(e.to, e.toPort)] = x;
+        prev = x;
+      });
+    }
+  }
+  const fanned = (dir, e) => slot[dir + key(e.from, e.fromPort) + key(e.to, e.toPort)];
 
   for (const e of MAP.edges) {
     const a0 = box(e.from), b0 = box(e.to);
     if (!a0 || !b0) continue;
     const a = Object.assign({}, a0, {id: e.from}), b = Object.assign({}, b0, {id: e.to});
-    a.x = anchor(a, b0, e.at); b.x = anchor(b, a0, e.at);
+    const pa = portBox(e.from, e.fromPort), pb = portBox(e.to, e.toPort);
+    a.x = fanned("out", e) ?? (pa ? pa.x : anchor(a, b0, e.at));
+    b.x = fanned("in",  e) ?? (pb ? pb.x : anchor(b, a0, e.at));
+    // stop on the part itself. The last short run is inside the card on purpose:
+    // it is the difference between "arrives at this module" and "arrives here".
+    if (pa) a.bot = pa.bot;
+    if (pb) b.top = pb.top;
     const live = onPath(e) && onPath(N[e.from]) && onPath(N[e.to]);
     const sd = side(e);
     const inGrad = gr ? gr.edges.has(e.from + ">" + e.to) : null;
     const cls = [
       !live || sd === "out" || inGrad === false ? "dim" : "",
-      sd === "lit" ? "lit" : "", sd === "half" ? "half" : "", inGrad === true ? "grad" : ""
+      sd === "lit" ? "lit" : "", sd === "half" ? "half" : "", inGrad === true ? "grad" : "",
+      e.kind === "control" ? "ctrl" : ""
     ].filter(Boolean).join(" ");
     const mk = cls.includes("dim") ? "-dim" : cls.includes("lit") ? "-lit"
              : cls.includes("grad") ? "-grad" : cls.includes("half") ? "-half" : "";

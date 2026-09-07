@@ -31,7 +31,7 @@ The map is read at three scales, and getting a node onto the right one is most o
 | Level | What it is | How it looks |
 |---|---|---|
 | **Group** | A phase — the loader, the encoders, the objective | A titled container with a one-line note and a live node count |
-| **Stage** | One step within a phase | A labelled row inside the group |
+| **Stage** | One step within a phase | A labelled row inside the group. **A stage whose label repeats its group's name is drawn without the label** — `BACKBONE` inside a group called `BACKBONE` says the same thing twice, and two nested headings of one name read as two different things |
 | **Node** | One operation | A card, in its lane's column |
 
 And a node sits in one of three positions inside its stage:
@@ -131,10 +131,67 @@ The walk stops *at* a `blocked` node and shows it as the boundary. That boundary
 
 **One honest limit.** `flows` is a claim about the graph, not about what the compiler does. A frozen module with nothing trainable upstream of it is on the gradient path in the diagram sense, but XLA or autograd will prune the backward through it. Where that matters — it is the difference between an activation you must keep and one you need not — say so in `notes` rather than inventing a fifth value.
 
+### `parts` — one module, inputs routed inside it
+
+Some modules are not a single destination. openpi's backbone is one attention stack carrying two disjoint sets of weights: image and language tokens are processed by the PaliGemma parameters, state and action tokens by the action expert's, and the two meet only through attention. Drawn as one undivided card, an edge into it claims nothing more than "this arrives somewhere in here" — and a reader will reasonably conclude the action expert is fed images.
+
+```js
+{ id: "llm", span: true, name: "Gemma 2B + 300M action expert",
+  parts: [
+    {id: "prefix", label: "PaliGemma expert", meta: "image + language tokens",     params: "lora"},
+    {id: "suffix", label: "action expert",    meta: "state + noisy action + time", params: "trained"}
+  ],
+  join: "one attention: every token attends across both halves, but a token only ever touches its own expert's weights" }
+```
+
+Edges then name the end they reach:
+
+```js
+{from: "siglip", to: "llm", toPort: "prefix",   label: "image tokens"}
+{from: "suffix", to: "llm", toPort: "suffix",   label: "(B, 50, w)"}
+{from: "llm",    to: "vout", fromPort: "suffix", label: "suffix_out"}
+```
+
+**The test: if two inputs reach different parameters, they are different ports.** Anything else and the map is asserting they are interchangeable.
+
+An edge naming a port **terminates on that part**, not on the card's outer edge, and the card's header collapses to one line so the parts sit near the top. That short last run inside the card is deliberate: it is the difference between "arrives at this module" and "arrives *here*". Landing every edge on the outer edge instead leaves the correspondence to be guessed from horizontal position across a card that may be two hundred pixels tall — which is the same failure as having no ports at all.
+
+`join` is what binds the parts, and with exactly two of them it is **drawn between them**, as a linked pair, rather than described underneath. Say what they share — one attention, one router, one normalisation — because that is what a reader cannot see from two boxes standing side by side, and without it they read as two separate models.
+
+Keep it to a few words. It sits in the gap between the parts and a sentence there wraps into a column too narrow to read; the full version belongs in `detail` or `watch`. With three or more parts it falls back to a line underneath, since repeating it in every gap adds nothing.
+
+### Parts or separate nodes?
+
+Both are available and they mean different things.
+
+| | Use |
+|---|---|
+| **Separate nodes** | The pieces are separately callable modules. openvla's two vision towers each take their own tensor and return their own; nothing binds them but a `torch.cat` afterwards, which is its own node |
+| **`parts` on one node** | The pieces cannot be invoked apart — one attention pass, one kernel, one router — and the split is which weights a given input touches |
+
+Getting this wrong in either direction is a real error. Two towers drawn as parts hide a concatenation that has a shape and a dimension argument; two experts drawn as separate nodes invent an interaction point that does not exist and lose the fact that they share attention.
+
+### `kind: "control"` — a mask, not the tensor
+
+```js
+{from: "pad", to: "dit", kind: "control", label: "action mask"}
+```
+
+Renders dashed. Use it for something that shapes the computation without being the data: a mask, a position index, a router decision, a length. A control input drawn like a data edge overstates it, and the reader starts looking for a tensor that is not there.
+
+### And the converse: do not draw a description as a stage
+
+openpi's `make_attn_mask` was a node on an earlier draft of that map, sitting full width between the token producers and the backbone. It is not a stage — it is assembled from the per-segment `ar_mask` lists as the tokens are built, and describes the sequence rather than transforming it. Drawing it in the path claimed every token flowed through it, and forced four edges out to a gutter to get round it.
+
+If a thing has no tensor passing through it, it is a note or a control edge, not a node.
+
 ## Edge
 
 ```js
-{ from: "atok", to: "prompt", label: "action tokens", paths: ["train"], at: "action" }
+{ from: "atok", to: "prompt", label: "action tokens", paths: ["train"],
+  at: "action",            // borrow a lane for a long bar-to-bar carry
+  toPort: "suffix",        // land on a named part of the target
+  kind: "control" }        // dashed: a mask or an index, not the tensor
 ```
 
 `at` is optional and only does anything between two span bars. Those have no lane of their own, so the edge would anchor at their centres and detour around whatever is in the middle; `at` lends it a lane to run down instead. Reach for it when a long carry bypasses a whole section — VITRA hands the action targets straight from the collator to the diffusion model without them ever entering the VLM, and saying `at: "action"` turns that from a 2694 px detour into a straight line down an empty column that shows exactly what is being claimed.

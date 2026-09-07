@@ -85,6 +85,7 @@ Every annotation on this map exists because a specific class of bug hides there.
 | `frozen` / `LoRA` / `trained` per module | `requires_grad=False` set but `.eval()` not — dropout and BN still live |
 | Where normalisation stats come from | Stats recomputed over the full set, or a checkpoint denormalised with the wrong file |
 | `train only` / `eval only` | Preprocessing divergence — the single most common silent regression |
+| Ports on a shared module | Which inputs reach which parameters, when one module holds several — two experts on one attention, a q/kv split, a router |
 | `grad` per node | Which components a given loss term actually updates — and where the autograd graph ends |
 | Evidence mark per node | Which parts of this map you are entitled to believe |
 
