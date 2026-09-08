@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* palette: ours, unchanged. layout and type: editorial long-read. */
+  --paper:#FAFBFB; --sunk:#F1F2F3; --frame:#FFFFFF;
+  --ink:#14171A; --body:#3B4147; --muted:#6E747A; --faint:#8A9096;
+  --rule:#DCE0E3; --rule-soft:#E8EBED;
+  --accent:#3A6183; --accent-deep:#27435C; --accent-soft:#DBE4EB; --wash:#EAF0F4;
+  --warn:#8C4A3C; --warn-soft:#EFE3E0;
+  --name:#54547A; --name-soft:#E6E6EE;
+  --sans:"Barlow","Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono","Noto Sans TC",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--body);font-family:var(--sans);
+     font-size:17px;line-height:1.75;font-weight:400;letter-spacing:.005em;
+     -webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block;height:auto}
+a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid rgba(58,97,131,.42)}
+a:hover{border-bottom-color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+h1,h2,h3,h4,h5{margin:0;color:var(--ink)}
+p{margin:0 0 16px;max-width:68ch}
+ul,ol{margin:0 0 18px;padding-left:1.15em;max-width:68ch}
+li{margin-bottom:9px}
+li::marker{color:var(--accent-deep)}
+strong,b{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+code{font-family:var(--mono);font-size:.86em;background:var(--wash);padding:1px 6px;color:var(--ink)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:1px solid var(--rule);padding:22px 0}
+.masthead .wrap{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.mark{width:26px;height:12px;background:var(--accent);flex:none;transform:skewX(-20deg)}
+.masthead b{font-weight:600;font-size:.95rem;letter-spacing:.01em}
+.masthead span{color:var(--muted);font-size:.85rem}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 8px}
+.hero h1{font-weight:600;margin:0 0 22px;font-size:clamp(2.1rem,5.4vw,3.7rem);
+         line-height:1.06;letter-spacing:-.022em;max-width:22ch}
+.byline{font-size:.92rem;color:var(--body);max-width:64ch;margin:0 0 4px}
+.affil{font-family:var(--mono);font-size:.78rem;color:var(--faint);margin:0 0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
+.chip{font-family:var(--mono);font-size:.76rem;padding:6px 10px;border:1px solid var(--rule);
+      background:var(--frame);color:var(--muted);border-bottom-width:1px}
+a.chip:hover{border-color:var(--accent);color:var(--accent-deep)}
+.chip.lic{background:var(--wash);border-color:var(--accent-soft);color:var(--accent-deep)}
+.hero .lede{font-size:clamp(1.05rem,1.9vw,1.3rem);line-height:1.6;max-width:60ch;
+            color:var(--body);margin:0 0 10px}
+
+/* ---------- tier legend + filter ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:9px;margin:26px 0 0;padding-top:20px;border-top:1px solid var(--rule-soft)}
+.tierkey{font-family:var(--mono);font-size:.74rem;padding:7px 11px;cursor:pointer;user-select:none;
+         background:var(--frame);color:var(--muted);line-height:1.3}
+.tierkey[data-t=verified]{border:1.5px solid var(--accent)}
+.tierkey[data-t=stated]{border:1px solid var(--rule)}
+.tierkey[data-t=inferred]{border:1px dashed var(--faint)}
+.tierkey.off{opacity:.34;text-decoration:line-through}
+.dim{opacity:.2;filter:grayscale(.75)}
+.tag{display:inline-block;font-family:var(--mono);font-size:.68rem;padding:3px 7px;
+     border:1px solid var(--rule);color:var(--faint);background:var(--frame);
+     vertical-align:.18em;font-weight:400;letter-spacing:0}
+.tag.verified{border-color:var(--accent);color:var(--accent-deep);background:var(--wash)}
+.tag.inferred{border-style:dashed}
+.tag.warn{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+
+/* ---------- hero diagram ---------- */
+.diagram{margin:52px 0 8px;border-top:1px solid var(--rule);padding-top:30px}
+.diagram h2{font-size:1.05rem;font-weight:600;margin:0 0 4px}
+.diagram p.note{font-size:.85rem;color:var(--muted);margin:0 0 22px;max-width:64ch}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:206px minmax(0,1fr);gap:56px;padding:64px 0 0}
+nav.rail{position:sticky;top:28px;align-self:start;font-size:.88rem;line-height:1.5;
+         max-height:calc(100vh - 56px);overflow:auto}
+nav.rail p{margin:0 0 14px;color:var(--muted);font-size:.78rem}
+nav.rail a{display:block;padding:7px 0 7px 13px;border:0;border-left:2px solid var(--rule-soft);color:var(--body)}
+nav.rail a:hover{border-left-color:var(--accent);color:var(--ink)}
+nav.rail a.on{border-left-color:var(--accent);background:var(--wash)}
+nav.rail a b{display:block;font-weight:600;color:var(--ink)}
+nav.rail a i{font-style:normal;color:var(--muted);font-size:.78rem;display:block;line-height:1.35}
+nav.rail a.sub{padding-left:26px}
+nav.rail a.sub b{font-weight:500;font-size:.85rem}
+main{min-width:0}
+section{padding-bottom:76px}
+section + section{border-top:1px solid var(--rule);padding-top:56px}
+h2.sec{font-size:clamp(1.55rem,3vw,2.15rem);font-weight:600;letter-spacing:-.015em;
+       line-height:1.15;margin:0 0 6px}
+h2.sec .en{display:block;font-size:.6em;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:6px}
+.keyline{width:74px;height:4px;background:var(--accent);margin:20px 0 24px}
+h3{font-size:1.12rem;font-weight:600;margin:38px 0 10px;line-height:1.4}
+h3:first-of-type{margin-top:0}
+h4{font-size:1rem;font-weight:600;margin:26px 0 8px}
+.lab{font-size:.78rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+
+/* ---------- editorial primitives ---------- */
+.term{font-weight:600;color:var(--ink);box-shadow:inset 0 -.42em 0 rgba(58,97,131,.22)}
+/* one highlighter only. proper nouns get colour, not a second stripe. */
+.mn{font-weight:600;color:var(--name)}
+.oneline{border-left:4px solid var(--accent);background:var(--wash);padding:18px 22px;
+         margin:0 0 30px;max-width:68ch;font-size:1.06rem;line-height:1.62;
+         color:var(--ink);font-weight:500}
+.oneline b{font-weight:700}
+dl.meta{display:grid;grid-template-columns:auto 1fr;gap:5px 18px;font-size:.87rem;
+        margin:0 0 30px;max-width:66ch}
+dl.meta dt{color:var(--muted)}
+dl.meta dd{margin:0;color:var(--body)}
+.stats{display:flex;flex-wrap:wrap;gap:0;margin:26px 0 8px;border-top:1px solid var(--rule)}
+.stats>div{flex:1 1 190px;padding:18px 24px 18px 0;border-bottom:1px solid var(--rule)}
+.stats .v{font-size:1.65rem;font-weight:600;color:var(--ink);line-height:1.1;letter-spacing:-.02em}
+.stats .v em{font-style:normal;color:var(--accent-deep)}
+.stats .k{font-size:.82rem;color:var(--body);margin-top:5px;line-height:1.45}
+.stats .vs{font-family:var(--mono);font-size:.74rem;color:var(--muted);margin-top:4px;line-height:1.4}
+ol.contrib{list-style:none;padding:0;margin:0 0 8px;max-width:68ch}
+ol.contrib li{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:18px 0;
+              border-top:1px solid var(--rule-soft);margin:0}
+ol.contrib li:last-child{border-bottom:1px solid var(--rule-soft)}
+ol.contrib .n{font-weight:600;color:var(--accent-deep);font-size:1.05rem;line-height:1.6}
+ol.contrib b{display:block;margin-bottom:3px}
+.caveat{background:var(--wash);padding:20px 24px;margin:26px 0 0;max-width:70ch}
+.caveat h4{margin:0 0 10px}
+.caveat ul{margin:0}
+.caveat li{font-size:.94rem}
+.caveat.warnbox{background:var(--warn-soft);border-left:4px solid var(--warn)}
+.caveat.warnbox h4{color:var(--warn)}
+
+/* ---------- maths ---------- */
+.eq{margin:22px 0 6px;padding:20px 12px;background:var(--sunk);overflow-x:auto;text-align:center}
+.eq math{font-size:1.16em}
+.eqno{font-family:var(--mono);font-size:.74rem;color:var(--muted);text-align:right;margin:-2px 2px 0 0}
+.sym{cursor:pointer;padding:0 1px}
+.sym:hover{background:var(--accent-soft)}
+.sym.lit{background:var(--accent-soft);outline:1.5px solid var(--accent)}
+table.syms{border-collapse:collapse;width:100%;margin:20px 0 8px;font-size:.9rem}
+table.syms th{text-align:left;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;
+              color:var(--muted);font-weight:600;padding:0 14px 9px 0;border-bottom:2px solid var(--accent)}
+table.syms td{padding:11px 14px 11px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+table.syms tr{cursor:pointer}
+table.syms tr.lit td{background:var(--wash)}
+table.syms td.s{font-family:var(--mono);white-space:nowrap;width:1%}
+td.sh{font-family:var(--mono);font-size:.8rem;color:var(--muted);white-space:nowrap}
+td.nt{font-size:.86rem;color:var(--body)}
+.prov{font-family:var(--mono);font-size:.68rem;padding:3px 7px;border:1px solid var(--rule);
+      color:var(--muted);background:var(--frame);white-space:nowrap}
+.prov.fast{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-deep);font-weight:500}
+.prov.learned{border-color:var(--name-soft);background:var(--name-soft);color:var(--name)}
+.codeline{display:inline-block;font-family:var(--mono);font-size:.74rem;color:var(--accent-deep);
+          background:var(--wash);border:1px solid var(--accent-soft);padding:4px 8px;
+          margin:4px 6px 0 0;border-bottom-width:1px}
+a.codeline:hover{background:var(--accent-soft)}
+
+/* ---------- figures ---------- */
+figure{margin:30px 0 8px}
+figure .frame{border:1px solid var(--rule);padding:14px;background:var(--frame)}
+figure img{cursor:zoom-in}
+figcaption{font-size:.83rem;color:var(--muted);line-height:1.6;margin-top:11px;max-width:78ch}
+figcaption b{color:var(--ink);font-weight:600}
+figcaption .fnum{font-family:var(--mono);color:var(--faint);margin-right:7px}
+.read{border-left:2px solid var(--accent);padding:2px 0 2px 20px;margin:22px 0 34px;max-width:68ch}
+.read h5{margin:0 0 10px;font-size:.93rem;font-weight:600}
+.read ul{margin:0;padding-left:1.05em}
+.read li{font-size:.95rem;margin-bottom:8px}
+.read li b{font-weight:600}
+.lb{position:fixed;inset:0;background:rgba(20,23,26,.92);display:none;place-items:center;
+    z-index:50;padding:24px;cursor:zoom-out}
+.lb.on{display:grid}
+.lb img{max-width:100%;max-height:92vh;background:#fff}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;overflow-x:auto;margin:26px 0 10px}
+table.data{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+table.data th,table.data td{text-align:left;vertical-align:top;padding:14px 16px 14px 0;
+                            border-bottom:1px solid var(--rule-soft)}
+table.data thead th{font-weight:600;color:var(--ink);border-bottom:3px solid var(--accent);padding-bottom:10px}
+table.data td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.data tr.best td{background:var(--wash)}
+table.data tr.best td.n,table.data tr.best td:first-child{font-weight:600;color:var(--accent-deep)}
+table.data tr[data-jump]{cursor:pointer}
+table.data tr[data-jump]:hover td{background:var(--wash)}
+
+/* ---------- diagrams ---------- */
+.dia{margin:0 0 44px}
+.dia svg{display:block;width:100%;height:auto;margin:14px 0 4px;overflow:visible}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;
+      padding-top:14px;border-top:1px solid var(--rule-soft)}
+.ctrl button{font-family:var(--mono);font-size:.76rem;padding:7px 12px;border:1px solid var(--rule);
+             background:var(--frame);color:var(--muted);cursor:pointer}
+.ctrl button:hover{border-color:var(--accent);color:var(--accent-deep)}
+.ctrl button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ctrl .cl{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.dia .say{margin-top:14px;font-size:.95rem;line-height:1.62;color:var(--body);
+          max-width:70ch;min-height:3.2em}
+.dia .say b{color:var(--ink);font-weight:600}
+
+/* ---------- code section ---------- */
+.pre{background:#14171A;color:#D6DBDF;padding:16px 18px;overflow-x:auto;
+     font-family:var(--mono);font-size:.76rem;line-height:1.65;white-space:pre;margin:16px 0 0}
+details{border-top:1px solid var(--rule);margin:26px 0 0}
+summary{cursor:pointer;padding:14px 0;font-size:.95rem;color:var(--accent-deep);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:before{content:"▸ ";color:var(--faint)}
+details[open] summary:before{content:"▾ "}
+.vd{margin:0 0 6px;padding:26px 0;border-top:1px solid var(--rule-soft)}
+.vd:last-of-type{border-bottom:1px solid var(--rule-soft)}
+.vd h3{margin:0 0 4px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.vd dl.pair{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:14px 0 0;
+            font-size:.94rem;max-width:70ch}
+.vd dl.pair dt{color:var(--muted);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;
+               white-space:nowrap;line-height:1.9}
+.vd dl.pair dd{margin:0;line-height:1.62}
+
+/* ---------- sources + footer ---------- */
+table.src{border-collapse:collapse;width:100%;font-size:.87rem}
+table.src td{padding:13px 16px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+table.src td .note{color:var(--muted);font-size:.83rem;line-height:1.55;margin-top:3px;max-width:70ch}
+table.src td.d{font-family:var(--mono);font-size:.76rem;color:var(--faint);white-space:nowrap;text-align:right}
+footer{border-top:1px solid var(--rule);padding:34px 0 60px;font-size:.85rem;color:var(--muted)}
+footer p{max-width:74ch;margin:0 0 10px}
+
+@media (max-width:900px){
+  body{font-size:16px}
+  .shell{grid-template-columns:1fr;gap:0;padding-top:40px}
+  nav.rail{display:none}
+  .hero{padding-top:44px}
+  ol.contrib li{grid-template-columns:26px 1fr;gap:12px}
+  .stats>div{padding-right:16px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .grow{transform-box:fill-box;transform-origin:left center;
+        animation:grow .75s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead"><div class="wrap">
+  <span class="mark" aria-hidden="true"></span>
+  <b id="mh1"></b><span id="mh2"></span>
+</div></header>
+
+<div class="wrap">
+  <div class="hero" id="hero"></div>
+  <div class="diagram" id="herodia" hidden></div>
+  <div class="shell">
+    <nav class="rail" aria-label="contents"><p id="navlab"></p><div id="nav"></div></nav>
+    <main id="body"></main>
+  </div>
+  <footer><p id="foot"></p></footer>
+</div>
+<div class="lb" id="lb"></div>
+
+<script>
+const TEARDOWN = __DATA__;
+
+const U = Object.assign({
+  contents:"On this page", claim:"The claim", problem:"The problem", method:"The method",
+  diagrams:"Diagrams", results:"Results", code:"The code",
+  gaps:"What the paper does not tell you", sources:"Sources",
+  theirs:"As the authors frame it", mine:"As I read it",
+  look:"Look at", means:"It establishes", change:"Would change my mind",
+  readTitle:"How to read this figure",
+  symbol:"Symbol", name:"Name", shape:"Shape", prov:"From", note:"Note",
+  paper:"Paper", incode:"Code", verdict:"Verdict", tier:"Evidence",
+  unspecified:"Unspecified — you would need this to reproduce it",
+  absent:"Absent — an ablation the argument wants",
+  reconcile:"Does not reconcile", authorlim:"The authors' own stated limitations",
+  probes:"Probe output, as it printed", masthead:"Paper teardown",
+  thirdparty:"Third-party reimplementation — not the authors' code",
+  thirdbody:"Every claim in this section is evidence about <b>this repository</b>. It is evidence about the paper only where the two agree. The authors released no code.",
+  repoLabel:"repo", isAuthor:"author of the paper?", yes:"yes", no:"no",
+  fetched:"fetched", secSubs:{},
+  tiers:{verified:"verified · I ran it", stated:"stated · the source says so", inferred:"inferred · my reading"}
+}, TEARDOWN.ui || {});
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c;
+                          if (h != null) n.innerHTML = h; return n; };
+const tierTag = t => t ? '<span class="tag ' + t + '">' + t + '</span>' : "";
+const sub = id => (U.secSubs || {})[id] || "";
+
+/* ===== masthead + hero ===== */
+const M = TEARDOWN.meta, C = TEARDOWN.claim;
+document.title = M.title;
+document.documentElement.lang = M.lang || "en";
+$("#mh1").textContent = U.masthead;
+$("#mh2").textContent = M.shortTitle || "";
+$("#navlab").textContent = U.contents;
+$("#hero").innerHTML =
+  '<h1>' + esc(M.title) + '</h1>' +
+  '<div class="byline">' + esc((M.authors || []).join(" · ")) + '</div>' +
+  '<div class="affil">' + esc((M.affiliations || []).join("  ·  ")) + '</div>' +
+  '<div class="chips">' +
+    (M.links || []).map(l => '<a class="chip" href="' + l.url + '" target="_blank" rel="noopener">' +
+      esc(l.label) + '</a>').join("") +
+    (M.date ? '<span class="chip">' + esc(M.date) + '</span>' : "") +
+    (M.licence ? '<span class="chip lic">' + esc(M.licence) + '</span>' : "") +
+  '</div>' +
+  '<p class="lede">' + C.sentence + '</p>' +
+  '<div class="stats">' + (C.numbers || []).map(n =>
+    '<div><div class="v"><em>' + esc(n.val) + '</em></div>' +
+    '<div class="k">' + n.label + '</div>' +
+    (n.vs ? '<div class="vs">' + esc(n.vs) + '</div>' : "") + '</div>').join("") + '</div>' +
+  '<div class="legend">' + ["verified","stated","inferred"].map(t =>
+    '<span class="tierkey" data-t="' + t + '">' + esc(U.tiers[t]) + '</span>').join("") + '</div>';
+
+/* ===== shared blocks ===== */
+function reading(r) {
+  if (!r) return "";
+  const li = (k, v) => v ? '<li><b>' + esc(k) + '.</b> ' + v + '</li>' : "";
+  return '<div class="read"><h5>' + esc(U.readTitle) + '</h5><ul>' +
+    li(U.look, r.look) + li(U.means, r.means) + li(U.change, r.change) + '</ul></div>';
+}
+function figure(f) {
+  if (!f) return "";
+  const body = f.link
+    ? '<div class="frame" style="padding:26px 14px;text-align:center;color:var(--muted)">' +
+      esc(f.link.note) + ' — <a href="' + f.link.url + '" target="_blank" rel="noopener">' +
+      esc(f.link.label) + '</a></div>'
+    : '<div class="frame"><img src="' + (f.dataUri || ("assets/" + f.file)) +
+      '" alt="' + esc(f.caption || "") + '" loading="lazy"></div>';
+  return '<figure>' + body + '<figcaption><span class="fnum">' + esc(f.num || "") + '</span>' +
+    (f.caption || "") + (f.credit ? ' <span style="color:var(--faint)">— ' + esc(f.credit) + '</span>' : "") +
+    '</figcaption>' + reading(f.read) + '</figure>';
+}
+function dtable(t) {
+  if (!t) return "";
+  return '<div class="tbl"><table class="data"><thead><tr>' +
+    t.cols.map(c => '<th>' + esc(c) + '</th>').join("") + '</tr></thead><tbody>' +
+    t.rows.map(r => '<tr' + (r.best ? ' class="best"' : '') + '>' +
+      r.cells.map((c, i) => '<td' + (i ? ' class="n"' : '') + '>' + esc(c) + '</td>').join("") +
+      '</tr>').join("") + '</tbody></table></div>' +
+    (t.caption ? '<figcaption><span class="fnum">' + esc(t.num || "") + '</span>' + t.caption + '</figcaption>' : "");
+}
+
+/* ===== mechanism ===== */
+function mech(m) {
+  const syms = (m.symbols || []).length ? '<table class="syms" data-eq="' + m.id + '"><thead><tr>' +
+    [U.symbol, U.name, U.shape, U.prov, U.note].map(h => '<th>' + esc(h) + '</th>').join("") +
+    '</tr></thead><tbody>' + m.symbols.map(s =>
+      '<tr data-sym="' + esc(s.key) + '"><td class="s">' + s.sym + '</td><td>' + s.name + '</td>' +
+      '<td class="sh">' + esc(s.shape || "") + '</td>' +
+      '<td><span class="prov ' + esc(s.prov) + '">' + esc(s.prov) + '</span></td>' +
+      '<td class="nt">' + (s.note || "") + '</td></tr>').join("") + '</tbody></table>' : "";
+  const eqs = (m.eqs || []).map(e =>
+    '<div class="eq" data-eq="' + m.id + '">' + e.mathml + '</div>' +
+    (e.num ? '<div class="eqno">' + esc(e.num) + '</div>' : "")).join("");
+  const code = (m.code || []).map(c =>
+    '<a class="codeline" href="' + (c.url || "#code") + '"' +
+    (c.url ? ' target="_blank" rel="noopener"' : "") + '>' + esc(c.path) + ':' + esc(c.line) +
+    '  ' + esc(c.ident) + '</a>').join("");
+  return '<div id="' + m.id + '" data-tier="' + (m.tier || "stated") + '" style="scroll-margin-top:20px">' +
+    '<h3>' + m.title + ' <span class="eqno" style="display:inline;margin:0">' + esc(m.num || "") + '</span> ' +
+      tierTag(m.tier) + '</h3>' +
+    (m.lede ? '<p class="oneline">' + m.lede + '</p>' : "") +
+    eqs + syms +
+    (m.gloss || []).map(g => '<p>' + g + '</p>').join("") +
+    (code ? '<div style="margin:14px 0 0">' + code + '</div>' : "") +
+    figure(m.fig) + '</div>';
+}
+
+/* ===== sections ===== */
+const S = [];
+function section(id, title, html) {
+  S.push({id, title, sub: sub(id)});
+  return '<section id="' + id + '"><h2 class="sec">' + esc(title) +
+    (sub(id) ? '<span class="en">' + esc(sub(id)) + '</span>' : "") + '</h2>' +
+    '<div class="keyline"></div>' + html + '</section>';
+}
+let out = "";
+
+/* problem */
+const P = TEARDOWN.problem;
+out += section("problem", U.problem,
+  '<div data-tier="stated"><h3>' + esc(U.theirs) + '</h3>' +
+    P.theirs.map(x => '<p>' + x + '</p>').join("") + '</div>' +
+  '<div data-tier="inferred"><h3>' + esc(U.mine) + '</h3>' +
+    P.mine.map(x => '<p>' + x + '</p>').join("") + '</div>');
+
+/* method */
+out += section("method", U.method,
+  (TEARDOWN.methodLede ? '<p class="lede" style="font-size:1.06rem">' + TEARDOWN.methodLede + '</p>' : "") +
+  TEARDOWN.mechanisms.map(mech).join(""));
+TEARDOWN.mechanisms.forEach(m => S.push({id:m.id, title:m.short || m.title, sub:m.num, kid:true}));
+
+/* diagrams (minus any promoted into the hero) */
+const heroId = TEARDOWN.heroDiagram;
+const inBody = (TEARDOWN.diagrams || []).filter(d => d.id !== heroId);
+if (inBody.length)
+  out += section("diagrams", U.diagrams,
+    (TEARDOWN.diagramsLede ? '<p class="lede" style="font-size:1.06rem">' + TEARDOWN.diagramsLede + '</p>' : "") +
+    inBody.map(d =>
+      '<div class="dia" id="' + d.id + '" data-tier="' + (d.tier || "inferred") + '">' +
+      '<h3>' + d.title + ' ' + tierTag(d.tier || "inferred") + '</h3>' +
+      (d.lede ? '<p>' + d.lede + '</p>' : "") +
+      '<div class="stage" data-dia="' + d.id + '"></div>' +
+      '<div class="ctrl" data-ctrl="' + d.id + '"></div>' +
+      '<div class="say" data-say="' + d.id + '"></div></div>').join(""));
+
+/* results */
+if ((TEARDOWN.results || []).length)
+  out += section("results", U.results, TEARDOWN.results.map(r =>
+    '<div id="' + r.id + '" data-tier="' + (r.tier || "stated") + '" style="scroll-margin-top:20px">' +
+    '<h3>' + r.title + ' ' + tierTag(r.tier) + '</h3>' +
+    (r.lede ? '<p>' + r.lede + '</p>' : "") +
+    dtable(r.table) + figure(r.fig) +
+    (r.after ? '<p>' + r.after + '</p>' : "") + '</div>').join(""));
+
+/* code */
+const K = TEARDOWN.code;
+if (K) {
+  out += section("code", U.code,
+    (K.official ? "" : '<div class="caveat warnbox"><h4>' + esc(U.thirdparty) + '</h4><p style="margin:0">' +
+      U.thirdbody + '</p></div>') +
+    '<dl class="meta" style="margin-top:30px">' +
+      '<dt>' + esc(U.repoLabel) + '</dt><dd><a href="' + K.url + '" target="_blank" rel="noopener">' +
+        esc(K.repo) + '</a></dd>' +
+      '<dt>' + esc(U.isAuthor) + '</dt><dd>' + (K.official ? esc(U.yes) : '<b>' + esc(U.no) + '</b>') + '</dd>' +
+      Object.entries(K.fields || {}).map(([k, v]) =>
+        '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>').join("") +
+    '</dl>' +
+    (K.lede ? '<p>' + K.lede + '</p>' : "") +
+    '<div class="tbl"><table class="data"><thead><tr>' +
+      [U.paper, U.incode, U.verdict, U.tier].map(h => '<th>' + esc(h) + '</th>').join("") +
+    '</tr></thead><tbody>' + K.rows.map(r =>
+      '<tr' + (r.jump ? ' data-jump="' + r.jump + '"' : "") + '>' +
+      '<td>' + r.paper + '</td>' +
+      '<td><code>' + esc(r.code) + '</code></td>' +
+      '<td>' + (r.verdict === "differs" || r.verdict === "absent"
+        ? '<span class="tag warn">' + esc(r.verdict) + '</span>'
+        : '<span class="tag">' + esc(r.verdict) + '</span>') + '</td>' +
+      '<td>' + tierTag(r.tier) + '</td></tr>').join("") + '</tbody></table></div>' +
+    (K.divergences || []).map(d =>
+      '<div class="vd" data-tier="' + (d.tier || "verified") + '">' +
+      '<h3>' + d.title + ' <span class="tag' + (d.grade === "defect" || d.grade === "缺陷" ? " warn" : "") +
+        '">' + esc(d.grade) + '</span> ' + tierTag(d.tier) + '</h3>' +
+      '<dl class="pair">' +
+        '<dt>' + esc(U.paper) + '</dt><dd>' + d.paper + '</dd>' +
+        '<dt>' + esc(U.incode) + '</dt><dd>' + d.code + '</dd>' +
+        '<dt>' + esc(U.means) + '</dt><dd>' + d.means + '</dd></dl>' +
+      (d.probe ? '<div class="pre">' + esc(d.probe) + '</div>' : "") + '</div>').join("") +
+    (K.probe ? '<details><summary>' + esc(U.probes) + '</summary>' +
+      '<div class="pre" style="margin-bottom:20px">' + esc(K.probe) + '</div></details>' : ""));
+}
+
+/* gaps */
+const G = TEARDOWN.gaps;
+if (G) {
+  const grp = (key, label, tier) => (G[key] || []).length
+    ? '<div class="caveat" data-tier="' + tier + '"><h4>' + esc(label) + '</h4><ul>' +
+      G[key].map(x => '<li>' + x + '</li>').join("") + '</ul></div>' : "";
+  out += section("gaps", U.gaps,
+    grp("unspecified", U.unspecified, "inferred") +
+    grp("absent", U.absent, "inferred") +
+    grp("reconcile", U.reconcile, "verified") +
+    grp("authors", U.authorlim, "stated"));
+}
+
+/* sources */
+out += section("sources", U.sources,
+  '<table class="src">' + TEARDOWN.sources.map(s =>
+    '<tr><td><a href="' + s.url + '" target="_blank" rel="noopener">' + esc(s.label) + '</a>' +
+    (s.note ? '<div class="note">' + esc(s.note) + '</div>' : "") + '</td>' +
+    '<td class="d">' + esc(U.fetched) + " " + esc(s.fetched) + '</td></tr>').join("") + '</table>');
+
+$("#body").innerHTML = out;
+$("#foot").innerHTML = TEARDOWN.footer || "";
+
+/* hero diagram */
+const hd = (TEARDOWN.diagrams || []).find(d => d.id === heroId);
+if (hd) {
+  $("#herodia").hidden = false;
+  $("#herodia").innerHTML = '<h2>' + hd.title + '</h2>' +
+    (hd.lede ? '<p class="note">' + hd.lede + '</p>' : "") +
+    '<div class="stage" data-dia="' + hd.id + '"></div>' +
+    '<div class="ctrl" data-ctrl="' + hd.id + '"></div>' +
+    '<div class="say" data-say="' + hd.id + '"></div>';
+}
+
+/* ===== nav ===== */
+$("#nav").innerHTML = S.map(s =>
+  '<a href="#' + s.id + '" class="' + (s.kid ? "sub" : "") + '">' +
+  '<b>' + esc(s.title) + '</b>' + (s.sub ? '<i>' + esc(s.sub) + '</i>' : "") + '</a>').join("");
+const links = [...document.querySelectorAll("#nav a")];
+const spy = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return;
+  links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }),
+  {rootMargin:"-10% 0px -80% 0px"});
+S.forEach(s => { const n = document.getElementById(s.id); if (n) spy.observe(n); });
+
+/* ===== symbol <-> equation ===== */
+const SYM = {};
+TEARDOWN.mechanisms.forEach(m => { SYM[m.id] = new Set((m.symbols || []).map(s => s.key)); });
+document.querySelectorAll(".eq").forEach(box => {
+  const keys = SYM[box.dataset.eq] || new Set();
+  box.querySelectorAll("mi,mo").forEach(mi => {
+    const key = mi.textContent.trim();
+    if (!keys.has(key)) return;
+    const p = mi.parentElement;
+    const t = (/^(msub|msup|msubsup)$/i.test(p.tagName) && p.firstElementChild === mi) ? p : mi;
+    t.classList.add("sym"); t.dataset.sym = key;
+  });
+});
+const lightSym = (k, on) => document.querySelectorAll('[data-sym="' + CSS.escape(k) + '"]')
+  .forEach(n => n.classList.toggle("lit", on));
+let held = null;
+document.addEventListener("mouseover", e => { const n = e.target.closest("[data-sym]");
+  if (n && !held) lightSym(n.dataset.sym, true); });
+document.addEventListener("mouseout", e => { const n = e.target.closest("[data-sym]");
+  if (n && !held) lightSym(n.dataset.sym, false); });
+document.addEventListener("click", e => {
+  const n = e.target.closest("[data-sym]");
+  if (held) { lightSym(held, false); const prev = held; held = null;
+              if (!n || n.dataset.sym === prev) return; }
+  if (n) { held = n.dataset.sym; lightSym(held, true); }
+});
+
+/* ===== lightbox ===== */
+const lb = $("#lb");
+document.addEventListener("click", e => {
+  const img = e.target.closest("figure img"); if (!img) return;
+  lb.innerHTML = '<img src="' + img.getAttribute("src") + '">'; lb.classList.add("on");
+});
+lb.addEventListener("click", () => lb.classList.remove("on"));
+addEventListener("keydown", e => { if (e.key === "Escape") lb.classList.remove("on"); });
+
+/* ===== tier filter ===== */
+const offT = new Set();
+document.querySelectorAll(".tierkey").forEach(k => k.addEventListener("click", () => {
+  const t = k.dataset.t;
+  offT.has(t) ? offT.delete(t) : offT.add(t);
+  k.classList.toggle("off", offT.has(t));
+  document.querySelectorAll("[data-tier]").forEach(n => n.classList.toggle("dim", offT.has(n.dataset.tier)));
+}));
+
+/* ===== correspondence row -> mechanism ===== */
+document.querySelectorAll("tr[data-jump]").forEach(tr => tr.addEventListener("click", () => {
+  const n = document.getElementById(tr.dataset.jump); if (n) n.scrollIntoView({block:"center"});
+}));
+
+/* ===== diagrams ===== */
+__DIAGRAMS__
+(TEARDOWN.diagrams || []).forEach(d => { if (DIA[d.kind]) DIA[d.kind](d); });
+</script>
+</body>
+</html>

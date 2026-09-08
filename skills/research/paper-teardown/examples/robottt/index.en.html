@@ -1,0 +1,2125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoboTTT: Context Scaling for Robot Policies — a teardown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* palette: ours, unchanged. layout and type: editorial long-read. */
+  --paper:#FAFBFB; --sunk:#F1F2F3; --frame:#FFFFFF;
+  --ink:#14171A; --body:#3B4147; --muted:#6E747A; --faint:#8A9096;
+  --rule:#DCE0E3; --rule-soft:#E8EBED;
+  --accent:#3A6183; --accent-deep:#27435C; --accent-soft:#DBE4EB; --wash:#EAF0F4;
+  --warn:#8C4A3C; --warn-soft:#EFE3E0;
+  --name:#54547A; --name-soft:#E6E6EE;
+  --sans:"Barlow","Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono","Noto Sans TC",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--body);font-family:var(--sans);
+     font-size:17px;line-height:1.75;font-weight:400;letter-spacing:.005em;
+     -webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block;height:auto}
+a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid rgba(58,97,131,.42)}
+a:hover{border-bottom-color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+h1,h2,h3,h4,h5{margin:0;color:var(--ink)}
+p{margin:0 0 16px;max-width:68ch}
+ul,ol{margin:0 0 18px;padding-left:1.15em;max-width:68ch}
+li{margin-bottom:9px}
+li::marker{color:var(--accent-deep)}
+strong,b{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+code{font-family:var(--mono);font-size:.86em;background:var(--wash);padding:1px 6px;color:var(--ink)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:1px solid var(--rule);padding:22px 0}
+.masthead .wrap{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.mark{width:26px;height:12px;background:var(--accent);flex:none;transform:skewX(-20deg)}
+.masthead b{font-weight:600;font-size:.95rem;letter-spacing:.01em}
+.masthead span{color:var(--muted);font-size:.85rem}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 8px}
+.hero h1{font-weight:600;margin:0 0 22px;font-size:clamp(2.1rem,5.4vw,3.7rem);
+         line-height:1.06;letter-spacing:-.022em;max-width:22ch}
+.byline{font-size:.92rem;color:var(--body);max-width:64ch;margin:0 0 4px}
+.affil{font-family:var(--mono);font-size:.78rem;color:var(--faint);margin:0 0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
+.chip{font-family:var(--mono);font-size:.76rem;padding:6px 10px;border:1px solid var(--rule);
+      background:var(--frame);color:var(--muted);border-bottom-width:1px}
+a.chip:hover{border-color:var(--accent);color:var(--accent-deep)}
+.chip.lic{background:var(--wash);border-color:var(--accent-soft);color:var(--accent-deep)}
+.hero .lede{font-size:clamp(1.05rem,1.9vw,1.3rem);line-height:1.6;max-width:60ch;
+            color:var(--body);margin:0 0 10px}
+
+/* ---------- tier legend + filter ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:9px;margin:26px 0 0;padding-top:20px;border-top:1px solid var(--rule-soft)}
+.tierkey{font-family:var(--mono);font-size:.74rem;padding:7px 11px;cursor:pointer;user-select:none;
+         background:var(--frame);color:var(--muted);line-height:1.3}
+.tierkey[data-t=verified]{border:1.5px solid var(--accent)}
+.tierkey[data-t=stated]{border:1px solid var(--rule)}
+.tierkey[data-t=inferred]{border:1px dashed var(--faint)}
+.tierkey.off{opacity:.34;text-decoration:line-through}
+.dim{opacity:.2;filter:grayscale(.75)}
+.tag{display:inline-block;font-family:var(--mono);font-size:.68rem;padding:3px 7px;
+     border:1px solid var(--rule);color:var(--faint);background:var(--frame);
+     vertical-align:.18em;font-weight:400;letter-spacing:0}
+.tag.verified{border-color:var(--accent);color:var(--accent-deep);background:var(--wash)}
+.tag.inferred{border-style:dashed}
+.tag.warn{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+
+/* ---------- hero diagram ---------- */
+.diagram{margin:52px 0 8px;border-top:1px solid var(--rule);padding-top:30px}
+.diagram h2{font-size:1.05rem;font-weight:600;margin:0 0 4px}
+.diagram p.note{font-size:.85rem;color:var(--muted);margin:0 0 22px;max-width:64ch}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:206px minmax(0,1fr);gap:56px;padding:64px 0 0}
+nav.rail{position:sticky;top:28px;align-self:start;font-size:.88rem;line-height:1.5;
+         max-height:calc(100vh - 56px);overflow:auto}
+nav.rail p{margin:0 0 14px;color:var(--muted);font-size:.78rem}
+nav.rail a{display:block;padding:7px 0 7px 13px;border:0;border-left:2px solid var(--rule-soft);color:var(--body)}
+nav.rail a:hover{border-left-color:var(--accent);color:var(--ink)}
+nav.rail a.on{border-left-color:var(--accent);background:var(--wash)}
+nav.rail a b{display:block;font-weight:600;color:var(--ink)}
+nav.rail a i{font-style:normal;color:var(--muted);font-size:.78rem;display:block;line-height:1.35}
+nav.rail a.sub{padding-left:26px}
+nav.rail a.sub b{font-weight:500;font-size:.85rem}
+main{min-width:0}
+section{padding-bottom:76px}
+section + section{border-top:1px solid var(--rule);padding-top:56px}
+h2.sec{font-size:clamp(1.55rem,3vw,2.15rem);font-weight:600;letter-spacing:-.015em;
+       line-height:1.15;margin:0 0 6px}
+h2.sec .en{display:block;font-size:.6em;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:6px}
+.keyline{width:74px;height:4px;background:var(--accent);margin:20px 0 24px}
+h3{font-size:1.12rem;font-weight:600;margin:38px 0 10px;line-height:1.4}
+h3:first-of-type{margin-top:0}
+h4{font-size:1rem;font-weight:600;margin:26px 0 8px}
+.lab{font-size:.78rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+
+/* ---------- editorial primitives ---------- */
+.term{font-weight:600;color:var(--ink);box-shadow:inset 0 -.42em 0 rgba(58,97,131,.22)}
+/* one highlighter only. proper nouns get colour, not a second stripe. */
+.mn{font-weight:600;color:var(--name)}
+.oneline{border-left:4px solid var(--accent);background:var(--wash);padding:18px 22px;
+         margin:0 0 30px;max-width:68ch;font-size:1.06rem;line-height:1.62;
+         color:var(--ink);font-weight:500}
+.oneline b{font-weight:700}
+dl.meta{display:grid;grid-template-columns:auto 1fr;gap:5px 18px;font-size:.87rem;
+        margin:0 0 30px;max-width:66ch}
+dl.meta dt{color:var(--muted)}
+dl.meta dd{margin:0;color:var(--body)}
+.stats{display:flex;flex-wrap:wrap;gap:0;margin:26px 0 8px;border-top:1px solid var(--rule)}
+.stats>div{flex:1 1 190px;padding:18px 24px 18px 0;border-bottom:1px solid var(--rule)}
+.stats .v{font-size:1.65rem;font-weight:600;color:var(--ink);line-height:1.1;letter-spacing:-.02em}
+.stats .v em{font-style:normal;color:var(--accent-deep)}
+.stats .k{font-size:.82rem;color:var(--body);margin-top:5px;line-height:1.45}
+.stats .vs{font-family:var(--mono);font-size:.74rem;color:var(--muted);margin-top:4px;line-height:1.4}
+ol.contrib{list-style:none;padding:0;margin:0 0 8px;max-width:68ch}
+ol.contrib li{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:18px 0;
+              border-top:1px solid var(--rule-soft);margin:0}
+ol.contrib li:last-child{border-bottom:1px solid var(--rule-soft)}
+ol.contrib .n{font-weight:600;color:var(--accent-deep);font-size:1.05rem;line-height:1.6}
+ol.contrib b{display:block;margin-bottom:3px}
+.caveat{background:var(--wash);padding:20px 24px;margin:26px 0 0;max-width:70ch}
+.caveat h4{margin:0 0 10px}
+.caveat ul{margin:0}
+.caveat li{font-size:.94rem}
+.caveat.warnbox{background:var(--warn-soft);border-left:4px solid var(--warn)}
+.caveat.warnbox h4{color:var(--warn)}
+
+/* ---------- maths ---------- */
+.eq{margin:22px 0 6px;padding:20px 12px;background:var(--sunk);overflow-x:auto;text-align:center}
+.eq math{font-size:1.16em}
+.eqno{font-family:var(--mono);font-size:.74rem;color:var(--muted);text-align:right;margin:-2px 2px 0 0}
+.sym{cursor:pointer;padding:0 1px}
+.sym:hover{background:var(--accent-soft)}
+.sym.lit{background:var(--accent-soft);outline:1.5px solid var(--accent)}
+table.syms{border-collapse:collapse;width:100%;margin:20px 0 8px;font-size:.9rem}
+table.syms th{text-align:left;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;
+              color:var(--muted);font-weight:600;padding:0 14px 9px 0;border-bottom:2px solid var(--accent)}
+table.syms td{padding:11px 14px 11px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+table.syms tr{cursor:pointer}
+table.syms tr.lit td{background:var(--wash)}
+table.syms td.s{font-family:var(--mono);white-space:nowrap;width:1%}
+td.sh{font-family:var(--mono);font-size:.8rem;color:var(--muted);white-space:nowrap}
+td.nt{font-size:.86rem;color:var(--body)}
+.prov{font-family:var(--mono);font-size:.68rem;padding:3px 7px;border:1px solid var(--rule);
+      color:var(--muted);background:var(--frame);white-space:nowrap}
+.prov.fast{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-deep);font-weight:500}
+.prov.learned{border-color:var(--name-soft);background:var(--name-soft);color:var(--name)}
+.codeline{display:inline-block;font-family:var(--mono);font-size:.74rem;color:var(--accent-deep);
+          background:var(--wash);border:1px solid var(--accent-soft);padding:4px 8px;
+          margin:4px 6px 0 0;border-bottom-width:1px}
+a.codeline:hover{background:var(--accent-soft)}
+
+/* ---------- figures ---------- */
+figure{margin:30px 0 8px}
+figure .frame{border:1px solid var(--rule);padding:14px;background:var(--frame)}
+figure img{cursor:zoom-in}
+figcaption{font-size:.83rem;color:var(--muted);line-height:1.6;margin-top:11px;max-width:78ch}
+figcaption b{color:var(--ink);font-weight:600}
+figcaption .fnum{font-family:var(--mono);color:var(--faint);margin-right:7px}
+.read{border-left:2px solid var(--accent);padding:2px 0 2px 20px;margin:22px 0 34px;max-width:68ch}
+.read h5{margin:0 0 10px;font-size:.93rem;font-weight:600}
+.read ul{margin:0;padding-left:1.05em}
+.read li{font-size:.95rem;margin-bottom:8px}
+.read li b{font-weight:600}
+.lb{position:fixed;inset:0;background:rgba(20,23,26,.92);display:none;place-items:center;
+    z-index:50;padding:24px;cursor:zoom-out}
+.lb.on{display:grid}
+.lb img{max-width:100%;max-height:92vh;background:#fff}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;overflow-x:auto;margin:26px 0 10px}
+table.data{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+table.data th,table.data td{text-align:left;vertical-align:top;padding:14px 16px 14px 0;
+                            border-bottom:1px solid var(--rule-soft)}
+table.data thead th{font-weight:600;color:var(--ink);border-bottom:3px solid var(--accent);padding-bottom:10px}
+table.data td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.data tr.best td{background:var(--wash)}
+table.data tr.best td.n,table.data tr.best td:first-child{font-weight:600;color:var(--accent-deep)}
+table.data tr[data-jump]{cursor:pointer}
+table.data tr[data-jump]:hover td{background:var(--wash)}
+
+/* ---------- diagrams ---------- */
+.dia{margin:0 0 44px}
+.dia svg{display:block;width:100%;height:auto;margin:14px 0 4px;overflow:visible}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;
+      padding-top:14px;border-top:1px solid var(--rule-soft)}
+.ctrl button{font-family:var(--mono);font-size:.76rem;padding:7px 12px;border:1px solid var(--rule);
+             background:var(--frame);color:var(--muted);cursor:pointer}
+.ctrl button:hover{border-color:var(--accent);color:var(--accent-deep)}
+.ctrl button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ctrl .cl{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.dia .say{margin-top:14px;font-size:.95rem;line-height:1.62;color:var(--body);
+          max-width:70ch;min-height:3.2em}
+.dia .say b{color:var(--ink);font-weight:600}
+
+/* ---------- code section ---------- */
+.pre{background:#14171A;color:#D6DBDF;padding:16px 18px;overflow-x:auto;
+     font-family:var(--mono);font-size:.76rem;line-height:1.65;white-space:pre;margin:16px 0 0}
+details{border-top:1px solid var(--rule);margin:26px 0 0}
+summary{cursor:pointer;padding:14px 0;font-size:.95rem;color:var(--accent-deep);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:before{content:"▸ ";color:var(--faint)}
+details[open] summary:before{content:"▾ "}
+.vd{margin:0 0 6px;padding:26px 0;border-top:1px solid var(--rule-soft)}
+.vd:last-of-type{border-bottom:1px solid var(--rule-soft)}
+.vd h3{margin:0 0 4px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.vd dl.pair{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:14px 0 0;
+            font-size:.94rem;max-width:70ch}
+.vd dl.pair dt{color:var(--muted);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;
+               white-space:nowrap;line-height:1.9}
+.vd dl.pair dd{margin:0;line-height:1.62}
+
+/* ---------- sources + footer ---------- */
+table.src{border-collapse:collapse;width:100%;font-size:.87rem}
+table.src td{padding:13px 16px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+table.src td .note{color:var(--muted);font-size:.83rem;line-height:1.55;margin-top:3px;max-width:70ch}
+table.src td.d{font-family:var(--mono);font-size:.76rem;color:var(--faint);white-space:nowrap;text-align:right}
+footer{border-top:1px solid var(--rule);padding:34px 0 60px;font-size:.85rem;color:var(--muted)}
+footer p{max-width:74ch;margin:0 0 10px}
+
+@media (max-width:900px){
+  body{font-size:16px}
+  .shell{grid-template-columns:1fr;gap:0;padding-top:40px}
+  nav.rail{display:none}
+  .hero{padding-top:44px}
+  ol.contrib li{grid-template-columns:26px 1fr;gap:12px}
+  .stats>div{padding-right:16px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .grow{transform-box:fill-box;transform-origin:left center;
+        animation:grow .75s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead"><div class="wrap">
+  <span class="mark" aria-hidden="true"></span>
+  <b id="mh1"></b><span id="mh2"></span>
+</div></header>
+
+<div class="wrap">
+  <div class="hero" id="hero"></div>
+  <div class="diagram" id="herodia" hidden></div>
+  <div class="shell">
+    <nav class="rail" aria-label="contents"><p id="navlab"></p><div id="nav"></div></nav>
+    <main id="body"></main>
+  </div>
+  <footer><p id="foot"></p></footer>
+</div>
+<div class="lb" id="lb"></div>
+
+<script>
+const TEARDOWN = {
+ "macros": {
+  "\\acronym": "\\textsc{RoboTTT}",
+  "\\FW": "\\mathrm{FW}"
+ },
+ "mechanisms": [
+  {
+   "id": "m-ttt",
+   "num": "Eq. 1–2",
+   "tier": "stated",
+   "short": "The TTT update",
+   "title": "The recurrent state is a small network's weights",
+   "lede": "Two equations, one idea: <b><span class=\"term\">update, then apply</span></b>. Everything else in the paper is scaffolding around this.",
+   "eqs": [
+    {
+     "num": "(1)",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"false\">←</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>−</mo><mi>η</mi><msub><mo form=\"prefix\" stretchy=\"false\">∇</mo><mi>W</mi></msub><msub><mi class=\"mathcal\">ℒ</mi><mpadded lspace=\"0\"><mi>FW</mi></mpadded></msub><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><msub><mi>f</mi><msub><mi>W</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></msub><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><msub><mi>K</mi><mi>t</mi></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow><mo separator=\"true\">,</mo><msub><mi>V</mi><mi>t</mi></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow></mrow></math>"
+    },
+    {
+     "num": "(2)",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><msub><mi>O</mi><mi>t</mi></msub><mo>=</mo><msub><mi>f</mi><msub><mi>W</mi><mi>t</mi></msub></msub><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><msub><mi>Q</mi><mi>t</mi></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow></mrow></math>"
+    }
+   ],
+   "symbols": [
+    {
+     "key": "W",
+     "name": "<b>fast weights</b> — the recurrent state",
+     "shape": "params of a 2-layer MLP",
+     "prov": "fast",
+     "note": "Not a vector. This is the whole point: an MLP's parameter set holds more than an RNN's hidden vector.",
+     "sym": "<math><msub><mi>W</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "f",
+     "name": "the <b><span class=\"term\">fast model</span></b>",
+     "shape": "ℝ^d → ℝ^d",
+     "prov": "derived",
+     "note": "Two-layer MLP with GeLU (App. A). Its architecture is fixed; its parameters are <math><mi>W</mi></math>.",
+     "sym": "<math><msub><mi>f</mi><mi>W</mi></msub></math>"
+    },
+    {
+     "key": "η",
+     "name": "inner learning rate",
+     "shape": "scalar",
+     "prov": "learned",
+     "note": "Learned, on a constant base of 0.1 (App. A). The one number that decides how hard a single timestep overwrites the state.",
+     "sym": "<math><mi>η</mi></math>"
+    },
+    {
+     "key": "ℒ",
+     "name": "fast-weight loss",
+     "shape": "scalar",
+     "prov": "derived",
+     "note": "<math><mrow><mi>‖</mi><mover><mi>v</mi><mo stretchy=\"false\" class=\"chr-sml wbk-sml-acc\" style=\"math-depth:0;\">ˆ</mo></mover><mo>−</mo><mi>v</mi><msup><mi>‖</mi><mn>2</mn></msup></mrow></math> — plain MSE. The <i>inner</i> loss; not the task loss.",
+     "sym": "<math><msub><mi class=\"mathcal\">ℒ</mi><mpadded lspace=\"0\"><mi>FW</mi></mpadded></msub></math>"
+    },
+    {
+     "key": "K",
+     "name": "key at this timestep",
+     "shape": "(d,)",
+     "prov": "derived",
+     "note": "<math><mrow><msub><mi>K</mi><mi>t</mi></msub><mo>=</mo><msub><mi>θ</mi><mi>K</mi></msub><msub><mi>X</mi><mi>t</mi></msub></mrow></math>. Together with <math><msub><mi>V</mi><mi>t</mi></msub></math> it is the (question, answer) pair written into the state.",
+     "sym": "<math><msub><mi>K</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "V",
+     "name": "value at this timestep",
+     "shape": "(d,)",
+     "prov": "derived",
+     "note": "The regression target the fast model is pushed toward.",
+     "sym": "<math><msub><mi>V</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "Q",
+     "name": "query at this timestep",
+     "shape": "(d,)",
+     "prov": "derived",
+     "note": "<math><mrow><msub><mi>Q</mi><mi>t</mi></msub><mo>=</mo><msub><mi>θ</mi><mi>Q</mi></msub><msub><mi>X</mi><mi>t</mi></msub></mrow></math>. What gets asked of the state after it has been updated.",
+     "sym": "<math><msub><mi>Q</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "O",
+     "name": "TTT layer output",
+     "shape": "(d,)",
+     "prov": "derived",
+     "note": "Goes on to be gated against the attention output — see Eq. 3.",
+     "sym": "<math><msub><mi>O</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "t",
+     "name": "timestep in the rollout",
+     "shape": "1…T",
+     "prov": "index",
+     "note": "Ranges over the trajectory, up to 8192. <b>Not</b> the flow-matching time — that is <math><mi>τ</mi></math>.",
+     "sym": "<math><mi>t</mi></math>"
+    }
+   ],
+   "gloss": [
+    "<b>What it does.</b> At every timestep the layer takes one gradient step on a small MLP, using this step's key as input and its value as target, then asks that just-updated MLP the step's query. The history is not stored — it is <i>trained into</i> a network, and read back out by querying it.",
+    "<b>Why not something simpler.</b> A transformer keeps every past key and value and attends over them, so decoding cost grows with history — unaffordable on a 30 Hz control loop over five minutes. An RNN keeps a fixed-size vector, which is cheap but small. Fast weights are the middle: fixed size, but the size of a network rather than a vector, and the write rule is gradient descent rather than a fixed linear update.",
+    "<b>What one symbol changes.</b> Make <math><msub><mi>f</mi><mi>W</mi></msub></math> a linear layer instead of an MLP and the paper's own ablation loses 27% (Fig. 12). The capacity of the thing being written into is doing the work, not the fact that something is being written into."
+   ],
+   "code": [
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 178,
+     "ident": "_store  (the inner loss)",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L178"
+    },
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 180,
+     "ident": "self.store = vmap(grad(...))",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L180"
+    },
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 293,
+     "ident": "next_memory_params",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L293"
+    }
+   ],
+   "fig": null
+  },
+  {
+   "id": "m-arch",
+   "num": "Fig. 2",
+   "tier": "stated",
+   "short": "Where TTT sits",
+   "title": "Attention runs within a timestep; TTT runs across them",
+   "lede": "The architectural claim, and the one that is hardest to see from prose. Nothing new is attended to — the TTT layer is bolted on <i>after</i> attention, on a different axis of the same tensor.",
+   "eqs": [],
+   "symbols": [
+    {
+     "key": "Φ",
+     "name": "vision-language tokens",
+     "shape": "(n_Φ, d)",
+     "prov": "input",
+     "note": "From the Eagle VLM backbone. <b>Deliberately kept out of the TTT layers</b> for cost; the <span class=\"term\">register tokens</span> carry their content forward instead.",
+     "sym": "<math><msub><mrow><mi mathvariant=\"normal\">Φ</mi><mspace></mspace></mrow><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "R",
+     "name": "learned register tokens",
+     "shape": "(16, d)",
+     "prov": "learned",
+     "note": "N = 16, prepended per timestep, attend to everything else. The channel through which vision-language content reaches the state.",
+     "sym": "<math><msub><mi>R</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "q",
+     "name": "encoded proprioception",
+     "shape": "(d,)",
+     "prov": "input",
+     "note": "Joint state. Note the collision: the paper also writes <math><mi>Q</mi></math> for the TTT query.",
+     "sym": "<math><msub><mi>q</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "A",
+     "name": "noised action chunk",
+     "shape": "(H, d_a)",
+     "prov": "derived",
+     "note": "H-step chunk at flow-matching level <math><msub><mi>τ</mi><mi>t</mi></msub></math>. Fed in as <i>input</i>, which is why the model can condition on what it did.",
+     "sym": "<math><msub><mover><mi>A</mi><mo stretchy=\"false\" class=\"chr-lrg wbk-lrg\" style=\"math-depth:0;\">~</mo></mover><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "X",
+     "name": "the sequence handed to TTT",
+     "shape": "(T·(N+1+H), d)",
+     "prov": "derived",
+     "note": "<math><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">[</mo><msub><mi>R</mi><mn>1</mn></msub><mo separator=\"true\">,</mo><msub><mi>q</mi><mn>1</mn></msub><mo separator=\"true\">,</mo><msub><mover><mi>A</mi><mo stretchy=\"false\" class=\"chr-lrg wbk-lrg\" style=\"math-depth:0;\">~</mo></mover><mn>1</mn></msub><mo separator=\"true\">,</mo><mo>…</mo><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">]</mo></mrow></math> — attention outputs concatenated along <b>time</b>. <math><mrow><mi mathvariant=\"normal\">Φ</mi><mspace></mspace></mrow></math> is absent.",
+     "sym": "<math><mi>X</mi></math>"
+    },
+    {
+     "key": "H",
+     "name": "action chunk length",
+     "shape": "scalar",
+     "prov": "hyper",
+     "note": "One forward pass predicts H steps; the rollout advances a chunk at a time.",
+     "sym": "<math><mi>H</mi></math>"
+    }
+   ],
+   "gloss": [
+    "<b>What it does.</b> A TTT layer is added after the self- and cross-attention of each of GR00T N1.7's 16 DiT layers. Attention sees one timestep's tokens. The per-timestep attention outputs are then stacked along time and handed to TTT, which is the only component that ever sees across timesteps.",
+    "<b>Why not something simpler.</b> Letting attention span time would restore the growing KV cache the design exists to avoid. Splitting the axes keeps the pretrained backbone's computation exactly as it was and buys the time dimension separately, which is also why the whole thing can be dropped onto a different VLA.",
+    "<b>What one symbol changes.</b> <math><mrow><mi mathvariant=\"normal\">Φ</mi><mspace></mspace></mrow></math> is excluded to save compute, so all vision-language information must squeeze through 16 register tokens. The ablation says those registers are worth +18% <i>with</i> TTT and nothing without it (Fig. 12) — they are a channel, not extra capacity."
+   ],
+   "code": [
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 163,
+     "ident": "RotaryEmbedding on q,k",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L163"
+    },
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 590,
+     "ident": "hook: output + ttt_memory_out",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L590"
+    }
+   ],
+   "fig": {
+    "file": "model_arch.webp",
+    "num": "Figure 2",
+    "caption": "<b>RoboTTT model architecture, training, and inference.</b> TTT layers are added after the attention layers in the DiT action head. Training uses a sequence flow-matching loss with <span class=\"term\">sequence action forcing</span>. Inference starts from <math><msub><mi>W</mi><mn>0</mn></msub></math> and propagates fast weights forward.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "The vertical stack (one timestep) versus the horizontal arrow carrying <math><mi>W</mi></math> (across timesteps). Everything the paper adds lives on the horizontal arrow.",
+     "means": "The backbone is unchanged and frozen during pretraining; only the TTT layers and the gates are new parameters — about 10M per layer, 690M total against the DiT's original 538M.",
+     "change": "If the diagram showed <math><mrow><mi mathvariant=\"normal\">Φ</mi><mspace></mspace></mrow></math> entering the horizontal path, the cost argument would collapse — the whole constant-latency claim rests on the VL tokens staying out of the recurrence."
+    }
+   }
+  },
+  {
+   "id": "m-gate",
+   "num": "Eq. 3",
+   "tier": "stated",
+   "short": "The gate",
+   "title": "A gate that starts at zero, so a pretrained model survives being modified",
+   "lede": "Three symbols, and the most consequential line of code in the whole method — see the code section.",
+   "eqs": [
+    {
+     "num": "(3)",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><mi>O</mi><mo>=</mo><mrow><mi>tanh</mi><mo>⁡</mo></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mi>α</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mo>⊙</mo><msub><mi>O</mi><mpadded lspace=\"0\"><mi>TTT</mi></mpadded></msub><mo>+</mo><msub><mi>O</mi><mpadded lspace=\"0\"><mi>attn</mi></mpadded></msub></mrow></math>"
+    }
+   ],
+   "symbols": [
+    {
+     "key": "α",
+     "name": "the learned gate",
+     "shape": "(d,)",
+     "prov": "learned",
+     "note": "Initialised near zero (0.001), per DiT layer. Borrowed from Flamingo's tanh gating.",
+     "sym": "<math><mi>α</mi></math>"
+    },
+    {
+     "key": "O",
+     "name": "TTT layer output",
+     "shape": "(d,)",
+     "prov": "derived",
+     "note": "Eq. 2's output, for this layer and timestep.",
+     "sym": "<math><msub><mi>O</mi><mpadded lspace=\"0\"><mi>TTT</mi></mpadded></msub></math>"
+    },
+    {
+     "key": "O",
+     "name": "attention output",
+     "shape": "(d,)",
+     "prov": "derived",
+     "note": "What the pretrained model would have produced on its own. Coefficient <b>1</b>.",
+     "sym": "<math><msub><mi>O</mi><mpadded lspace=\"0\"><mi>attn</mi></mpadded></msub></math>"
+    },
+    {
+     "key": "⊙",
+     "name": "elementwise product",
+     "shape": "—",
+     "prov": "derived",
+     "note": "<math><mi>α</mi></math> is a vector, so the gate is per-channel, not one scalar per layer.",
+     "sym": "<math><mo form=\"prefix\" stretchy=\"false\" lspace=\"0em\" rspace=\"0em\">⊙</mo></math>"
+    }
+   ],
+   "gloss": [
+    "<b>What it does.</b> At initialisation <math><mrow><mrow><mi>tanh</mi><mo>⁡</mo></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mn>0.001</mn><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mo>≈</mo><mn>0.001</mn></mrow></math>, so the layer's output is the attention output and nothing else — the pretrained network computes exactly what it computed before. Training then decides, per channel and per layer, how much TTT to let in.",
+    "<b>Why not something simpler.</b> Adding a randomly initialised layer into the middle of a 538M-parameter pretrained action head destroys its behaviour on step one. A zero-initialised gate makes the modification a no-op at initialisation, so the model is <i>strictly extended</i> rather than perturbed, and any gain is attributable to TTT rather than to re-learning what was already there.",
+    "<b>What one symbol changes.</b> The coefficient on <math><msub><mi>O</mi><mpadded lspace=\"0\"><mi>attn</mi></mpadded></msub></math> must be exactly 1 for that argument to hold. It is not 1 in the reimplementation, and this is not a subtle degradation — it is the whole reason the gate exists. See <a href='#code'>the code section</a>."
+   ],
+   "code": [
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 413,
+     "ident": "memory_out_layerscale",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L413"
+    },
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 450,
+     "ident": "chunk_out = action_chunk + ...",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L450"
+    },
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 590,
+     "ident": "hook return",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L590"
+    }
+   ],
+   "fig": {
+    "file": "gating.webp",
+    "num": "Figure 3",
+    "caption": "<b>Computation flow with <math><mrow><mi>tanh</mi><mo>⁡</mo><mspace width=\"0.1667em\"></mspace></mrow></math> gating.</b> The TTT output is weighted by <math><mrow><mrow><mi>tanh</mi><mo>⁡</mo></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mi>α</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow></mrow></math> before being added to the attention output.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "Which branch carries a weight and which does not. The attention branch is unweighted.",
+     "means": "The residual structure is asymmetric on purpose: one branch is the pretrained model, the other is the addition being introduced.",
+     "change": "Nothing here tells you the initialisation scale — 0.001 comes from the text, not the figure. That number is what makes it a no-op rather than a small perturbation."
+    }
+   }
+  },
+  {
+   "id": "m-loss",
+   "num": "Eq. 4–5",
+   "tier": "stated",
+   "short": "Sequence action forcing",
+   "title": "One loss per timestep, and a different noise level for every one of them",
+   "lede": "The training recipe's first half. The equation looks like an ordinary flow-matching loss with a sum bolted on; the subscript on <math><msub><mi>τ</mi><mi>t</mi></msub></math> is the whole contribution.",
+   "eqs": [
+    {
+     "num": "(5)",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><msub><mi class=\"mathcal\">ℒ</mi><mpadded lspace=\"0\"><mi>fm</mi></mpadded></msub><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><mi>ξ</mi><mo separator=\"true\">;</mo><msub><mi>W</mi><mn>0</mn></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><mrow><munderover><mo movablelimits=\"false\">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover></mrow><msub><mi>𝔼</mi><mrow><msub><mi>τ</mi><mi>t</mi></msub><mo separator=\"true\">,</mo><mi>ϵ</mi></mrow></msub><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">[</mo><msup><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">‖</mo><msub><mi>v</mi><mi>θ</mi></msub><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><msub><mrow><mi mathvariant=\"normal\">Φ</mi><mspace></mspace></mrow><mi>t</mi></msub><mo separator=\"true\">,</mo><msubsup><mi>A</mi><mi>t</mi><msub class=\"tml-lrg-pad\"><mi>τ</mi><mi>t</mi></msub></msubsup><mo separator=\"true\">,</mo><msub><mi>q</mi><mi>t</mi></msub><mo separator=\"true\">;</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow><mo>−</mo><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo>−</mo><mi>ϵ</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">‖</mo></mrow><mn>2</mn></msup><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">]</mo></mrow></mrow></math>"
+    },
+    {
+     "num": "noise schedule",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><msubsup><mi>A</mi><mi>t</mi><mi class=\"tml-lrg-pad\">τ</mi></msubsup><mo>=</mo><mi>τ</mi><msub><mi>A</mi><mi>t</mi></msub><mo>+</mo><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mn>1</mn><mo>−</mo><mi>τ</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mi>ϵ</mi><mo separator=\"true\">,</mo><mspace width=\"2em\"></mspace><msub><mi>τ</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mn>1</mn><mo>−</mo><mi>u</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mo separator=\"true\">,</mo><mspace width=\"1em\"></mspace><mi>u</mi><mo>∼</mo><mpadded lspace=\"0\"><mi>Beta</mi></mpadded><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mn>1.5</mn><mo separator=\"true\">,</mo><mn>1</mn><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mo separator=\"true\">,</mo><mspace width=\"1em\"></mspace><mi>s</mi><mo>=</mo><mn>0.999</mn></mrow></math>"
+    }
+   ],
+   "symbols": [
+    {
+     "key": "τ",
+     "name": "flow-matching noise level <b>at timestep t</b>",
+     "shape": "[0, 1]",
+     "prov": "derived",
+     "note": "<b>Sampled independently per timestep.</b> This subscript is the paper's contribution called <i>sequence action forcing</i>.",
+     "sym": "<math><msub><mi>τ</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "ϵ",
+     "name": "Gaussian noise",
+     "shape": "(H, d_a)",
+     "prov": "input",
+     "note": "<math><mrow><mi>ϵ</mi><mo>∼</mo><mi class=\"mathcal\">𝒩</mi><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mn>0</mn><mo separator=\"true\">,</mo><mi>I</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow></mrow></math>, redrawn per sample.",
+     "sym": "<math><mi>ϵ</mi></math>"
+    },
+    {
+     "key": "v",
+     "name": "the DiT action head",
+     "shape": "538M params",
+     "prov": "learned",
+     "note": "Predicts the flow-matching velocity. <math><mi>θ</mi></math> here is <i>slow</i> weights, distinct from <math><mi>W</mi></math>.",
+     "sym": "<math><msub><mi>v</mi><mi>θ</mi></msub></math>"
+    },
+    {
+     "key": "A",
+     "name": "ground-truth action chunk",
+     "shape": "(H, d_a)",
+     "prov": "input",
+     "note": "The demonstration. <math><msubsup><mi>A</mi><mi>t</mi><msub class=\"tml-lrg-pad\"><mi>τ</mi><mi>t</mi></msub></msubsup></math> is its noised version at level <math><msub><mi>τ</mi><mi>t</mi></msub></math>.",
+     "sym": "<math><msub><mi>A</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "W",
+     "name": "fast-weight initialisation",
+     "shape": "params of the MLP",
+     "prov": "learned",
+     "note": "<b>Meta-learned</b> through <span class=\"term\">gradients of gradients</span> — every timestep's loss reaches back to it through the whole update chain.",
+     "sym": "<math><msub><mi>W</mi><mn>0</mn></msub></math>"
+    },
+    {
+     "key": "ξ",
+     "name": "one trajectory",
+     "shape": "T tuples",
+     "prov": "input",
+     "note": "<math><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">{</mo><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mi>l</mi><mo separator=\"true\">,</mo><msub><mi>o</mi><mi>t</mi></msub><mo separator=\"true\">,</mo><msub><mi>q</mi><mi>t</mi></msub><mo separator=\"true\">,</mo><msub><mi>A</mi><mi>t</mi></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">}</mo></mrow></math>: language, image, proprioception, action.",
+     "sym": "<math><mi>ξ</mi></math>"
+    },
+    {
+     "key": "T",
+     "name": "training context length",
+     "shape": "scalar",
+     "prov": "hyper",
+     "note": "Grown to 8192 during pretraining; 1024 during post-training.",
+     "sym": "<math><mi>T</mi></math>"
+    },
+    {
+     "key": "s",
+     "name": "noise-schedule ceiling",
+     "shape": "scalar",
+     "prov": "hyper",
+     "note": "0.999 — keeps <math><mi>τ</mi></math> off exactly 1.",
+     "sym": "<math><mi>s</mi></math>"
+    },
+    {
+     "key": "u",
+     "name": "Beta draw",
+     "shape": "scalar",
+     "prov": "derived",
+     "note": "<math><mrow><mpadded lspace=\"0\"><mi>Beta</mi></mpadded><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mn>1.5</mn><mo separator=\"true\">,</mo><mn>1</mn><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow></mrow></math> is skewed toward 1, so <math><mi>τ</mi></math> is skewed toward noisy. Mean <math><mrow><mi>τ</mi><mo>=</mo><mn>0.3996</mn></mrow></math>.",
+     "sym": "<math><mi>u</mi></math>"
+    }
+   ],
+   "gloss": [
+    "<b>What it does.</b> Run TTT forward over the whole trajectory, take a flow-matching loss at every timestep against the fast-weight state that arrived there, average, and backpropagate into both the <span class=\"term\">slow weights</span> and <math><msub><mi>W</mi><mn>0</mn></msub></math>.",
+    "<b>Why not something simpler.</b> The obvious thing is one noise level for the whole sequence, as in full-sequence diffusion. The paper reports that training is then unstable, the guess being that a shared <math><mi>τ</mi></math> makes an entire sequence uniformly easy or uniformly hard. Independent noise means every batch contains both.",
+    "<b>What one symbol changes.</b> Drop the <math><mi>t</mi></math> from <math><msub><mi>τ</mi><mi>t</mi></msub></math> and the paper's own ablation says the policy produces motions too inaccurate to make progress at all (Fig. 12) — the largest single effect in that figure, from what reads on the page like a sampling detail."
+   ],
+   "code": [
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 485,
+     "ident": "sample_action_times",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L485"
+    },
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 731,
+     "ident": "sample_action_times(batch * time)",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L731"
+    }
+   ],
+   "fig": null
+  },
+  {
+   "id": "m-tbptt",
+   "num": "Fig. 4 — equation mine",
+   "tier": "inferred",
+   "short": "TBPTT",
+   "title": "Memory is bounded by the segment, not by the sequence",
+   "lede": "The training recipe's second half. The paper states this in prose; the equation below is mine, so it is marked inferred.",
+   "eqs": [
+    {
+     "num": "(mine)",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"false\">←</mo><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">{</mo><mtable><mtr><mtd class=\"tml-left\" style=\"padding-left:0em;padding-right:0em;\"><mrow><mpadded lspace=\"0\"><mi>sg</mi></mpadded><mrow style=\"margin-left:-0.1667em;\"></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">[</mo><mspace width=\"0.1667em\"></mspace><mover><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"true\" class=\"tml-hat-2\" style=\"math-depth:0;\">ˆ</mo></mover><mspace width=\"0.1667em\"></mspace><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">]</mo></mrow></mrow></mtd><mtd class=\"tml-left\" style=\"padding-left:1em;padding-right:0em;\"><mrow><mi>t</mi><mo>≡</mo><mn>0</mn><mo></mo><mspace width=\"0.4444em\"></mspace><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mpadded lspace=\"0\"><mi>mod</mi></mpadded><mspace width=\"0.3333em\"></mspace><mi>S</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow></mrow></mtd></mtr><mtr><mtd class=\"tml-left\" style=\"padding-left:0em;padding-right:0em;\"><mover><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"true\" class=\"tml-hat-2\" style=\"math-depth:0;\">ˆ</mo></mover></mtd><mtd class=\"tml-left\" style=\"padding-left:1em;padding-right:0em;\"><mtext>otherwise</mtext></mtd></mtr></mtable><mo fence=\"true\" form=\"postfix\" stretchy=\"true\"></mo></mrow><mspace width=\"2em\"></mspace><mover><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"true\" class=\"tml-hat-2\" style=\"math-depth:0;\">ˆ</mo></mover><mo>=</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>−</mo><mi>η</mi><msub><mo form=\"prefix\" stretchy=\"false\">∇</mo><mi>W</mi></msub><msub><mi class=\"mathcal\">ℒ</mi><mpadded lspace=\"0\"><mi>FW</mi></mpadded></msub></mrow></math>"
+    }
+   ],
+   "symbols": [
+    {
+     "key": "S",
+     "name": "segment length",
+     "shape": "scalar",
+     "prov": "hyper",
+     "note": "Sets the GPU memory ceiling. The paper does not state the value used.",
+     "sym": "<math><mi>S</mi></math>"
+    },
+    {
+     "key": "sg",
+     "name": "stop-gradient",
+     "shape": "—",
+     "prov": "derived",
+     "note": "Detach. The <b>value</b> passes through; the <b>gradient</b> does not.",
+     "sym": "<math><mpadded lspace=\"0\"><mi>sg</mi></mpadded></math>"
+    },
+    {
+     "key": "W",
+     "name": "the ordinary update",
+     "shape": "params",
+     "prov": "fast",
+     "note": "Eq. 1, unchanged. Truncation touches only the gradient path.",
+     "sym": "<math><mover><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"true\" class=\"tml-hat-2\" style=\"math-depth:0;\">ˆ</mo></mover></math>"
+    }
+   ],
+   "gloss": [
+    "<b>What it does.</b> Split the sequence into segments. Gradients flow only within a segment; the fast weights cross the boundary carrying their value but not their gradient. GPU memory is then set by <math><mi>S</mi></math> rather than by <math><mi>T</mi></math>, so context length can grow under a fixed memory budget.",
+    "<b>Why not something simpler.</b> Full BPTT stores activations for every timestep, so 8K timesteps is 8K sets of activations for a 690M-parameter model. Truncation is the standard concession, and its standard cost is that no gradient signal reaches beyond one segment.",
+    "<b>What one symbol changes.</b> <math><msub><mi>W</mi><mn>0</mn></msub></math> is the exception the paper flags: it still receives gradient, because the first segment's updates originate from it directly. That is the only path by which a <span class=\"term\">meta-learned</span> initialisation survives truncation at all."
+   ],
+   "code": [
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 467,
+     "ident": "divisible_by(step, tbptt_step_size)",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L467"
+    }
+   ],
+   "fig": {
+    "file": "tbptt.webp",
+    "num": "Figure 4",
+    "caption": "<b>TBPTT.</b> Gradients are truncated at segment boundaries; fast weights carry over, so TTT continues over the entire sequence.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "Two chains, not one — a solid state chain that runs through, and a gradient chain that stops.",
+     "means": "Forward behaviour at inference is identical whatever <math><mi>S</mi></math> is. <math><mi>S</mi></math> changes only what training can learn to shape.",
+     "change": "The figure does not say what <math><mi>S</mi></math> was, and the paper does not either — see the gaps section. Two runs with the same context length and different <math><mi>S</mi></math> are not the same experiment."
+    }
+   }
+  },
+  {
+   "id": "m-mask",
+   "num": "Sec. 3.3 — equation mine",
+   "tier": "inferred",
+   "short": "Masked context",
+   "title": "Some timesteps are context only: they write to the state and never become a target",
+   "lede": "One mask, two capabilities. This is what turns the architecture into one-shot imitation and into <span class=\"term\">DAgger Distillation</span>.",
+   "eqs": [
+    {
+     "num": "(mine)",
+     "mathml": "<math display=\"block\" class=\"tml-display\" style=\"display:block math;\"><mrow><mi class=\"mathcal\">ℒ</mi><mo>=</mo><mfrac><mrow><msubsup><mo movablelimits=\"false\">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></msubsup><msub><mi>m</mi><mi>t</mi></msub><mspace width=\"0.1667em\"></mspace><msub><mi>ℓ</mi><mi>t</mi></msub><mrow style=\"margin-left:-0.1667em;\"></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo separator=\"true\">;</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow></mrow><mrow><msubsup><mo movablelimits=\"false\">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></msubsup><msub><mi>m</mi><mi>t</mi></msub></mrow></mfrac><mo separator=\"true\">,</mo><mspace width=\"2em\"></mspace><msub><mi>W</mi><mi>t</mi></msub><mo stretchy=\"false\">←</mo><mpadded lspace=\"0\"><mi>TTT</mi></mpadded><mrow style=\"margin-left:-0.1667em;\"></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"true\">(</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo separator=\"true\">,</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo fence=\"true\" form=\"postfix\" stretchy=\"true\">)</mo></mrow><mtext> </mtext><mtext> </mtext><mi>∀</mi><mspace width=\"0.1667em\"></mspace><mi>t</mi></mrow></math>"
+    }
+   ],
+   "symbols": [
+    {
+     "key": "m",
+     "name": "loss mask at timestep t",
+     "shape": "{0, 1}",
+     "prov": "input",
+     "note": "0 = context only. Set by which kind of data this timestep is.",
+     "sym": "<math><msub><mi>m</mi><mi>t</mi></msub></math>"
+    },
+    {
+     "key": "∀",
+     "name": "for every timestep",
+     "shape": "—",
+     "prov": "index",
+     "note": "<b>The asymmetry.</b> The mask is on the loss; the state update is unconditional.",
+     "sym": "<math><mi>∀</mi></math>"
+    },
+    {
+     "key": "ℓ",
+     "name": "per-step flow-matching loss",
+     "shape": "scalar",
+     "prov": "derived",
+     "note": "The summand of Eq. 5.",
+     "sym": "<math><msub><mi>ℓ</mi><mi>t</mi></msub></math>"
+    }
+   ],
+   "gloss": [
+    "<b>What it does.</b> Mask a timestep and it still updates the fast weights but contributes no imitation target. Pair a human video with a robot trajectory of the same task, mask the video, and the model must extract the task from context because the prompt is identical across configurations. Feed a DAgger rollout, mask everything except the human corrections, and the model learns to map failure to correction rather than to imitate corrections in isolation.",
+    "<b>Why not something simpler.</b> Standard DAgger fine-tunes on the corrections and throws the robot's failures away. But a correction is only interpretable against the failure it answers; discarding the failures discards the antecedent of every lesson in the data. The paper's measurement is direct: fine-tuning GR00T on the full trajectories including robot actions scores identically to corrections alone, 57% both ways. The failures are worth nothing as targets and a great deal as context.",
+    "<b>What one symbol changes.</b> <math><mrow><mi>∀</mi><mi>t</mi></mrow></math> is the whole design. Make the state update respect the mask too and the method collapses back into standard DAgger with extra steps."
+   ],
+   "code": [
+    {
+     "path": "robo_ttt/robo_ttt.py",
+     "line": 762,
+     "ident": "masked_mean(loss, loss_mask)",
+     "url": "https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L762"
+    }
+   ],
+   "fig": {
+    "file": "dagger_distillation.webp",
+    "num": "Figure 6",
+    "caption": "<b>DAgger Distillation.</b> During sequence training, all executed actions update the fast weights, but the flow-matching loss is computed only on human corrections.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "Which arrows reach the state and which reach the loss. They are not the same set.",
+     "means": "The same collected data yields a 33% average improvement here against 9% for standard DAgger — from a different reading of the same bytes.",
+     "change": "It works at test time only if the policy's own corrections re-enter the history the same way the human's did during training. The paper asserts this; the figure does not show it."
+    }
+   }
+  }
+ ],
+ "ui": {
+  "claim": "The claim",
+  "problem": "The problem",
+  "method": "The method",
+  "diagrams": "Diagrams",
+  "results": "Results",
+  "code": "The code",
+  "gaps": "What the paper does not tell you",
+  "sources": "Sources",
+  "theirs": "As the authors frame it",
+  "mine": "As I read it",
+  "look": "Look at",
+  "means": "It establishes",
+  "change": "Would change my mind",
+  "symbol": "Symbol",
+  "name": "Name",
+  "shape": "Shape",
+  "prov": "From",
+  "note": "Note",
+  "paper": "Paper",
+  "incode": "Code",
+  "verdict": "Verdict",
+  "tier": "Evidence",
+  "unspecified": "Unspecified — you would need this to reproduce it",
+  "absent": "Absent — an ablation the argument wants",
+  "reconcile": "Does not reconcile",
+  "authorlim": "The authors' own stated limitations",
+  "probes": "Probe output, as it printed",
+  "thirdparty": "Third-party reimplementation — not the authors' code",
+  "thirdbody": "The authors released no code. Every claim in this section is evidence about <b>this repository</b>; it is evidence about the paper only where the two agree.",
+  "fetched": "fetched",
+  "drew": "Diagram mine, not the paper's",
+  "repoLabel": "repo",
+  "isAuthor": "author of the paper?",
+  "yes": "yes",
+  "no": "no",
+  "masthead": "Paper teardown",
+  "readTitle": "How to read this figure",
+  "contents": "On this page",
+  "secSubs": {
+   "problem": "What was broken before, in two voices",
+   "method": "Six mechanisms, each with every symbol accounted for",
+   "diagrams": "Drawn to show what the prose states but does not show",
+   "results": "Every figure and table, each with a reading",
+   "code": "The only public implementation, run rather than read",
+   "gaps": "Unspecified, absent, and what does not reconcile",
+   "sources": "Every URL, commit and licence, with the date fetched"
+  },
+  "tiers": {
+   "verified": "verified · I ran it",
+   "stated": "stated · the source says so",
+   "inferred": "inferred · my reading"
+  }
+ },
+ "meta": {
+  "title": "RoboTTT: Context Scaling for Robot Policies — a teardown",
+  "authors": [
+   "Yunfan Jiang",
+   "Yevgen Chebotar",
+   "Ruijie Zheng",
+   "Fengyuan Hu",
+   "Yunhao Ge",
+   "Jimmy Wu",
+   "Tianyuan Dai",
+   "Scott Reed",
+   "Li Fei-Fei",
+   "Yuke Zhu",
+   "Linxi \"Jim\" Fan"
+  ],
+  "affiliations": [
+   "NVIDIA",
+   "Stanford University",
+   "The University of Texas at Austin"
+  ],
+  "date": "arXiv v1 · 16 Jul 2026",
+  "lang": "en",
+  "shortTitle": "RoboTTT · arXiv:2607.15275",
+  "licence": "CC BY 4.0",
+  "links": [
+   {
+    "label": "arXiv 2607.15275",
+    "url": "https://arxiv.org/abs/2607.15275"
+   },
+   {
+    "label": "project page",
+    "url": "https://research.nvidia.com/labs/gear/robottt/"
+   },
+   {
+    "label": "lucidrains/robo_ttt",
+    "url": "https://github.com/lucidrains/robo_ttt"
+   }
+  ]
+ },
+ "claim": {
+  "sentence": "Make a robot policy's recurrent state be <b>the weights of a small MLP that keeps training during the rollout</b>, and the policy can condition on 8,000 timesteps — about five minutes of 30 Hz control — at inference cost that does not grow with history.",
+  "numbers": [
+   {
+    "val": "8K",
+    "label": "timesteps of visuomotor context",
+    "vs": "vs 1 for GR00T N1.7, 2–8 for short-history VLAs"
+   },
+   {
+    "val": "79%",
+    "label": "average task completion, three assembly tasks",
+    "vs": "vs 42% single-step · 56% best baseline"
+   },
+   {
+    "val": "6 / 10",
+    "label": "one-shot imitations from a single human video",
+    "vs": "vs 0 / 10 for the recurrent baseline"
+   }
+  ]
+ },
+ "problem": {
+  "theirs": [
+   "State-of-the-art robot foundation models see one frame, or a handful. Context length has become a scaling axis for language models and has not been one for policies. Long visuomotor context is what would buy one-shot imitation from a human video, improvement from the robot's own deployment history, and closed-loop performance on tasks with many stages.",
+   "Three obstacles are named: a history needs enough capacity to encode, the conditioned context has to actually be exploited rather than merely stored, and inference cost must stay flat. A transformer's KV cache grows with history; an RNN's state vector is too small; <span class=\"term\">fast weights</span> are proposed as the point between them."
+  ],
+  "mine": [
+   "The framing does two things at once and it is worth separating them. This is not the language-model sense of long context, where a long prompt is handed in from outside. It is a <b>closed loop</b> — the policy's own actions become the context it later conditions on. That is why causal confusion is the standing hazard here and why the related-work section spends a paragraph on it; it is a failure mode a long prompt does not have.",
+   "And the real comparison is narrower than the title suggests. GDN — the paper's own strongest baseline — also carries a fixed-size state across the whole rollout. The paper says so outright: both maintain fixed-size states, and the difference is the update rule. So the finding is not <i>memory beats no memory</i>. It is that <b>a state written by gradient descent scales with context length and a state written by a linear associative rule does not</b> (Fig. 8). That is a sharper and more surprising claim, and it is the one the scaling curve actually supports."
+  ]
+ },
+ "diagrams": [
+  {
+   "id": "d-axes",
+   "kind": "axes2",
+   "tier": "inferred",
+   "steps": 6,
+   "title": "Two operators, two axes of the same tensor",
+   "lede": "The single hardest thing to see from the prose. Toggle the two and watch which cells light.",
+   "tokens": [
+    {
+     "key": "R",
+     "label": "R  registers ×16"
+    },
+    {
+     "key": "q",
+     "label": "q  proprioception"
+    },
+    {
+     "key": "A",
+     "label": "Ã  noised actions"
+    },
+    {
+     "key": "Phi",
+     "label": "Φ  vision-language",
+     "through": false
+    }
+   ],
+   "labels": {
+    "t": "t",
+    "ctrl": "Operator"
+   },
+   "modes": [
+    {
+     "label": "attention",
+     "axis": "col",
+     "at": 2,
+     "note": "within one timestep",
+     "say": "<b>Attention runs down a column.</b> It sees every token of one timestep — registers, proprioception, noised actions — and cross-attends to that timestep's vision-language tokens. It sees nothing of any other timestep. This is the pretrained GR00T computation, unchanged."
+    },
+    {
+     "label": "TTT",
+     "axis": "row",
+     "note": "across all timesteps",
+     "say": "<b>TTT runs along a row.</b> It sees one token position across the whole rollout, and it is the only component that ever does. Note the dashed row: <b>Φ never enters TTT</b> — the vision-language tokens are left out for cost, so everything they contain has to reach the future through the 16 register tokens. That single exclusion is what keeps inference latency flat."
+    }
+   ]
+  },
+  {
+   "id": "d-loop",
+   "kind": "recurrence",
+   "tier": "inferred",
+   "steps": 5,
+   "title": "Update, then apply — one timestep at a time",
+   "lede": "Equations 1 and 2, stepped. Press play.",
+   "labels": {
+    "kv": "K,V",
+    "state": "W",
+    "o": "O",
+    "init": "W₀",
+    "k": "K",
+    "v": "V",
+    "q": "Q",
+    "w": "W",
+    "update": "update",
+    "ctrl": "Rollout",
+    "back": "◀",
+    "fwd": "▶",
+    "play": "play",
+    "all": "all"
+   },
+   "stepText": [
+    "Before anything happens the state is <math><msub><mi>W</mi><mn>0</mn></msub></math> — a <b>learned</b> initialisation, meta-learned through gradients of gradients so that its later updates suit robot trajectories specifically.",
+    "<b>t = 1.</b> One gradient step binds <math><msub><mi>K</mi><mn>1</mn></msub></math> to <math><msub><mi>V</mi><mn>1</mn></msub></math> inside the MLP, giving <math><msub><mi>W</mi><mn>1</mn></msub></math>. Then <math><msub><mi>Q</mi><mn>1</mn></msub></math> is asked of the just-updated MLP, giving <math><msub><mi>O</mi><mn>1</mn></msub></math>. Update <i>then</i> apply — the order matters, the state already contains this step.",
+    "<b>t = 2.</b> <math><msub><mi>W</mi><mn>1</mn></msub></math> carries forward and takes another step. Nothing about step 1 is stored anywhere; what survives of it is only the change it made to these weights.",
+    "<b>t = 3.</b> The state's size has not changed and will not. This is the property that keeps inference cost flat, and it is also what makes the fast model's capacity the binding constraint.",
+    "<b>t = 4.</b> Every step so far has overwritten a little of every step before it. What survives is what kept being useful — which is the paper's argument for why gradient descent is the right write rule for dense, repetitive robot streams.",
+    "<b>t = 5.</b> Now scale this to 8,192. At inference the loop is the same and the cost per step is the same; the only thing that changed is how much has been written into the same weights."
+   ]
+  },
+  {
+   "id": "d-tbptt",
+   "kind": "truncation",
+   "tier": "inferred",
+   "steps": 12,
+   "title": "What the segment length costs you",
+   "lede": "Blue is the fast-weight chain; red is how far gradient reaches back from the loss.",
+   "labels": {
+    "state": "W chain",
+    "grad": "gradient",
+    "cut": "cut",
+    "axis": "timestep →",
+    "ctrl": "Segment S"
+   },
+   "options": [
+    {
+     "label": "S = 2",
+     "seg": 2
+    },
+    {
+     "label": "S = 3",
+     "seg": 3
+    },
+    {
+     "label": "S = 6",
+     "seg": 6
+    },
+    {
+     "label": "full BPTT",
+     "seg": null
+    }
+   ],
+   "initial": 1,
+   "text": "Segment <b>S = {seg}</b>: gradient reaches back <b>{reach}</b> of {T} timesteps, so GPU memory holds {reach} steps of activations. The blue chain still runs the whole way — inference behaviour is identical whatever S is. What S buys is how far back training can shape the update dynamics; what it costs is memory. The paper never states the value it used."
+  },
+  {
+   "id": "d-mask",
+   "kind": "maskstrip",
+   "tier": "inferred",
+   "title": "Failures as context, corrections as targets",
+   "lede": "The same DAgger rollout, read two ways.",
+   "roleColors": {
+    "robot": {
+     "fill": "var(--sunk)",
+     "stroke": "var(--rule)",
+     "ink": "var(--body)"
+    },
+    "human": {
+     "fill": "var(--name-soft)",
+     "stroke": "var(--name)",
+     "ink": "var(--name)"
+    }
+   },
+   "roleShort": {
+    "robot": "robot",
+    "human": "human"
+   },
+   "labels": {
+    "step": "action",
+    "updates": "updates W",
+    "loss": "in the loss",
+    "skip": "—",
+    "ctrl": "Training scheme"
+   },
+   "initial": 1,
+   "schemes": [
+    {
+     "label": "standard DAgger",
+     "roles": [
+      "robot",
+      "robot",
+      "robot",
+      "robot",
+      "human",
+      "human",
+      "human",
+      "robot",
+      "robot",
+      "robot",
+      "human",
+      "human"
+     ],
+     "loss": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+     ],
+     "say": "<b>Standard DAgger</b> fine-tunes on the human corrections and discards the robot's failures entirely. The corrections are learned in isolation, with no record of what each one was answering. Measured gain over the base policies: <b>9%</b> on average."
+    },
+    {
+     "label": "DAgger Distillation",
+     "roles": [
+      "robot",
+      "robot",
+      "robot",
+      "robot",
+      "human",
+      "human",
+      "human",
+      "robot",
+      "robot",
+      "robot",
+      "human",
+      "human"
+     ],
+     "loss": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+     ],
+     "say": "<b>DAgger Distillation</b> uses the same bytes. Every action — failures included — writes to the fast weights, while only the corrections are targets. The failure is now the antecedent of the correction, so what gets distilled is the mapping rather than the corrections themselves. Same data, measured gain <b>33%</b>. The rows below look identical between the two schemes; the difference is the top row, which is present as context in one and thrown away in the other."
+    }
+   ]
+  }
+ ],
+ "results": [
+  {
+   "id": "r-tasks",
+   "tier": "stated",
+   "title": "What the robot is actually being asked to do",
+   "lede": "Worth looking at before any number. These are not pick-and-place: screwing, drilling, bimanual handoffs, flipping a car body, and in the case of Gear Bot a ten-stage sequence that takes five minutes to complete.",
+   "fig": {
+    "file": "tasks.webp",
+    "num": "Figure 5",
+    "caption": "<b>Evaluation tasks</b> on a YAM bimanual setup, one rollout per row. <b>Top, Pup Go Car:</b> toy vehicle assembly, 2-minute episodes. <b>Middle, Circuit:</b> target specified by prompt or by a one-shot human video; 1-minute episodes. <b>Bottom, Gear Bot:</b> ten stages over five minutes, the longest-horizon task.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "How much of each row is the same scene. Multi-stage assembly means visually near-identical states recur, several minutes apart.",
+     "means": "That recurrence is the failure mode the whole paper is built against — <i><span class=\"term\">state aliasing</span></i>. A single-frame policy cannot tell stage 3 from stage 7 and so performs the wrong motion or skips a stage; knowing which one you are in requires remembering how you got there.",
+     "change": "All three tasks are tabletop bimanual assembly on one hardware setup. Nothing here says whether the result survives a different embodiment or a task whose stages are visually distinct — the latter would be the sharper test, since it removes the aliasing that motivates the method."
+    }
+   }
+  },
+  {
+   "id": "r-main",
+   "tier": "stated",
+   "title": "Main evaluation — three real-robot assembly tasks",
+   "lede": "YAM bimanual setup, four RGB cameras, 20 trials per task (10 for Gear Bot). Scores are rubric-based, normalised to [0,1] and reported as percent — <b>a rubric score is not a success rate</b>, and the paper reports both.",
+   "table": {
+    "num": "Table 1",
+    "caption": "<b>Fully successful trials</b>, out of 20 per task (10 for Gear Bot). RoboTTT is the only method with any full success on Gear Bot, a ten-stage task averaging five minutes.",
+    "cols": [
+     "Method",
+     "Pup Go Car",
+     "Circuit",
+     "Gear Bot"
+    ],
+    "rows": [
+     {
+      "best": true,
+      "cells": [
+       "RoboTTT",
+       "9 / 20",
+       "13 / 20",
+       "2 / 10"
+      ]
+     },
+     {
+      "cells": [
+       "GR00T N1.7",
+       "3 / 20",
+       "3 / 20",
+       "0 / 10"
+      ]
+     },
+     {
+      "cells": [
+       "GR00T N1.7 Hist.",
+       "0 / 20",
+       "8 / 20",
+       "0 / 10"
+      ]
+     },
+     {
+      "cells": [
+       "GDN",
+       "3 / 20",
+       "8 / 20",
+       "0 / 10"
+      ]
+     }
+    ]
+   },
+   "fig": {
+    "file": "main_exp_results.svg",
+    "num": "Figure 7",
+    "caption": "<b>Main evaluation: task completion scores on three assembly tasks.</b> Rubric-based, in percent; higher is better.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "Not the winner — the gap between GR00T N1.7 Hist. and plain GR00T N1.7 on Pup Go Car. Adding one history frame made it <i>worse</i>: 39.5% against 57%.",
+     "means": "History is not free. Concatenating past observations introduces spurious correlations and leaves the policy temporally out of distribution. That negative result is what makes the rest of the paper a claim about the update rule rather than about having memory.",
+     "change": "n is 20 per task, 10 for Gear Bot. A 9/20 against 3/20 is a real gap; the 2/10 on Gear Bot is one or two rollouts away from being 0/10 or 4/10 and should not be leaned on alone."
+    }
+   }
+  },
+  {
+   "id": "r-scaling",
+   "tier": "stated",
+   "title": "The result the paper is actually about",
+   "lede": "Pretrain at context lengths from 128 to 8K, then post-train and evaluate closed-loop on all three tasks. This is the figure that justifies the title.",
+   "fig": {
+    "file": "ctx_scaling_results.svg",
+    "num": "Figure 8",
+    "caption": "<b>Closed-loop performance scales with pretraining context length.</b> RoboTTT improves steadily to 71.5% at 8K with no sign of saturation; GDN does not benefit from longer context.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "The two curves' <b>slopes</b>, not their heights. RoboTTT rises with context length; GDN is flat.",
+     "means": "Both methods carry a fixed-size state, so this separates the two update rules and nothing else. Gradient descent on the state benefits from longer training sequences — more inner steps for the outer loss to shape — and a linear associative update does not.",
+     "change": "Below 1K, RoboTTT is beaten by its own longer-context variants, which the paper attributes to the rollout outrunning the training context. That means the curve is partly about train/test length mismatch, not purely about capacity, and a version of this plot with the rollout truncated to the training length would be a cleaner test."
+    }
+   }
+  },
+  {
+   "id": "r-oneshot",
+   "tier": "stated",
+   "title": "One-shot imitation from a single human video",
+   "lede": "The prompt is <i>“assemble circuit”</i> for all ~80 configurations, so the target is identifiable <b>only</b> from the in-context video. Trained on 20 configurations, tested on the other 60.",
+   "table": {
+    "num": "Table 2",
+    "caption": "<b>One-shot imitation on Circuit</b>, conditioning on one human video of an unseen configuration.",
+    "cols": [
+     "Method",
+     "Completion score",
+     "Successful rollouts"
+    ],
+    "rows": [
+     {
+      "best": true,
+      "cells": [
+       "RoboTTT",
+       "65%",
+       "6 / 10"
+      ]
+     },
+     {
+      "cells": [
+       "GDN",
+       "33%",
+       "0 / 10"
+      ]
+     }
+    ]
+   },
+   "fig": {
+    "file": "circuit_one_shot_rollout.webp",
+    "num": "Figure 9",
+    "caption": "<b>One-shot imitation from an in-context human video.</b> Continuous footage: a human demonstrates an unseen configuration (frames 1–3), the scene is reset (frame 4), and RoboTTT reproduces the assembly (row 2).",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "GDN's 0 / 10 next to its 33% completion score. It is not failing to encode the video — it scores partial credit — it is failing to <i>use</i> what it encoded, picking wrong components and assembling in the wrong order.",
+     "means": "Encoding and retrieval are separable failures, and this is the cleanest evidence in the paper for the retrieval half. Querying a network that was gradient-updated on the history retrieves; a linear associative state apparently stores without retrieving.",
+     "change": "n = 10, one task, one baseline. GR00T is excluded on the reasonable grounds that it cannot condition on context at all — but that also means there is no non-recurrent reference point on this table."
+    }
+   }
+  },
+  {
+   "id": "r-perturb",
+   "tier": "stated",
+   "title": "Robustness to a human interfering mid-episode",
+   "lede": "On Pup Go Car a human removes the roof after it is installed, or a tire after insertion. A policy conditioned on its own rollout should notice and reinstall. 30 minutes of perturbation data was co-trained in for all methods.",
+   "table": {
+    "num": "Table 3",
+    "caption": "<b>Robustness to external perturbations.</b> Successful recoveries — the policy reassembled the removed part — out of 20 per condition.",
+    "cols": [
+     "Method",
+     "Roof",
+     "Tire"
+    ],
+    "rows": [
+     {
+      "best": true,
+      "cells": [
+       "RoboTTT",
+       "15 / 20",
+       "18 / 20"
+      ]
+     },
+     {
+      "cells": [
+       "GR00T N1.7",
+       "10 / 20",
+       "11 / 20"
+      ]
+     },
+     {
+      "cells": [
+       "GR00T N1.7 Hist.",
+       "3 / 20",
+       "5 / 20"
+      ]
+     },
+     {
+      "cells": [
+       "GDN",
+       "13 / 20",
+       "18 / 20"
+      ]
+     }
+    ]
+   },
+   "after": "Note what this table does <i>not</i> separate. All methods were co-trained on perturbation data, so every number here includes whatever a single-step policy can learn from seeing perturbations in its training set. GDN ties RoboTTT on tires at 18/20. The honest reading is that within-episode conditioning helps and that this particular comparison does not isolate how much of the help comes from context rather than from the co-training."
+  },
+  {
+   "id": "r-dagger",
+   "tier": "stated",
+   "title": "Learning to recover, from data that was already collected",
+   "lede": "50 DAgger trajectories collected with RoboTTT and 50 with GR00T, pooled to 100, used to train every method. Same bytes, four ways of reading them.",
+   "fig": {
+    "file": "dagger_distillation_results.svg",
+    "num": "Figure 10",
+    "caption": "<b>DAgger Distillation results on Pup Go Car.</b> Task completion after fine-tuning on a pool of 100 DAgger trajectories. DAgger Distillation applies to the sequence models only.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "The control, which is the most informative bar on the chart: fine-tuning GR00T on the <b>full</b> trajectories, robot failures included, scores <b>57% — identical</b> to fine-tuning on corrections alone.",
+     "means": "The failures carry zero value as imitation targets. Their entire value is as context, and only a model with somewhere to put context can collect it. That is what makes this a result about the architecture rather than about data curation.",
+     "change": "GDN gains 29% here against RoboTTT's 36%, so the technique is not specific to TTT and generalises to sequence-model policies. If it had only worked for RoboTTT, it would be a property of fast weights; it is not."
+    }
+   }
+  },
+  {
+   "id": "r-recovery",
+   "tier": "stated",
+   "title": "What on-the-fly recovery looks like",
+   "fig": {
+    "file": "dagger_distillation_rollout.webp",
+    "num": "Figure 11",
+    "caption": "<b>On-the-fly recovery learned through DAgger Distillation.</b> Tightening the roof screw on Pup Go Car, RoboTTT misses (frames 1–3), raises the arm and re-attempts, getting closer but missing again (4–5), then re-adjusts once more and succeeds (6–8).",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "Frames 4–5 — the <b>second</b> failure. One retry could be a policy that always retries; two adjustments that get progressively closer is a policy conditioning on what just went wrong.",
+     "means": "This is the behaviour the paper says no baseline shows: baselines proceed to the next stage as if the previous one had succeeded. It is also the qualitative half of the 36% number — most of DAgger Distillation's gain is attributed to recovery after wrong actions.",
+     "change": "A hand-picked rollout is an existence proof, not a rate. The rate is in Figure 10; this figure shows what the rate is made of, and the two should not be read as one claim."
+    }
+   }
+  },
+  {
+   "id": "r-ablation",
+   "tier": "stated",
+   "title": "Which design choices actually carry the result",
+   "fig": {
+    "file": "ablation.svg",
+    "num": "Figure 12",
+    "caption": "<b>Ablation on Pup Go Car.</b> Sequence action forcing, the fast model's architecture, and the development roadmap: state tokens → + action tokens → + register tokens. GR00T with matched register tokens is included so the comparison isolates TTT from the extra tokens.",
+    "credit": "RoboTTT, CC BY 4.0",
+    "read": {
+     "look": "Two rows in particular: <i>No Seq. Action Forcing</i> collapses, and <i>+ Register Tokens</i> helps RoboTTT while the same tokens do nothing for GR00T.",
+     "means": "The single largest effect belongs to what reads on the page as a sampling detail. And register tokens are worth +18% only in the presence of TTT, which means they are a channel into the recurrence rather than extra capacity — the matched-token control is what licenses that reading.",
+     "change": "This is one task, and it is the task with the DAgger data. An ablation this load-bearing on Circuit or Gear Bot would tell you whether the ordering holds; the paper does not run it."
+    }
+   }
+  }
+ ],
+ "code": {
+  "repo": "lucidrains/robo_ttt",
+  "url": "https://github.com/lucidrains/robo_ttt",
+  "official": false,
+  "fields": {
+   "stars": "72",
+   "licence": "MIT",
+   "commit read": "df865de (2026-08-20)",
+   "size": "770 lines, one file",
+   "ran it": "yes — torch 2.6.0, py3.10"
+  },
+  "lede": "Phil Wang's reference implementation, written from the paper. It is not a fork of anything the authors released, because the authors released nothing. It is small enough to read end to end and it does run, so every row below is a measurement rather than a reading — which turns out to matter, because two lines that look wrong on the page are right at runtime and one line that looks fine is not.",
+  "rows": [
+   {
+    "paper": "Eq. 1 — one gradient step on the fast weights",
+    "code": "robo_ttt.py:178,180,293",
+    "verdict": "match",
+    "tier": "verified",
+    "jump": "m-ttt"
+   },
+   {
+    "paper": "Eq. 2 — apply the updated weights to the query",
+    "code": "robo_ttt.py:298",
+    "verdict": "match",
+    "tier": "verified",
+    "jump": "m-ttt"
+   },
+   {
+    "paper": "Eq. 3 — <math><mrow><mi>tanh</mi><mo>⁡</mo><mspace width=\"0.1667em\"></mspace></mrow></math> gate on the TTT branch",
+    "code": "robo_ttt.py:450,590",
+    "verdict": "differs",
+    "tier": "verified",
+    "jump": "m-gate"
+   },
+   {
+    "paper": "Eq. 5 — noise level sampled per timestep",
+    "code": "robo_ttt.py:485,731",
+    "verdict": "match",
+    "tier": "verified",
+    "jump": "m-loss"
+   },
+   {
+    "paper": "TBPTT — detach at segment boundaries, carry the state",
+    "code": "robo_ttt.py:467",
+    "verdict": "match",
+    "tier": "verified",
+    "jump": "m-tbptt"
+   },
+   {
+    "paper": "Masked loss, unconditional state update",
+    "code": "robo_ttt.py:762",
+    "verdict": "match",
+    "tier": "verified",
+    "jump": "m-mask"
+   },
+   {
+    "paper": "Freeze the backbone, train only the new layers",
+    "code": "robo_ttt.py:557",
+    "verdict": "match",
+    "tier": "verified"
+   },
+   {
+    "paper": "RoPE on the TTT queries and keys, <math><mrow><mi>θ</mi><mo>=</mo><mn>10000</mn></mrow></math>",
+    "code": "robo_ttt.py:163",
+    "verdict": "match",
+    "tier": "stated"
+   },
+   {
+    "paper": "Inner learning rate on a base of 0.1",
+    "code": "robo_ttt.py:184",
+    "verdict": "differs",
+    "tier": "verified"
+   },
+   {
+    "paper": "Gate initialised to 0.001",
+    "code": "robo_ttt.py:413",
+    "verdict": "differs",
+    "tier": "verified"
+   },
+   {
+    "paper": "16 learned register tokens per timestep",
+    "code": "—",
+    "verdict": "absent",
+    "tier": "verified"
+   },
+   {
+    "paper": "Muon — explicitly left to future work",
+    "code": "robo_ttt.py:101",
+    "verdict": "beyond",
+    "tier": "verified"
+   },
+   {
+    "paper": "Forget gate — not in the paper",
+    "code": "robo_ttt.py:204",
+    "verdict": "beyond",
+    "tier": "verified"
+   }
+  ],
+  "divergences": [
+   {
+    "grade": "defect",
+    "tier": "verified",
+    "title": "The attention branch is added twice, so the gate no longer preserves the pretrained model",
+    "paper": "Eq. 3 is <math><mrow><mi>O</mi><mo>=</mo><mrow><mi>tanh</mi><mo>⁡</mo></mrow><mrow><mo fence=\"true\" form=\"prefix\" stretchy=\"false\">(</mo><mi>α</mi><mo fence=\"true\" form=\"postfix\" stretchy=\"false\">)</mo></mrow><mo>⊙</mo><msub><mi>O</mi><mpadded lspace=\"0\"><mi>TTT</mi></mpadded></msub><mo>+</mo><msub><mi>O</mi><mpadded lspace=\"0\"><mi>attn</mi></mpadded></msub></mrow></math>. The coefficient on the attention branch is 1, which is exactly what makes a near-zero gate a no-op and lets a 538M-parameter pretrained head survive being modified.",
+    "code": "<a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L450\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:450</a> already returns <code>action_chunk + memory_out * tanh(scale)</code> — the residual is inside the wrapper. Then the forward hook at <a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L590\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:590</a> returns <code>output + ttt_memory_out</code>, adding it again. The effective output is <b>2·O<sub>attn</sub> + tanh(α)⊙O<sub>TTT</sub></b>.",
+    "means": "At initialisation every wrapped layer doubles its output instead of passing it through. The gate's stated purpose is defeated: the model is perturbed hard from step one, exactly what Eq. 3 exists to prevent. Training can rescale around it, so it will not crash — it will quietly cost you the pretrained initialisation. Note that <code>TTTWrapper</code> used standalone, as in the repo's first README example, is correct; only the <code>RoboTTT</code> wrapper path doubles.",
+    "probe": "# gate zeroed, so tanh(alpha) = 0 and only the residual structure is left\nhooked = model(video_hiddens = vh)                   # through RoboTTT's forward hook\nplain  = policy(vh.reshape(B*T, N, D)).reshape(B, T) # no hook at all\n\n4 hooked/unhooked ratio: min=2.000000 max=2.000000\n4 expected 1.0 if Eq.3 is O = attn + tanh(a)*TTT ; 2.0 if the residual is added twice"
+   },
+   {
+    "grade": "a choice",
+    "tier": "verified",
+    "title": "A learned forget gate the paper does not have",
+    "paper": "Eq. 1 has no forgetting term. The fast weights accumulate updates and nothing decays them.",
+    "code": "<a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L204\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:204</a> builds a sigmoid gate from the mean token and multiplies every fast-weight delta by it. On by default (<code>learned_forget = True</code>), with the comment that many papers find forgetting important.",
+    "means": "Defensible on its own terms and probably helpful, but it changes the state dynamics the paper's scaling result is about. Anyone using this repo to reproduce Fig. 8 is running a different recurrence than the one that produced the curve."
+   },
+   {
+    "grade": "a choice",
+    "tier": "verified",
+    "title": "The inner learning rate starts at 0.70, not 0.1",
+    "paper": "Appendix A: the inner test-time learning rate is learned on top of <b>a constant base learning rate of 0.1</b>.",
+    "code": "<a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L184\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:184</a> initialises the raw parameter to <code>1e-2</code> and passes it through <code>softplus</code>, giving an effective rate of <b>0.6982</b> — seven times the paper's base — and it is one scalar rather than one per layer.",
+    "means": "It is learnable, so training can walk it back. But the starting point decides how violently a single timestep overwrites the state early in training, which is when the meta-learned <math><msub><mi>W</mi><mn>0</mn></msub></math> is being shaped. This is the divergence most likely to change results while looking like nothing."
+   },
+   {
+    "grade": "cosmetic",
+    "tier": "verified",
+    "title": "The update looks like ascent and is descent",
+    "paper": "Eq. 1 subtracts <math><mrow><mi>η</mi><msub><mo form=\"prefix\" stretchy=\"false\">∇</mo><mi>W</mi></msub><msub><mi class=\"mathcal\">ℒ</mi><mpadded lspace=\"0\"><mi>FW</mi></mpadded></msub></mrow></math>.",
+    "code": "<a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L178\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:178</a> returns <code>-F.mse_loss(...)</code>, and <a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L293\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:293</a> <i>adds</i> the resulting gradient. Two negations compose.",
+    "means": "Listed because it is the trap: read alone, the added gradient looks like an ascent step, and the fix a careless reviewer would apply would break it. One probe settles it. The loss is also a mean where the paper writes a squared norm, which differs by a constant the learnable rate absorbs.",
+    "probe": "B fast-weight MSE on its own keys: before=0.280587 after=0.241871  -> DESCENDS (Eq.1 sign correct)"
+   },
+   {
+    "grade": "absent",
+    "tier": "verified",
+    "title": "No register tokens, and TBPTT is off unless you ask for it",
+    "paper": "16 learned register tokens per timestep, worth +18% in the ablation. TBPTT is half the training recipe.",
+    "code": "No register tokens exist anywhere in the file; <code>select_tokens_slice</code> mentions them in a comment but creates none. <code>tbptt_step_size</code> defaults to <code>None</code> at <a href=\"https://github.com/lucidrains/robo_ttt/blob/df865de2e5798691f71ff1503f201efab37422fe/robo_ttt/robo_ttt.py#L413\" target=\"_blank\" rel=\"noopener\">robo_ttt.py:413</a>'s constructor and <code>RoboTTT</code> never sets it, so the README's usage trains with full BPTT.",
+    "means": "Both are additions the user is expected to supply, which is reasonable for a reference implementation and worth knowing before treating it as a reproduction. The TBPTT mechanism itself is present and correct — it just has to be switched on.",
+    "probe": "C tbptt_step_size=None -> timesteps with nonzero grad from the last output: 6/6\nC tbptt_step_size=2    -> timesteps with nonzero grad from the last output: 2/6\nC tbptt_step_size=3    -> timesteps with nonzero grad from the last output: 3/6"
+   }
+  ],
+  "probe": "1 shapes  in (2, 5, 4, 16) -> out (2, 5, 4, 16)\n1 fast weight keys: ['0.bias', '0.weight', '2.bias', '2.weight'] step: 5\n2 gate init: mean=+4.520e-05 std=8.913e-05 max|.|=1.800e-04\n3 gate=0 -> ||out - in|| = 0.000e+00   (0 means the wrapper returns input + gated)\n4 hooked/unhooked ratio: min=2.000000 max=2.000000\n4 expected 1.0 if Eq.3 is O = attn + tanh(a)*TTT ; 2.0 if the residual is added twice\n\nA raw lr param = 0.0100 -> softplus = 0.6982  (paper: base 0.1)\nA learned_forget default = True ; muon default = False ; rope theta = torch.Size([8])\nB fast-weight MSE on its own keys: before=0.280587 after=0.241871  -> DESCENDS (Eq.1 sign correct)\nC tbptt_step_size=None -> timesteps with nonzero grad from the last output: 6/6  ['2.89e-04', '2.42e-04', '3.53e-04', '3.91e-04', '4.18e-04', '1.28e+02']\nC tbptt_step_size=2    -> timesteps with nonzero grad from the last output: 2/6  ['0.00e+00', '0.00e+00', '0.00e+00', '0.00e+00', '3.34e-04', '1.28e+02']\nC tbptt_step_size=3    -> timesteps with nonzero grad from the last output: 3/6  ['0.00e+00', '0.00e+00', '0.00e+00', '4.20e-04', '4.95e-04', '1.28e+02']\nD sample_action_times(12) -> shape (12,) range [0.1081,0.8860]  (paper: tau = 0.999*(1-u), u~Beta(1.5,1))\nD empirical mean=0.3992  closed form 0.999*(1-1.5/2.5)=0.3996\nE params total=5316 finetune_parameters()=2522 (47.4%)  policy params excluded = True\nF masked loss = -0.065166 ; fast-weight step advanced to 6 of T=6 (paper: all steps update W, loss only on unmasked)"
+ },
+ "gaps": {
+  "unspecified": [
+   "<b>The TBPTT segment length <math><mi>S</mi></math>.</b> Never given, in the method or the appendix. It sets the GPU memory ceiling and how far back training can shape the update dynamics; two runs at 8K context with different <math><mi>S</mi></math> are not the same experiment.",
+   "<b>The context-length schedule.</b> Pretraining “gradually increases” context to the target. The shape of that ramp is a training-curriculum choice, and Fig. 8 is a plot of its endpoint.",
+   "<b><math><mi>k</mi></math>, the number of denoising steps at inference.</b> Named in the method and never given a value. It trades latency against action quality on a 30 Hz loop.",
+   "<b>Pretraining data scale.</b> The mixture is named and cited, and the trajectory-length distribution is plotted (Fig. A.1), but not the number of hours or trajectories. The downstream task data is given precisely — 8, 6 and 5 hours."
+  ],
+  "absent": [
+   "<b>No seed variance anywhere.</b> Every number is a single training run evaluated once. With n = 20 trials and no repeats, a 9/20 against 8/20 is indistinguishable from noise, and several comparisons in Table 3 sit in that range.",
+   "<b>The ablation runs on one task only</b> — Pup Go Car, which is also the task carrying the DAgger data. The claim that sequence action forcing matters more than the fast model's architecture rests entirely on that one setting.",
+   "<b>No latency measurement.</b> “Without growing inference latency” is the abstract's claim and the design's whole justification, and no timing appears in the paper. The deployment hardware is given (RTX 5090, 30 Hz) but not what the control loop actually costs at 128 versus 8K context.",
+   "<b>No fast-weight drift measurement over a long rollout.</b> The method rests on the state staying useful across 8K updates with no explicit forgetting term; nothing in the paper measures whether it does."
+  ],
+  "reconcile": [
+   "<b>62% in the abstract, 63% in the body.</b> The abstract says 8K “outperforms the same model pretrained with 1K timesteps by 62%”; the introduction and Sec. 4 both say 63%, and Sec. 4 gives the underlying figures as 71.5% and 43.9%. 71.5 / 43.9 − 1 = 62.9%, which rounds to 63. The abstract is the odd one out. Trivial, and worth knowing which number to quote.",
+   "<b>The 87% headline does reconcile</b>, though the displayed numbers do not reproduce it: 79 / 42 − 1 = 88%. Unrounded values near 78.9 and 42.2 give 87%, which is consistent, so this is rounding and not an error. Recorded here because it looks like one at a glance and is not."
+  ],
+  "authors": [
+   "Scaling the training context length increases training cost; more recent TTT training techniques such as TNT are suggested as future work.",
+   "The TTT layers use a generic self-supervised objective; robotics-oriented objectives for them are unexplored.",
+   "RoboTTT does not handle every failure mode encountered in deployment; combining it with reinforcement learning to optimise task success directly is named as the natural next step."
+  ]
+ },
+ "sources": [
+  {
+   "label": "RoboTTT: Context Scaling for Robot Policies — arXiv:2607.15275v1",
+   "url": "https://arxiv.org/abs/2607.15275",
+   "note": "Jiang, Chebotar, Zheng, Hu, Ge, Wu, Dai, Reed, Fei-Fei, Zhu, Fan. NVIDIA / Stanford / UT Austin. CC BY 4.0. Equations, figures and section text read from the LaTeX source tarball; figure and table numbers checked against the published PDF.",
+   "fetched": "2026-09-08"
+  },
+  {
+   "label": "arXiv e-print source tarball",
+   "url": "https://arxiv.org/e-print/2607.15275",
+   "note": "26 .tex files, 16 figure PDFs. Figures converted here: vector → SVG, raster-backed → WebP at 1500 px.",
+   "fetched": "2026-09-08"
+  },
+  {
+   "label": "Project page — research.nvidia.com/labs/gear/robottt",
+   "url": "https://research.nvidia.com/labs/gear/robottt/",
+   "note": "Rollout videos. No code release.",
+   "fetched": "2026-09-08"
+  },
+  {
+   "label": "lucidrains/robo_ttt @ df865de",
+   "url": "https://github.com/lucidrains/robo_ttt/tree/df865de2e5798691f71ff1503f201efab37422fe",
+   "note": "Third-party reimplementation, MIT, 72 stars, 770 lines. Run under torch 2.6.0 / Python 3.10.18; probe script and output reproduced above.",
+   "fetched": "2026-09-08"
+  }
+ ],
+ "footer": "Teardown built with paper-teardown. Figures © the authors, CC BY 4.0, embedded under that licence. Diagrams in the Diagrams section, all readings, and everything marked inferred are mine, not the paper's. The code section describes a third-party reimplementation and not the authors' work.",
+ "heroDiagram": "d-axes",
+ "methodLede": "Six blocks, in the order the paper builds them. Click any symbol in an equation to light it everywhere it appears, and its row in the table below; click again to release.",
+ "diagramsLede": "None of these are the paper's figures. They are drawn to make four things visible that the prose states but does not show, and they are marked inferred for that reason."
+};
+
+const U = Object.assign({
+  contents:"On this page", claim:"The claim", problem:"The problem", method:"The method",
+  diagrams:"Diagrams", results:"Results", code:"The code",
+  gaps:"What the paper does not tell you", sources:"Sources",
+  theirs:"As the authors frame it", mine:"As I read it",
+  look:"Look at", means:"It establishes", change:"Would change my mind",
+  readTitle:"How to read this figure",
+  symbol:"Symbol", name:"Name", shape:"Shape", prov:"From", note:"Note",
+  paper:"Paper", incode:"Code", verdict:"Verdict", tier:"Evidence",
+  unspecified:"Unspecified — you would need this to reproduce it",
+  absent:"Absent — an ablation the argument wants",
+  reconcile:"Does not reconcile", authorlim:"The authors' own stated limitations",
+  probes:"Probe output, as it printed", masthead:"Paper teardown",
+  thirdparty:"Third-party reimplementation — not the authors' code",
+  thirdbody:"Every claim in this section is evidence about <b>this repository</b>. It is evidence about the paper only where the two agree. The authors released no code.",
+  repoLabel:"repo", isAuthor:"author of the paper?", yes:"yes", no:"no",
+  fetched:"fetched", secSubs:{},
+  tiers:{verified:"verified · I ran it", stated:"stated · the source says so", inferred:"inferred · my reading"}
+}, TEARDOWN.ui || {});
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c;
+                          if (h != null) n.innerHTML = h; return n; };
+const tierTag = t => t ? '<span class="tag ' + t + '">' + t + '</span>' : "";
+const sub = id => (U.secSubs || {})[id] || "";
+
+/* ===== masthead + hero ===== */
+const M = TEARDOWN.meta, C = TEARDOWN.claim;
+document.title = M.title;
+document.documentElement.lang = M.lang || "en";
+$("#mh1").textContent = U.masthead;
+$("#mh2").textContent = M.shortTitle || "";
+$("#navlab").textContent = U.contents;
+$("#hero").innerHTML =
+  '<h1>' + esc(M.title) + '</h1>' +
+  '<div class="byline">' + esc((M.authors || []).join(" · ")) + '</div>' +
+  '<div class="affil">' + esc((M.affiliations || []).join("  ·  ")) + '</div>' +
+  '<div class="chips">' +
+    (M.links || []).map(l => '<a class="chip" href="' + l.url + '" target="_blank" rel="noopener">' +
+      esc(l.label) + '</a>').join("") +
+    (M.date ? '<span class="chip">' + esc(M.date) + '</span>' : "") +
+    (M.licence ? '<span class="chip lic">' + esc(M.licence) + '</span>' : "") +
+  '</div>' +
+  '<p class="lede">' + C.sentence + '</p>' +
+  '<div class="stats">' + (C.numbers || []).map(n =>
+    '<div><div class="v"><em>' + esc(n.val) + '</em></div>' +
+    '<div class="k">' + n.label + '</div>' +
+    (n.vs ? '<div class="vs">' + esc(n.vs) + '</div>' : "") + '</div>').join("") + '</div>' +
+  '<div class="legend">' + ["verified","stated","inferred"].map(t =>
+    '<span class="tierkey" data-t="' + t + '">' + esc(U.tiers[t]) + '</span>').join("") + '</div>';
+
+/* ===== shared blocks ===== */
+function reading(r) {
+  if (!r) return "";
+  const li = (k, v) => v ? '<li><b>' + esc(k) + '.</b> ' + v + '</li>' : "";
+  return '<div class="read"><h5>' + esc(U.readTitle) + '</h5><ul>' +
+    li(U.look, r.look) + li(U.means, r.means) + li(U.change, r.change) + '</ul></div>';
+}
+function figure(f) {
+  if (!f) return "";
+  const body = f.link
+    ? '<div class="frame" style="padding:26px 14px;text-align:center;color:var(--muted)">' +
+      esc(f.link.note) + ' — <a href="' + f.link.url + '" target="_blank" rel="noopener">' +
+      esc(f.link.label) + '</a></div>'
+    : '<div class="frame"><img src="' + (f.dataUri || ("assets/" + f.file)) +
+      '" alt="' + esc(f.caption || "") + '" loading="lazy"></div>';
+  return '<figure>' + body + '<figcaption><span class="fnum">' + esc(f.num || "") + '</span>' +
+    (f.caption || "") + (f.credit ? ' <span style="color:var(--faint)">— ' + esc(f.credit) + '</span>' : "") +
+    '</figcaption>' + reading(f.read) + '</figure>';
+}
+function dtable(t) {
+  if (!t) return "";
+  return '<div class="tbl"><table class="data"><thead><tr>' +
+    t.cols.map(c => '<th>' + esc(c) + '</th>').join("") + '</tr></thead><tbody>' +
+    t.rows.map(r => '<tr' + (r.best ? ' class="best"' : '') + '>' +
+      r.cells.map((c, i) => '<td' + (i ? ' class="n"' : '') + '>' + esc(c) + '</td>').join("") +
+      '</tr>').join("") + '</tbody></table></div>' +
+    (t.caption ? '<figcaption><span class="fnum">' + esc(t.num || "") + '</span>' + t.caption + '</figcaption>' : "");
+}
+
+/* ===== mechanism ===== */
+function mech(m) {
+  const syms = (m.symbols || []).length ? '<table class="syms" data-eq="' + m.id + '"><thead><tr>' +
+    [U.symbol, U.name, U.shape, U.prov, U.note].map(h => '<th>' + esc(h) + '</th>').join("") +
+    '</tr></thead><tbody>' + m.symbols.map(s =>
+      '<tr data-sym="' + esc(s.key) + '"><td class="s">' + s.sym + '</td><td>' + s.name + '</td>' +
+      '<td class="sh">' + esc(s.shape || "") + '</td>' +
+      '<td><span class="prov ' + esc(s.prov) + '">' + esc(s.prov) + '</span></td>' +
+      '<td class="nt">' + (s.note || "") + '</td></tr>').join("") + '</tbody></table>' : "";
+  const eqs = (m.eqs || []).map(e =>
+    '<div class="eq" data-eq="' + m.id + '">' + e.mathml + '</div>' +
+    (e.num ? '<div class="eqno">' + esc(e.num) + '</div>' : "")).join("");
+  const code = (m.code || []).map(c =>
+    '<a class="codeline" href="' + (c.url || "#code") + '"' +
+    (c.url ? ' target="_blank" rel="noopener"' : "") + '>' + esc(c.path) + ':' + esc(c.line) +
+    '  ' + esc(c.ident) + '</a>').join("");
+  return '<div id="' + m.id + '" data-tier="' + (m.tier || "stated") + '" style="scroll-margin-top:20px">' +
+    '<h3>' + m.title + ' <span class="eqno" style="display:inline;margin:0">' + esc(m.num || "") + '</span> ' +
+      tierTag(m.tier) + '</h3>' +
+    (m.lede ? '<p class="oneline">' + m.lede + '</p>' : "") +
+    eqs + syms +
+    (m.gloss || []).map(g => '<p>' + g + '</p>').join("") +
+    (code ? '<div style="margin:14px 0 0">' + code + '</div>' : "") +
+    figure(m.fig) + '</div>';
+}
+
+/* ===== sections ===== */
+const S = [];
+function section(id, title, html) {
+  S.push({id, title, sub: sub(id)});
+  return '<section id="' + id + '"><h2 class="sec">' + esc(title) +
+    (sub(id) ? '<span class="en">' + esc(sub(id)) + '</span>' : "") + '</h2>' +
+    '<div class="keyline"></div>' + html + '</section>';
+}
+let out = "";
+
+/* problem */
+const P = TEARDOWN.problem;
+out += section("problem", U.problem,
+  '<div data-tier="stated"><h3>' + esc(U.theirs) + '</h3>' +
+    P.theirs.map(x => '<p>' + x + '</p>').join("") + '</div>' +
+  '<div data-tier="inferred"><h3>' + esc(U.mine) + '</h3>' +
+    P.mine.map(x => '<p>' + x + '</p>').join("") + '</div>');
+
+/* method */
+out += section("method", U.method,
+  (TEARDOWN.methodLede ? '<p class="lede" style="font-size:1.06rem">' + TEARDOWN.methodLede + '</p>' : "") +
+  TEARDOWN.mechanisms.map(mech).join(""));
+TEARDOWN.mechanisms.forEach(m => S.push({id:m.id, title:m.short || m.title, sub:m.num, kid:true}));
+
+/* diagrams (minus any promoted into the hero) */
+const heroId = TEARDOWN.heroDiagram;
+const inBody = (TEARDOWN.diagrams || []).filter(d => d.id !== heroId);
+if (inBody.length)
+  out += section("diagrams", U.diagrams,
+    (TEARDOWN.diagramsLede ? '<p class="lede" style="font-size:1.06rem">' + TEARDOWN.diagramsLede + '</p>' : "") +
+    inBody.map(d =>
+      '<div class="dia" id="' + d.id + '" data-tier="' + (d.tier || "inferred") + '">' +
+      '<h3>' + d.title + ' ' + tierTag(d.tier || "inferred") + '</h3>' +
+      (d.lede ? '<p>' + d.lede + '</p>' : "") +
+      '<div class="stage" data-dia="' + d.id + '"></div>' +
+      '<div class="ctrl" data-ctrl="' + d.id + '"></div>' +
+      '<div class="say" data-say="' + d.id + '"></div></div>').join(""));
+
+/* results */
+if ((TEARDOWN.results || []).length)
+  out += section("results", U.results, TEARDOWN.results.map(r =>
+    '<div id="' + r.id + '" data-tier="' + (r.tier || "stated") + '" style="scroll-margin-top:20px">' +
+    '<h3>' + r.title + ' ' + tierTag(r.tier) + '</h3>' +
+    (r.lede ? '<p>' + r.lede + '</p>' : "") +
+    dtable(r.table) + figure(r.fig) +
+    (r.after ? '<p>' + r.after + '</p>' : "") + '</div>').join(""));
+
+/* code */
+const K = TEARDOWN.code;
+if (K) {
+  out += section("code", U.code,
+    (K.official ? "" : '<div class="caveat warnbox"><h4>' + esc(U.thirdparty) + '</h4><p style="margin:0">' +
+      U.thirdbody + '</p></div>') +
+    '<dl class="meta" style="margin-top:30px">' +
+      '<dt>' + esc(U.repoLabel) + '</dt><dd><a href="' + K.url + '" target="_blank" rel="noopener">' +
+        esc(K.repo) + '</a></dd>' +
+      '<dt>' + esc(U.isAuthor) + '</dt><dd>' + (K.official ? esc(U.yes) : '<b>' + esc(U.no) + '</b>') + '</dd>' +
+      Object.entries(K.fields || {}).map(([k, v]) =>
+        '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>').join("") +
+    '</dl>' +
+    (K.lede ? '<p>' + K.lede + '</p>' : "") +
+    '<div class="tbl"><table class="data"><thead><tr>' +
+      [U.paper, U.incode, U.verdict, U.tier].map(h => '<th>' + esc(h) + '</th>').join("") +
+    '</tr></thead><tbody>' + K.rows.map(r =>
+      '<tr' + (r.jump ? ' data-jump="' + r.jump + '"' : "") + '>' +
+      '<td>' + r.paper + '</td>' +
+      '<td><code>' + esc(r.code) + '</code></td>' +
+      '<td>' + (r.verdict === "differs" || r.verdict === "absent"
+        ? '<span class="tag warn">' + esc(r.verdict) + '</span>'
+        : '<span class="tag">' + esc(r.verdict) + '</span>') + '</td>' +
+      '<td>' + tierTag(r.tier) + '</td></tr>').join("") + '</tbody></table></div>' +
+    (K.divergences || []).map(d =>
+      '<div class="vd" data-tier="' + (d.tier || "verified") + '">' +
+      '<h3>' + d.title + ' <span class="tag' + (d.grade === "defect" || d.grade === "缺陷" ? " warn" : "") +
+        '">' + esc(d.grade) + '</span> ' + tierTag(d.tier) + '</h3>' +
+      '<dl class="pair">' +
+        '<dt>' + esc(U.paper) + '</dt><dd>' + d.paper + '</dd>' +
+        '<dt>' + esc(U.incode) + '</dt><dd>' + d.code + '</dd>' +
+        '<dt>' + esc(U.means) + '</dt><dd>' + d.means + '</dd></dl>' +
+      (d.probe ? '<div class="pre">' + esc(d.probe) + '</div>' : "") + '</div>').join("") +
+    (K.probe ? '<details><summary>' + esc(U.probes) + '</summary>' +
+      '<div class="pre" style="margin-bottom:20px">' + esc(K.probe) + '</div></details>' : ""));
+}
+
+/* gaps */
+const G = TEARDOWN.gaps;
+if (G) {
+  const grp = (key, label, tier) => (G[key] || []).length
+    ? '<div class="caveat" data-tier="' + tier + '"><h4>' + esc(label) + '</h4><ul>' +
+      G[key].map(x => '<li>' + x + '</li>').join("") + '</ul></div>' : "";
+  out += section("gaps", U.gaps,
+    grp("unspecified", U.unspecified, "inferred") +
+    grp("absent", U.absent, "inferred") +
+    grp("reconcile", U.reconcile, "verified") +
+    grp("authors", U.authorlim, "stated"));
+}
+
+/* sources */
+out += section("sources", U.sources,
+  '<table class="src">' + TEARDOWN.sources.map(s =>
+    '<tr><td><a href="' + s.url + '" target="_blank" rel="noopener">' + esc(s.label) + '</a>' +
+    (s.note ? '<div class="note">' + esc(s.note) + '</div>' : "") + '</td>' +
+    '<td class="d">' + esc(U.fetched) + " " + esc(s.fetched) + '</td></tr>').join("") + '</table>');
+
+$("#body").innerHTML = out;
+$("#foot").innerHTML = TEARDOWN.footer || "";
+
+/* hero diagram */
+const hd = (TEARDOWN.diagrams || []).find(d => d.id === heroId);
+if (hd) {
+  $("#herodia").hidden = false;
+  $("#herodia").innerHTML = '<h2>' + hd.title + '</h2>' +
+    (hd.lede ? '<p class="note">' + hd.lede + '</p>' : "") +
+    '<div class="stage" data-dia="' + hd.id + '"></div>' +
+    '<div class="ctrl" data-ctrl="' + hd.id + '"></div>' +
+    '<div class="say" data-say="' + hd.id + '"></div>';
+}
+
+/* ===== nav ===== */
+$("#nav").innerHTML = S.map(s =>
+  '<a href="#' + s.id + '" class="' + (s.kid ? "sub" : "") + '">' +
+  '<b>' + esc(s.title) + '</b>' + (s.sub ? '<i>' + esc(s.sub) + '</i>' : "") + '</a>').join("");
+const links = [...document.querySelectorAll("#nav a")];
+const spy = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return;
+  links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }),
+  {rootMargin:"-10% 0px -80% 0px"});
+S.forEach(s => { const n = document.getElementById(s.id); if (n) spy.observe(n); });
+
+/* ===== symbol <-> equation ===== */
+const SYM = {};
+TEARDOWN.mechanisms.forEach(m => { SYM[m.id] = new Set((m.symbols || []).map(s => s.key)); });
+document.querySelectorAll(".eq").forEach(box => {
+  const keys = SYM[box.dataset.eq] || new Set();
+  box.querySelectorAll("mi,mo").forEach(mi => {
+    const key = mi.textContent.trim();
+    if (!keys.has(key)) return;
+    const p = mi.parentElement;
+    const t = (/^(msub|msup|msubsup)$/i.test(p.tagName) && p.firstElementChild === mi) ? p : mi;
+    t.classList.add("sym"); t.dataset.sym = key;
+  });
+});
+const lightSym = (k, on) => document.querySelectorAll('[data-sym="' + CSS.escape(k) + '"]')
+  .forEach(n => n.classList.toggle("lit", on));
+let held = null;
+document.addEventListener("mouseover", e => { const n = e.target.closest("[data-sym]");
+  if (n && !held) lightSym(n.dataset.sym, true); });
+document.addEventListener("mouseout", e => { const n = e.target.closest("[data-sym]");
+  if (n && !held) lightSym(n.dataset.sym, false); });
+document.addEventListener("click", e => {
+  const n = e.target.closest("[data-sym]");
+  if (held) { lightSym(held, false); const prev = held; held = null;
+              if (!n || n.dataset.sym === prev) return; }
+  if (n) { held = n.dataset.sym; lightSym(held, true); }
+});
+
+/* ===== lightbox ===== */
+const lb = $("#lb");
+document.addEventListener("click", e => {
+  const img = e.target.closest("figure img"); if (!img) return;
+  lb.innerHTML = '<img src="' + img.getAttribute("src") + '">'; lb.classList.add("on");
+});
+lb.addEventListener("click", () => lb.classList.remove("on"));
+addEventListener("keydown", e => { if (e.key === "Escape") lb.classList.remove("on"); });
+
+/* ===== tier filter ===== */
+const offT = new Set();
+document.querySelectorAll(".tierkey").forEach(k => k.addEventListener("click", () => {
+  const t = k.dataset.t;
+  offT.has(t) ? offT.delete(t) : offT.add(t);
+  k.classList.toggle("off", offT.has(t));
+  document.querySelectorAll("[data-tier]").forEach(n => n.classList.toggle("dim", offT.has(n.dataset.tier)));
+}));
+
+/* ===== correspondence row -> mechanism ===== */
+document.querySelectorAll("tr[data-jump]").forEach(tr => tr.addEventListener("click", () => {
+  const n = document.getElementById(tr.dataset.jump); if (n) n.scrollIntoView({block:"center"});
+}));
+
+/* ===== diagrams ===== */
+/* ============================================================================
+   Four diagram kinds, reusable across sequence-model papers. Each reads its
+   spec from TEARDOWN.diagrams[i], renders into .stage[data-dia], wires
+   .ctrl[data-ctrl] and narrates into .say[data-say].
+   All copy comes from the spec, so a translated report needs no code change.
+   ========================================================================== */
+const SVGNS = "http://www.w3.org/2000/svg";
+const A = "var(--accent)", AD = "var(--accent-deep)", ASOFT = "var(--accent-soft)",
+      AWASH = "var(--wash)", INK = "var(--ink)", INK2 = "var(--body)",
+      INK3 = "var(--muted)", RULE = "var(--rule)", SURF = "var(--frame)",
+      WARN = "var(--warn)", WSOFT = "var(--warn-soft)", NAME = "var(--name)";
+
+const svg = (w, h) => { const s = document.createElementNS(SVGNS, "svg");
+  s.setAttribute("viewBox", "0 0 " + w + " " + h); s.setAttribute("width", w);
+  s.setAttribute("height", h); return s; };
+function node(tag, attrs, txt) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (txt != null) n.textContent = txt;
+  return n;
+}
+function box(g, x, y, w, h, label, o) {
+  o = o || {};
+  g.appendChild(node("rect", {x, y, width:w, height:h, rx:o.rx || 3,
+    fill:o.fill || SURF, stroke:o.stroke || RULE, "stroke-width":o.sw || 1,
+    "stroke-dasharray":o.dash || "none", opacity:o.op == null ? 1 : o.op}));
+  if (label != null) g.appendChild(node("text", {x:x + w/2, y:y + h/2 + 4,
+    "text-anchor":"middle", fill:o.ink || INK, "font-family":"var(--mono)",
+    "font-size":o.fs || 12, "font-weight":o.fw || 400, opacity:o.op == null ? 1 : o.op}, label));
+}
+function arrow(g, x1, y1, x2, y2, o) {
+  o = o || {};
+  g.appendChild(node("path", {d:o.d || ("M" + x1 + " " + y1 + "L" + x2 + " " + y2),
+    fill:"none", stroke:o.stroke || INK3, "stroke-width":o.sw || 1.3,
+    "stroke-dasharray":o.dash || "none", opacity:o.op == null ? 1 : o.op,
+    "marker-end":"url(#" + (o.head || "ah") + ")"}));
+}
+function label(g, x, y, t, o) {
+  o = o || {};
+  g.appendChild(node("text", {x, y, "text-anchor":o.anchor || "middle",
+    fill:o.ink || INK3, "font-family":o.mono === false ? "var(--sans)" : "var(--mono)",
+    "font-size":o.fs || 10.5, "font-weight":o.fw || 400,
+    opacity:o.op == null ? 1 : o.op}, t));
+}
+function defs(s) {
+  const d = node("defs");
+  [["ah", INK3], ["ahA", A], ["ahW", WARN], ["ahL", "#C6CCD1"]].forEach(([id, col]) => {
+    const m = node("marker", {id, viewBox:"0 0 8 8", refX:7, refY:4, markerWidth:5.5,
+      markerHeight:5.5, orient:"auto-start-reverse"});
+    m.appendChild(node("path", {d:"M0 0.6 L8 4 L0 7.4 Z", fill:col}));
+    d.appendChild(m);
+  });
+  s.appendChild(d);
+}
+/* Measure the widest label so the left gutter fits it. A constant here clips the
+   moment the report is translated -- CJK labels are wider than their English source. */
+function gutter(s, texts, fs) {
+  const probe = node("g", {opacity:0}); s.appendChild(probe);
+  let w = 0;
+  texts.filter(Boolean).forEach(t => {
+    const n = node("text", {x:0, y:0, "font-family":"var(--mono)", "font-size":fs || 10.5}, t);
+    probe.appendChild(n); w = Math.max(w, n.getBBox().width);
+  });
+  probe.remove();
+  return Math.ceil(w);
+}
+const stage = id => document.querySelector('.stage[data-dia="' + id + '"]');
+const ctrl  = id => document.querySelector('.ctrl[data-ctrl="' + id + '"]');
+const say   = id => document.querySelector('.say[data-say="' + id + '"]');
+function buttons(id, groupLabel, items, initial, onPick) {
+  const c = ctrl(id);
+  if (groupLabel) c.appendChild(el("span", "cl", esc(groupLabel)));
+  const bs = items.map((it, i) => {
+    const b = el("button", i === initial ? "on" : "", esc(it.label));
+    b.addEventListener("click", () => {
+      bs.forEach(x => x.classList.remove("on")); b.classList.add("on"); onPick(i, it);
+    });
+    c.appendChild(b); return b;
+  });
+  return bs;
+}
+
+const DIA = {};
+
+/* ---------------------------------------------------------------- 1. recurrence
+   A state carried along a timeline: update from (K,V), then apply to Q.
+   spec: {steps, stepText:[per-step narration], labels:{k,v,q,o,state,init}}      */
+DIA.recurrence = function (d) {
+  const T = d.steps || 5, W = 840, H = 208;
+  const s = svg(W, H); defs(s);
+  stage(d.id).appendChild(s);
+  const lw = gutter(s, [d.labels.kv, d.labels.state, d.labels.o]);
+  const initW = Math.max(52, gutter(s, [d.labels.init], 12.5) + 16);
+  const x0 = lw + 16 + initW + 14, colw = (W - x0 - 12) / T;
+  const g = node("g"); s.appendChild(g);
+
+  label(g, 8, 34, d.labels.kv, {anchor:"start", ink:INK2});
+  label(g, 8, 116, d.labels.state, {anchor:"start", ink:AD, fw:500});
+  label(g, 8, 190, d.labels.o, {anchor:"start", ink:INK2});
+
+  box(g, lw + 16, 92, initW, 34, d.labels.init, {fill:AWASH, stroke:ASOFT, ink:AD, fs:12.5});
+
+  const parts = [];
+  const bw = Math.min(88, colw - 22);
+  for (let i = 0; i < T; i++) {
+    const x = x0 + i * colw, gi = node("g"); g.appendChild(gi);
+    box(gi, x, 16, bw, 30, d.labels.k + (i + 1) + "  " + d.labels.v + (i + 1), {fs:11});
+    arrow(gi, x + bw / 2, 48, x + bw / 2, 88);
+    label(gi, x + bw / 2 + 8, 70, d.labels.update, {anchor:"start", fs:9.5});
+    box(gi, x, 92, bw, 34, d.labels.w + (i + 1), {fs:12.5, fw:500});
+    if (i < T - 1) arrow(gi, x + bw, 109, x + colw - 2, 109);
+    box(gi, x, 140, 40, 26, d.labels.q + (i + 1), {fs:11});
+    arrow(gi, x + 20, 138, x + 30, 128);
+    arrow(gi, x + bw / 2 + 8, 128, x + bw - 22, 170, {stroke:A, head:"ahA"});
+    box(gi, x + bw - 40, 172, 40, 26, d.labels.o + (i + 1), {fs:11, stroke:A, fill:AWASH, ink:AD});
+    parts.push(gi);
+  }
+  arrow(g, lw + 16 + initW, 109, x0 - 2, 109);
+
+  let at = -1, timer = null;
+  const paint = () => {
+    parts.forEach((p, i) => p.setAttribute("opacity", at < 0 || i <= at ? 1 : 0.16));
+    say(d.id).innerHTML = at < 0 ? d.stepText[0] : d.stepText[Math.min(at + 1, d.stepText.length - 1)];
+  };
+  const c = ctrl(d.id);
+  c.appendChild(el("span", "cl", esc(d.labels.ctrl)));
+  const mk = (t, fn) => { const b = el("button", "", esc(t)); b.addEventListener("click", fn); c.appendChild(b); return b; };
+  mk(d.labels.back, () => { clearInterval(timer); at = Math.max(-1, at - 1); paint(); });
+  mk(d.labels.fwd,  () => { clearInterval(timer); at = Math.min(T - 1, at + 1); paint(); });
+  const play = mk(d.labels.play, () => {
+    clearInterval(timer); at = -1; paint(); play.classList.add("on");
+    timer = setInterval(() => { at++; paint();
+      if (at >= T - 1) { clearInterval(timer); play.classList.remove("on"); } }, 850);
+  });
+  mk(d.labels.all, () => { clearInterval(timer); play.classList.remove("on"); at = T - 1; paint(); });
+  at = T - 1; paint();
+};
+
+/* ------------------------------------------------------------- 2. truncation
+   Gradients stop at segment boundaries; the carried state does not.
+   spec: {steps, options:[{label, seg}], text(seg, reach)}                        */
+DIA.truncation = function (d) {
+  const T = d.steps || 12, W = 840, H = 172;
+  const s = svg(W, H); defs(s);
+  stage(d.id).appendChild(s);
+  const pad = gutter(s, [d.labels.state, d.labels.grad]) + 18;
+  const cw = (W - pad - 20) / T;
+  const g = node("g"); s.appendChild(g);
+  const draw = seg => {
+    g.innerHTML = "";
+    const reach = seg ? Math.min(seg, T) : T;
+    label(g, 6, 56, d.labels.state, {anchor:"start", ink:AD, fw:500});
+    label(g, 6, 120, d.labels.grad, {anchor:"start", ink:INK2});
+    for (let i = 0; i < T; i++) {
+      const x = pad + i * cw;
+      box(g, x + 2, 40, cw - 6, 26, String(i + 1),
+          {fs:10.5, fill:AWASH, stroke:ASOFT, ink:AD});
+      if (i < T - 1) arrow(g, x + cw - 4, 53, x + cw + 2, 53, {stroke:A, head:"ahA", sw:1.1});
+      const live = i >= T - reach;
+      box(g, x + 2, 104, cw - 6, 22, "",
+          {fill:live ? WSOFT : "transparent", stroke:live ? WARN : RULE,
+           dash:live ? "none" : "3 3", sw:live ? 1.2 : 1});
+      if (live && i < T - 1)
+        arrow(g, x + cw + 2, 115, x + cw - 4, 115, {stroke:WARN, head:"ahW", sw:1.1});
+    }
+    if (seg) for (let b = seg; b < T; b += seg) {
+      const x = pad + b * cw;
+      g.appendChild(node("line", {x1:x, y1:26, x2:x, y2:140, stroke:INK3,
+        "stroke-width":1, "stroke-dasharray":"4 4"}));
+      label(g, x, 20, d.labels.cut, {ink:INK3, fs:9.5});
+    }
+    label(g, pad, 152, d.labels.axis, {anchor:"start", ink:INK3, fs:10});
+    say(d.id).innerHTML = d.text.replace("{seg}", seg || T).replace("{reach}", reach).replace("{T}", T);
+  };
+  buttons(d.id, d.labels.ctrl, d.options, d.initial || 0, (i, it) => draw(it.seg));
+  draw(d.options[d.initial || 0].seg);
+};
+
+/* -------------------------------------------------------------- 3. maskstrip
+   Which timesteps update the state, and which contribute to the loss.
+   spec: {schemes:[{label, roles:[..], loss:[bool], say}], roleColors, labels}     */
+DIA.maskstrip = function (d) {
+  const W = 840, H = 152;
+  const s = svg(W, H); defs(s);
+  stage(d.id).appendChild(s);
+  const pad = gutter(s, [d.labels.step, d.labels.updates, d.labels.loss]) + 18;
+  const g = node("g"); s.appendChild(g);
+  const draw = sc => {
+    g.innerHTML = "";
+    const T = sc.roles.length, cw = (W - pad - 20) / T;
+    label(g, 6, 34, d.labels.step, {anchor:"start", ink:INK2});
+    label(g, 6, 80, d.labels.updates, {anchor:"start", ink:AD, fw:500});
+    label(g, 6, 124, d.labels.loss, {anchor:"start", ink:INK2});
+    for (let i = 0; i < T; i++) {
+      const x = pad + i * cw, r = sc.roles[i], col = d.roleColors[r];
+      box(g, x + 1.5, 18, cw - 4, 24, d.roleShort[r],
+          {fs:10, fill:col.fill, stroke:col.stroke, ink:col.ink});
+      box(g, x + 1.5, 64, cw - 4, 22, "", {fill:ASOFT, stroke:A, sw:1.1});
+      const on = sc.loss[i];
+      box(g, x + 1.5, 108, cw - 4, 22, on ? "" : d.labels.skip,
+          {fs:9, fill:on ? WSOFT : "transparent", stroke:on ? WARN : RULE,
+           dash:on ? "none" : "3 3", ink:INK3});
+    }
+    for (let i = 0; i < T - 1; i++)
+      arrow(g, pad + (i + 1) * cw - 2.5, 75, pad + (i + 1) * cw + 1.5, 75, {stroke:A, head:"ahA", sw:1.1});
+    say(d.id).innerHTML = sc.say;
+  };
+  buttons(d.id, d.labels.ctrl, d.schemes, d.initial || 0, (i, sc) => draw(sc));
+  draw(d.schemes[d.initial || 0]);
+};
+
+/* ------------------------------------------------------------------ 4. axes2
+   Two operators on two axes of the same grid: one within a column, one along a row.
+   spec: {steps, tokens:[{key,label,through}], modes:[{label,axis,say}]}           */
+DIA.axes2 = function (d) {
+  const T = d.steps || 6, W = 840, y0 = 34;
+  const rows = d.tokens.length, rh = 34, H = y0 + rows * rh + 40;
+  const s = svg(W, H); defs(s);
+  stage(d.id).appendChild(s);
+  const x0 = gutter(s, d.tokens.map(t => t.label), 11) + 20;
+  const cw = (W - x0 - 26) / T;
+  const back = node("g"), front = node("g"); s.appendChild(back); s.appendChild(front);
+
+  d.tokens.forEach((t, r) => label(back, x0 - 12, y0 + r * rh + rh / 2 + 4, t.label,
+    {anchor:"end", ink:t.through === false ? INK3 : INK2, fs:11}));
+  for (let i = 0; i < T; i++) label(back, x0 + i * cw + cw / 2, y0 - 10, d.labels.t + (i + 1), {fs:10});
+  const cells = [];
+  for (let r = 0; r < rows; r++) for (let i = 0; i < T; i++) {
+    const x = x0 + i * cw + 2, y = y0 + r * rh + 3;
+    const rect = node("rect", {x, y, width:cw - 5, height:rh - 7, rx:3,
+      fill:SURF, stroke:RULE, "stroke-width":1});
+    back.appendChild(rect); cells.push({rect, r, i, t:d.tokens[r]});
+  }
+  const draw = mode => {
+    front.innerHTML = "";
+    cells.forEach(c => {
+      const inCol = mode.axis === "col" && c.i === (mode.at == null ? 1 : mode.at);
+      const inRow = mode.axis === "row" && c.t.through !== false;
+      const on = inCol || inRow;
+      c.rect.setAttribute("fill", on ? (mode.axis === "col" ? ASOFT : AWASH) : SURF);
+      c.rect.setAttribute("stroke", on ? A : (c.t.through === false ? RULE : RULE));
+      c.rect.setAttribute("stroke-width", on ? 1.5 : 1);
+      c.rect.setAttribute("stroke-dasharray", c.t.through === false ? "3 3" : "none");
+      c.rect.setAttribute("opacity", c.t.through === false && mode.axis === "row" ? 0.45 : 1);
+    });
+    if (mode.axis === "col") {
+      const i = mode.at == null ? 1 : mode.at, x = x0 + i * cw + cw / 2;
+      arrow(front, x, y0 + 2, x, y0 + rows * rh - 6, {stroke:A, head:"ahA", sw:1.6});
+      label(front, x + 8, y0 + rows * rh + 16, mode.note, {anchor:"start", ink:AD, fs:10.5});
+    } else {
+      d.tokens.forEach((t, r) => { if (t.through === false) return;
+        arrow(front, x0 + 4, y0 + r * rh + rh / 2 - 3, W - 22, y0 + r * rh + rh / 2 - 3,
+              {stroke:A, head:"ahA", sw:1.6, op:.85}); });
+      label(front, x0, y0 + rows * rh + 16, mode.note, {anchor:"start", ink:AD, fs:10.5});
+    }
+    say(d.id).innerHTML = mode.say;
+  };
+  buttons(d.id, d.labels.ctrl, d.modes, d.initial || 0, (i, m) => draw(m));
+  draw(d.modes[d.initial || 0]);
+};
+
+(TEARDOWN.diagrams || []).forEach(d => { if (DIA[d.kind]) DIA[d.kind](d); });
+</script>
+</body>
+</html>

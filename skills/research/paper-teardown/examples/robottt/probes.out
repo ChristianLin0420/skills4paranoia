@@ -1,0 +1,17 @@
+1 shapes  in (2, 5, 4, 16) -> out (2, 5, 4, 16)
+1 fast weight keys: ['0.bias', '0.weight', '2.bias', '2.weight'] step: 5
+2 gate init: mean=+4.520e-05 std=8.913e-05 max|.|=1.800e-04
+3 gate=0 -> ||out - in|| = 0.000e+00   (0 means the wrapper returns input + gated)
+4 hooked/unhooked ratio: min=2.000000 max=2.000000
+4 expected 1.0 if Eq.3 is O = attn + tanh(a)*TTT ; 2.0 if the residual is added twice
+
+A raw lr param = 0.0100 -> softplus = 0.6982  (paper: base 0.1)
+A learned_forget default = True ; muon default = False ; rope theta = torch.Size([8])
+B fast-weight MSE on its own keys: before=0.280587 after=0.241871  -> DESCENDS (Eq.1 sign correct)
+C tbptt_step_size=None -> timesteps with nonzero grad from the last output: 6/6  ['2.89e-04', '2.42e-04', '3.53e-04', '3.91e-04', '4.18e-04', '1.28e+02']
+C tbptt_step_size=2    -> timesteps with nonzero grad from the last output: 2/6  ['0.00e+00', '0.00e+00', '0.00e+00', '0.00e+00', '3.34e-04', '1.28e+02']
+C tbptt_step_size=3    -> timesteps with nonzero grad from the last output: 3/6  ['0.00e+00', '0.00e+00', '0.00e+00', '4.20e-04', '4.95e-04', '1.28e+02']
+D sample_action_times(12) -> shape (12,) range [0.1081,0.8860]  (paper: tau = 0.999*(1-u), u~Beta(1.5,1))
+D empirical mean=0.3992  closed form 0.999*(1-1.5/2.5)=0.3996
+E params total=5316 finetune_parameters()=2522 (47.4%)  policy params excluded = True
+F masked loss = -0.065166 ; fast-weight step advanced to 6 of T=6 (paper: all steps update W, loss only on unmasked)

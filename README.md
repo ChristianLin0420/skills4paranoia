@@ -14,16 +14,22 @@ skills/
     deck-design-system/
     research-figures/
     codebase-onboarding/
+    html-design-system/
   research/                 ← topic: doing the research itself
     experiment-prereg/
     vla-code-review/
+    baseline-repro/
+    paper-teardown/
+  invest/                   ← topic: holding a position you can defend
+    thesis-prereg/
+    company-dossier/
 ```
 
 Add a topic by creating a folder under `skills/` and adding the paths to the `skills` array in `.claude-plugin/plugin.json`. Nothing else changes.
 
 **Language.** English is the source language; every skill states that its output follows the user's language. Ask in Chinese and you get Chinese questions, a Chinese report and a Chinese deck, with the same structure.
 
-Concretely, and checked rather than asserted: all eight descriptions carry Chinese trigger phrases alongside the English ones, no two skills share a Chinese trigger term (a router cannot choose between two skills that claim the same sentence), all eight bodies carry the directive to answer in the user's language, and the HTML deliverables name a CJK face in both their sans and monospace stacks — a monospace stack without one renders Chinese as tofu on many machines. Templates and blank forms ship in English only; `experiment-prereg`, `research-deck` and `baseline-repro` also ship a filled Chinese example beside the English one.
+Concretely, and checked rather than asserted — `python3 tools/lint/check_routing.py` is the check, and it runs in a second: all twelve descriptions carry Chinese trigger phrases alongside the English ones, **no two skills claim the same trigger phrase** (a router cannot choose between two skills that claim the same sentence), all twelve bodies carry the directive to answer in the user's language, and the HTML deliverables name a CJK face in both their sans and monospace stacks — a monospace stack without one renders Chinese as tofu on many machines. Exactly one topic word is shared by two skills, 投影片 between `deck-design-system` and `research-deck`, which is deliberate: one is the specification and the other is the producer. Templates and blank forms ship in English only; `experiment-prereg`, `research-deck`, `baseline-repro`, `company-dossier` and `paper-teardown` also ship a filled Chinese example beside the English one, Chinese down to the headings and chrome rather than an English frame with Chinese paragraphs in it.
 
 ## Installing
 
@@ -104,8 +110,9 @@ Doing the research itself.
 | [`experiment-prereg`](skills/research/experiment-prereg) | Pin the measurement contract and freeze it |
 | [`vla-code-review`](skills/research/vla-code-review) | Hunts the engineering failures that never raise and only make the numbers worse |
 | [`baseline-repro`](skills/research/baseline-repro) | Bisects a gap against a published number and ledgers every axis on which the two setups differ, before anyone says "does not reproduce" |
+| [`paper-teardown`](skills/research/paper-teardown) | Rebuilds a paper as an interactive HTML explainer — compiled maths with every symbol given a provenance, the paper's own figures, and a code survey that runs the code |
 
-Complementary: one covers whether you defined what "right" means, the other whether the code is quietly wrong.
+Complementary: one covers whether you defined what "right" means, the other whether the code is quietly wrong. `paper-teardown` comes before all of them, when you are still deciding whether a method is worth the compute.
 
 More in [skills/research/README.md](skills/research/README.md).
 
@@ -113,7 +120,7 @@ More in [skills/research/README.md](skills/research/README.md).
 
 Holding a position you can defend.
 
-> **Nothing here is investment advice.** These skills do not value anything, judge whether a price is attractive, size a position, or say what to buy or sell — they take reasoning you already hold and put it into a form that can be wrong. Every worked example is mock; the companies do not exist. Not a substitute for a licensed adviser.
+> **Nothing here is investment advice.** These skills do not value anything, judge whether a price is attractive, size a position, or say what to buy or sell — they take reasoning you already hold and put it into a form that can be wrong. `thesis-prereg`'s worked example is mock and the company does not exist; `company-dossier`'s is real filing data on a real company, presented and not recommended. Not a substitute for a licensed adviser.
 
 | Skill | What it covers |
 |---|---|
@@ -125,6 +132,8 @@ The public finance catalogues are institutional work product or screeners wired 
 More in [skills/invest/README.md](skills/invest/README.md).
 
 ## tools/
+
+`tools/lint/check_routing.py` checks the claims this README makes — trigger phrases, the language directive, `plugin.json` against what is on disk, and CJK coverage in every font stack. It has no dependencies. Run it after adding a skill; a claim nobody can re-run is an assertion.
 
 `tools/deck-renderer` is a working Python reference implementation (markdown → `.pptx` plus an SVG preview). **It is not part of the skills and is not copied on install.** It exists because the geometry in the skills came from it, and because it can verify what an agent produces.
 

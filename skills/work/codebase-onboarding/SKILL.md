@@ -7,7 +7,8 @@ description: >-
   paths. The map is verified against a real forward pass — module hooks and a batch probe — and
   a map that fails verification ships marked NOT VERIFIED rather than silently. Use when
   starting on a new repo, inheriting someone else's training code, or trying to see the data
-  path end to end. Chinese triggers: 幫我看懂這個 codebase / 這份 code 的資料流是什麼 / 畫出模型架構 /
+  path end to end. To understand a METHOD from its paper rather than map a repo you have already
+  committed to, use paper-teardown, which hands off to this once you decide to work in the code. Chinese triggers: 幫我看懂這個 codebase / 這份 code 的資料流是什麼 / 畫出模型架構 /
   新專案上手 / train 跟 eval 的前處理一樣嗎.
 ---
 

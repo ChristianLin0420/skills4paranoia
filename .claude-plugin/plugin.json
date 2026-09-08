@@ -25,9 +25,13 @@
     "investing",
     "value-investing",
     "thesis",
-    "design-system",
     "sec-edgar",
-    "filings"
+    "filings",
+    "paper",
+    "arxiv",
+    "literature-review",
+    "latex",
+    "mathml"
   ],
   "skills": [
     "./skills/work/grill-deeper",
@@ -40,6 +44,7 @@
     "./skills/research/baseline-repro",
     "./skills/invest/thesis-prereg",
     "./skills/work/html-design-system",
-    "./skills/invest/company-dossier"
+    "./skills/invest/company-dossier",
+    "./skills/research/paper-teardown"
   ]
 }

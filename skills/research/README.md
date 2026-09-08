@@ -7,8 +7,9 @@ Skills for doing the research itself, as distinct from `work/`, which is about c
 | [`experiment-prereg`](experiment-prereg) | Pin the measurement contract and freeze it | Once you have decided to spend the compute |
 | [`vla-code-review`](vla-code-review) | Hunts engineering failures that never raise and only make the numbers worse | Before launch, or when numbers do not reproduce |
 | [`baseline-repro`](baseline-repro) | Bisects a gap against a published number, and ledgers every axis on which the two setups differ | When your number lands short of someone else's |
+| [`paper-teardown`](paper-teardown) | Rebuilds a paper as an interactive explainer — compiled maths, its own figures, and a code survey that runs the code | When you need to actually understand a method, not skim it |
 
-The first two are complementary before a run: one covers whether you defined what "right" means, the other whether the code is quietly wrong. The third is for afterwards, when the number disagrees with a paper.
+The first two are complementary before a run: one covers whether you defined what "right" means, the other whether the code is quietly wrong. The third is for afterwards, when the number disagrees with a paper. The fourth comes first of all, when you are still deciding whether a method is worth any of the other three.
 
 ## experiment-prereg
 
@@ -44,6 +45,18 @@ Every axis gets `same`, `differs`, or `unknown` — and **`unknown` is not `same
 [`examples/repro-ledger.en.md`](baseline-repro/examples/repro-ledger.en.md) — and [`.zh.md`](baseline-repro/examples/repro-ledger.zh.md) — is one worked through end to end, from an untidy request that opens "starting to think their number is optimistic". The bisection localises the gap to the evaluator in two hours; nineteen of twenty rows then close without a GPU; both rows that differ turn out to be house rules in the reader's own harness — a 300-step cap and open-loop chunk execution — which apply to every model that harness has ever run. The verdict is *we are measuring something else*, and the useful finding is not about the paper at all.
 
 The axes are the ones specific to this field, ordered by how often they turn out to be the answer — success criterion, episode limit, reset distribution, aggregation, then the inference-time constants that exist nowhere in training. openpi integrates 10 Euler steps by default and VITRA 10 DDIM steps at `cfg_scale=5.0`; openvla denormalises by an `unnorm_key`, openpi by a flag choosing between mean/std and quantiles, VITRA by one statistics file per source dataset. **Every one of those changes the policy without changing a weight**, and none of them appears in a training config.
+
+## paper-teardown
+
+One paper in, one HTML explainer out. It fetches the LaTeX source rather than the PDF, so the equations are the authors' and not something retyped off a rendered page; compiles them to MathML at build time, so they are selectable, searchable and need no CDN; pulls the paper's own figures out of the source tarball; and if code exists, surveys it end to end.
+
+**The rule: every symbol gets a home.** An equation is not explained until every symbol in it has a name, a shape and a *provenance* — `input`, `learned`, `fast`, `hyper`, `derived` or `index`. Recitation is restating the equation in words. Explanation is being able to say what breaks if a given symbol is wrong. In the report the two are linked: click `W` in Equation 1 and every form of it lights — `W_t`, `W_{t-1}`, the subscript on `∇_W`, the one inside `f_{W_{t-1}}` — along with its row in the table.
+
+**Reading is not enough.** Where code exists it gets run, and every claim carries how it was established: `verified` (observed at runtime), `stated` (the source says so), `inferred` (your reading, dashed border). This is not ceremony. In the RoboTTT example, one line looks wrong on the page and is correct at runtime — a negated loss and an added gradient compose to a descent step — while another looks fine and doubles the attention branch of every layer it wraps. Two plausible readings, opposite verdicts, and only a probe separates them.
+
+**Third-party code is labelled on every claim it supports.** A reimplementation is evidence about the reimplementation; it is evidence about the paper only where the two agree. It gets a divergence table, never a merged narrative, and each divergence is graded *cosmetic*, *a choice*, or *a defect* — the last only ever from a measurement.
+
+[`examples/robottt`](paper-teardown/examples/robottt) is a full teardown of [RoboTTT](https://arxiv.org/abs/2607.15275) (NVIDIA / Stanford / UT Austin) in both languages: six mechanisms, 34 symbols, seven compiled equations, eleven of the paper's figures each with a reading, four interactive diagrams for the things the prose states but does not show, and a survey of the only public implementation — which is not the authors'. `probes.py` and its output ship with it, so every runtime claim can be re-run.
 
 ## vla-code-review
 
