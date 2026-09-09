@@ -27,6 +27,8 @@ skills/
 
 Add a topic by creating a folder under `skills/` and adding the paths to the `skills` array in `.claude-plugin/plugin.json`. Nothing else changes.
 
+**Two layout modes.** A reader either scans and compares or reads front to back, and one page shape cannot serve both — so `html-design-system` specifies a **dashboard** (grey surface, content plus a sticky detail panel, cards, 15px) and a **long-read** (paper surface, one measure plus a navigation rail, hairline rules instead of cards, 16px). Tokens, evidence tiers and primitives are shared; only the page shape forks. Pick by what the reader does, not by how much content there is — a company dossier is very long and is still a dashboard.
+
 **Language.** English is the source language; every skill states that its output follows the user's language. Ask in Chinese and you get Chinese questions, a Chinese report and a Chinese deck, with the same structure.
 
 Concretely, and checked rather than asserted — `python3 tools/lint/check_routing.py` is the check, and it runs in a second: all twelve descriptions carry Chinese trigger phrases alongside the English ones, **no two skills claim the same trigger phrase** (a router cannot choose between two skills that claim the same sentence), all twelve bodies carry the directive to answer in the user's language, and the HTML deliverables name a CJK face in both their sans and monospace stacks — a monospace stack without one renders Chinese as tofu on many machines. Exactly one topic word is shared by two skills, 投影片 between `deck-design-system` and `research-deck`, which is deliberate: one is the specification and the other is the producer. Templates and blank forms ship in English only; `experiment-prereg`, `research-deck`, `baseline-repro`, `company-dossier` and `paper-teardown` also ship a filled Chinese example beside the English one, Chinese down to the headings and chrome rather than an English frame with Chinese paragraphs in it.
@@ -90,7 +92,7 @@ Communication and record-keeping. These survive a change of role.
 | [`research-deck`](skills/work/research-deck) | Structure and process: problem → solution → results, and how evidence attaches |
 | [`deck-design-system`](skills/work/deck-design-system) | Appearance: palette, type scale, grid, per-layout geometry |
 | [`research-figures`](skills/work/research-figures) | Figures: curves with error bands, matrices, ablation tables, reference lines, conditions footnotes |
-| [`html-design-system`](skills/work/html-design-system) | Tokens and primitives shared by every interactive HTML deliverable, so a third report is not a third stylesheet |
+| [`html-design-system`](skills/work/html-design-system) | Tokens, two layout modes and primitives shared by every interactive HTML deliverable, so a third report is not a third stylesheet |
 | [`codebase-onboarding`](skills/work/codebase-onboarding) | Maps the data path through an unfamiliar model repo, with shapes on every edge, and verifies it against a real forward pass. Worked examples for [openvla](skills/work/codebase-onboarding/examples/openvla.html), [openpi](skills/work/codebase-onboarding/examples/openpi.html) and [VITRA](skills/work/codebase-onboarding/examples/vitra.html) |
 
 **[See six sample pages](skills/work/research-deck/examples/preview)** — the front three, and three evidence pages showing the density this aims at.

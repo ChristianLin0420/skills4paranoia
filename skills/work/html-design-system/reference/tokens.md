@@ -52,9 +52,9 @@ Paste this block verbatim. It is the same palette as `deck-design-system`, which
 
 **One CJK face across a whole document.** Two Chinese faces on one page is the first thing a native reader notices, and it makes a layout look busier than its content — so do not split the stack by job the way you might in Latin-only typography. A calligraphic face (楷體, and LXGW WenKai in particular) is a specific trap: pleasant on its own, too literary beside code and equations. `paper-teardown` tried the split and reverted it; the finding is recorded in its `reference/structure.md`.
 
-## Type scale
+## Type scale — dashboard
 
-Points, at a default 15px base. HTML reports are read at arm's length on a large display, which is a different problem from a projected slide — do not import the deck's scale.
+Points, at a default 15px base. HTML reports are read at arm's length on a large display, which is a different problem from a projected slide — do not import the deck's scale. For the long-read scale, see below and `modes.md`.
 
 | Role | Size | Weight | Face |
 |---|---|---|---|
@@ -69,3 +69,27 @@ Points, at a default 15px base. HTML reports are read at arm's length on a large
 | Tag | 10 | 400 | mono |
 
 **Every number a reader might compare down a column is mono with tabular figures.** Proportional digits in a financial table are a defect, not a style choice.
+
+## Type scale — long-read
+
+A 16px base, looser leading, and a scale that goes up rather than down: a section heading here
+opens a chapter instead of labelling a scan.
+
+| Role | Size | Weight | Notes |
+|---|---|---|---|
+| Page title | `clamp(1.95rem, 4.6vw, 3.1rem)` | 600 | `line-height:1.12`, `text-wrap:balance` |
+| Section (`h2.sec`) | `clamp(1.4rem, 2.6vw, 1.85rem)` | 600 | sentence case, `--accent` keyline under it |
+| Section subtitle | `.6em` of the section | 500 | `--muted`, own line |
+| Sub-head (`h3`) | 1.08rem | 600 | `line-height:1.5`, generous top margin |
+| Body | 16 / 1.85 | 400 | |
+| Figure caption | .82rem / 1.75 | 400 | `--muted` |
+| Label / tag | .7–.76rem | 400–600 | mono |
+
+**CJK gets its own metrics, set once on `lang`.** Latin leading is not enough for Chinese, and
+guessing per element is how the two language versions drift apart:
+
+```css
+html[lang^="zh"] body{line-height:2.05;letter-spacing:.028em}
+html[lang^="zh"] h2.sec{letter-spacing:.01em;line-height:1.4}
+html[lang^="zh"] h3{line-height:1.62}
+```
