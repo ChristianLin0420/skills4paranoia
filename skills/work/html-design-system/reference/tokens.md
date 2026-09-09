@@ -50,6 +50,8 @@ Paste this block verbatim. It is the same palette as `deck-design-system`, which
 
 **CJK in both stacks.** `Noto Sans TC` is not monospaced and a mixed Latin/CJK line loses column alignment. Tofu is the worse half of that trade.
 
+**One CJK face across a whole document.** Two Chinese faces on one page is the first thing a native reader notices, and it makes a layout look busier than its content — so do not split the stack by job the way you might in Latin-only typography. A calligraphic face (楷體, and LXGW WenKai in particular) is a specific trap: pleasant on its own, too literary beside code and equations. `paper-teardown` tried the split and reverted it; the finding is recorded in its `reference/structure.md`.
+
 ## Type scale
 
 Points, at a default 15px base. HTML reports are read at arm's length on a large display, which is a different problem from a projected slide — do not import the deck's scale.

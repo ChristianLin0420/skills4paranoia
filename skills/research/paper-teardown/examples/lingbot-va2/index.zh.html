@@ -6,7 +6,7 @@
 <title>為通用機器人控制而生的原生 Video-Action 預訓練——逐項拆解</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=LXGW+WenKai+TC:wght@300;400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   /* palette: ours, unchanged. layout and type: editorial long-read. */
@@ -16,11 +16,10 @@
   --accent:#3A6183; --accent-deep:#27435C; --accent-soft:#DBE4EB; --wash:#EAF0F4;
   --warn:#8C4A3C; --warn-soft:#EFE3E0;
   --name:#54547A; --name-soft:#E6E6EE;
-  /* Two text stacks on purpose. --sans is furniture: headings, labels, nav, tags, where a
-     calligraphic CJK face would read as decoration. --read is for text you sit with, where
-     LXGW WenKai's open counters are what "breathing room" actually means in Chinese. */
-  --sans:"Barlow","Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
-  --read:"Barlow","LXGW WenKai TC","Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
+  /* One CJK face for every Chinese glyph on the page -- headings, prose, tables, labels,
+     diagrams. Mixing two reads as noise. The Latin side is IBM Plex Sans, which is the same
+     family as the mono already used for data and code, so Latin is one system too. */
+  --sans:"IBM Plex Sans","Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono","Noto Sans TC",ui-monospace,Menlo,monospace;
 }
 *{box-sizing:border-box}
@@ -32,7 +31,7 @@ body{margin:0;background:var(--paper);color:var(--body);font-family:var(--sans);
    The whole document carries lang, so this is one rule rather than per-element guesswork. */
 html[lang^="zh"] body{line-height:2.05;letter-spacing:.028em}
 html[lang^="zh"] .lede,html[lang^="zh"] .oneline{line-height:1.9}
-p,li,dd,figcaption,.read,.oneline,.hero .lede,.dia .say,.caveat,blockquote{font-family:var(--read)}
+/* no per-element font overrides: one stack, applied on body */
 img{max-width:100%;display:block;height:auto}
 a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid rgba(58,97,131,.42)}
 a:hover{border-bottom-color:var(--accent)}

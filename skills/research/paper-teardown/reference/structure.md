@@ -100,7 +100,7 @@ Number every exhibit, derive its id from that number, and resolve references at 
 skipping captions (self-linking), headings, and code. A reference to a figure you did not
 reproduce should stay plain text rather than link somewhere wrong.
 
-## Two text stacks, and CJK gets its own metrics
+## One CJK face, and CJK gets its own metrics
 
 **A wall of text is a structure problem before it is a leading problem.** Raising line-height
 alone bought 6%; splitting the gloss into labelled, ruled items bought the rest. Each gloss
@@ -117,12 +117,20 @@ html[lang^="zh"] body{line-height:2.05;letter-spacing:.028em}
 CJK needs more leading and a little tracking than Latin to stop reading as a block. Guessing
 per-element is how the two versions drift apart.
 
-**Split the font stack by job.** `--sans` is furniture — headings, labels, nav, tags — where a
-calligraphic CJK face reads as decoration. `--read` is text you sit with, where an open face
-like LXGW WenKai TC is what "breathing room" actually means in Chinese. Check the face is
-really rendering before believing it: CJK advance widths are all 1em, so measuring string
-width proves nothing — rasterise the same glyphs in each family and compare, with a
-deliberately bogus family name as the fallback control.
+**Use exactly one CJK face for the whole page** — headings, prose, tables, labels, diagrams.
+Splitting the stack by job sounds principled and reads as noise: two Chinese faces on one
+page is the first thing a native reader notices, and it makes the layout look busier than
+its content. A calligraphic face is a further trap; it is pleasant in isolation and too
+literary next to code and equations. Neutral sans, one weight range, everywhere.
+
+The Latin side should be the same family as the monospace already used for data and paths,
+so that side is one system too — here IBM Plex Sans against IBM Plex Mono.
+
+**Check the face is really rendering before believing it.** CJK advance widths are all 1em,
+so measuring string width proves nothing — every family returns the same number. Rasterise
+the same glyphs in each stack the page uses and compare the images, with a deliberately
+bogus family name as the fallback control. Two stacks whose CJK rasterises identically at
+the same weight are, in fact, one face.
 
 **Measure the change, do not eyeball it.** Visible characters per 1000px of document height
 is a serviceable proxy for density; apply the old values with an injected stylesheet and
