@@ -100,6 +100,34 @@ Number every exhibit, derive its id from that number, and resolve references at 
 skipping captions (self-linking), headings, and code. A reference to a figure you did not
 reproduce should stay plain text rather than link somewhere wrong.
 
+## Two text stacks, and CJK gets its own metrics
+
+**A wall of text is a structure problem before it is a leading problem.** Raising line-height
+alone bought 6%; splitting the gloss into labelled, ruled items bought the rest. Each gloss
+point already opens with a bold lead-in — promote it to its own label so three paragraphs read
+as three things.
+
+**Latin and CJK do not want the same metrics.** The document carries `lang`, so set them once:
+
+```css
+body{font-size:16px;line-height:1.85}
+html[lang^="zh"] body{line-height:2.05;letter-spacing:.028em}
+```
+
+CJK needs more leading and a little tracking than Latin to stop reading as a block. Guessing
+per-element is how the two versions drift apart.
+
+**Split the font stack by job.** `--sans` is furniture — headings, labels, nav, tags — where a
+calligraphic CJK face reads as decoration. `--read` is text you sit with, where an open face
+like LXGW WenKai TC is what "breathing room" actually means in Chinese. Check the face is
+really rendering before believing it: CJK advance widths are all 1em, so measuring string
+width proves nothing — rasterise the same glyphs in each family and compare, with a
+deliberately bogus family name as the fallback control.
+
+**Measure the change, do not eyeball it.** Visible characters per 1000px of document height
+is a serviceable proxy for density; apply the old values with an injected stylesheet and
+re-measure to get a controlled before and after in the same page.
+
 ## One measure, not three
 
 **The content column is the reading measure. Set it once, on the column.**
