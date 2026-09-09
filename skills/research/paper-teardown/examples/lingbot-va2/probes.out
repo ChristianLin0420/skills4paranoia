@@ -1,0 +1,27 @@
+repo: /private/tmp/claude-502/-Users-chrislin-Library-Application-Support-Claude-scratch-workspaces-cf2b7161-6d61-46e1-b1aa-35bebfeedbde-ae6cdefa-a29d-44f9-af49-72d85aede8c8-scratch-2026-09-05-df2504/89288079-30f0-4817-b199-585753e5aa9d/scratchpad/lingbot/code   files scanned: 48
+total python lines: 6507
+
+-- the four design principles of LingBot-VA 2.0 --
+NOT-VA2  (3) sparse MoE backbone                      ABSENT
+NOT-VA2  (1a) semantic alignment to a teacher         ABSENT
+NOT-VA2  (1b) latent action tokenizer                 ABSENT
+NOT-VA2  (MCP) multi-chunk prediction                 ABSENT
+NOT-VA2  (4) Foresight Reasoning / re-grounding       ABSENT
+
+-- what the released model is built on instead --
+NOT-VA2  reconstruction VAE from Wan2.2               PRESENT
+          wan_va/wan_va_server.py:24  WanVAEStreamingWrapper,
+          wan_va/wan_va_server.py:67  self.streaming_vae = WanVAEStreamingWrapper(self.vae)
+NOT-VA2  initialised from a pretrained video model    PRESENT
+          INSTALL.md:40  Once the installation is complete, you can run **Wan2.2** using:
+          INSTALL.md:43  poetry run python generate.py --task t2v-A14B --size '1280*720' --ckpt_d
+NOT-VA2  Wan video transformer as the backbone        PRESENT
+          wan_va/modules/model.py:569  class WanTransformer3DModel(ModelMixin, ConfigMixin):
+NOT-VA2  dense FeedForward, not a routed layer        PRESENT
+          wan_va/modules/model.py:9  from diffusers.models.attention import FeedForward
+
+-- which paper the repository is for --
+        arXiv ids referenced anywhere: ['2601.21998']
+        2607.08639 (this paper) referenced: False
+        2601.21998 (LingBot-VA 1.0)  referenced: True
+        PDFs committed at the repo root: ['LingBot_VA2_paper.pdf', 'LingBot_VA_paper.pdf']

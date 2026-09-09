@@ -329,8 +329,10 @@ function figure(f) {
     ? '<div class="frame" style="padding:26px 14px;text-align:center;color:var(--muted)">' +
       esc(f.link.note) + ' — <a href="' + f.link.url + '" target="_blank" rel="noopener">' +
       esc(f.link.label) + '</a></div>'
-    : '<div class="frame"><img src="' + (f.dataUri || ("assets/" + f.file)) +
-      '" alt="' + esc(f.caption || "") + '" loading="lazy"></div>';
+    : '<div class="frame">' + (f.files || [f.file]).map((fl, i) =>
+        '<img src="' + ((f.dataUris && f.dataUris[i]) || ("assets/" + fl)) +
+        '" alt="' + esc(f.caption || "") + '" loading="lazy"' +
+        (i ? ' style="margin-top:8px"' : '') + '>').join("") + '</div>';
   return '<figure>' + body + '<figcaption><span class="fnum">' + esc(f.num || "") + '</span>' +
     (f.caption || "") + (f.credit ? ' <span style="color:var(--faint)">— ' + esc(f.credit) + '</span>' : "") +
     '</figcaption>' + reading(f.read) + '</figure>';

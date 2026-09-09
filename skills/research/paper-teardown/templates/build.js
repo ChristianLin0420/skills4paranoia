@@ -65,17 +65,23 @@ let inlined = 0;
 if (assetDir) {
   const MIME = {".svg":"image/svg+xml", ".webp":"image/webp", ".png":"image/png", ".jpg":"image/jpeg"};
   const seen = new Map();
-  const embed = f => {
-    if (!f || !f.file || f.link) return;
-    if (!seen.has(f.file)) {
-      const ext = f.file.slice(f.file.lastIndexOf("."));
-      const path = require("path").join(assetDir, f.file);
-      if (!fs.existsSync(path)) { console.error("missing asset: " + path); process.exitCode = 1; return; }
-      seen.set(f.file, "data:" + (MIME[ext] || "application/octet-stream") +
-                       ";base64," + fs.readFileSync(path).toString("base64"));
+  const uri = file => {
+    if (!seen.has(file)) {
+      const ext = file.slice(file.lastIndexOf("."));
+      const path = require("path").join(assetDir, file);
+      if (!fs.existsSync(path)) { console.error("missing asset: " + path); process.exitCode = 1; return null; }
+      seen.set(file, "data:" + (MIME[ext] || "application/octet-stream") +
+                     ";base64," + fs.readFileSync(path).toString("base64"));
       inlined++;
     }
-    f.dataUri = seen.get(f.file);
+    return seen.get(file);
+  };
+  const embed = f => {
+    if (!f || f.link) return;
+    const files = f.files || (f.file ? [f.file] : []);
+    if (!files.length) return;
+    f.dataUris = files.map(uri);          // one entry per image; never also store dataUri,
+                                          // or every figure's base64 lands in the file twice
   };
   (spec.mechanisms || []).forEach(m => embed(m.fig));
   (spec.results || []).forEach(r => embed(r.fig));

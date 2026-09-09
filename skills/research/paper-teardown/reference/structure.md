@@ -70,6 +70,11 @@ Four kinds, kept apart:
 The last one is theirs and goes last, clearly labelled. Mixing it with yours takes credit for their
 honesty.
 
+**Show the interval.** When a stated figure does not follow from a table, do not just assert it —
+compute the range the displayed precision allows and show that the claim falls outside it. "The
+table shows 93.6 and 79.8, so the difference lies in (13.70, 13.90); the stated 14.0 is outside it
+for every pair consistent with what is printed" is checkable. "The arithmetic is wrong" is not.
+
 **Be precise about arithmetic.** Rounded numbers do not reproduce rounded ratios: 79 and 42 shown to
 two figures give 88%, and the paper's "87%" is right if the unrounded values are 78.9 and 42.2. Check
 whether any pair of unrounded inputs consistent with the display reproduces the claim before calling

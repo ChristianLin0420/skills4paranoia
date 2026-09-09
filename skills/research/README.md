@@ -56,7 +56,13 @@ One paper in, one HTML explainer out. It fetches the LaTeX source rather than th
 
 **Third-party code is labelled on every claim it supports.** A reimplementation is evidence about the reimplementation; it is evidence about the paper only where the two agree. It gets a divergence table, never a merged narrative, and each divergence is graded *cosmetic*, *a choice*, or *a defect* — the last only ever from a measurement.
 
-[`examples/robottt`](paper-teardown/examples/robottt) is a full teardown of [RoboTTT](https://arxiv.org/abs/2607.15275) (NVIDIA / Stanford / UT Austin) in both languages: six mechanisms, 34 symbols, seven compiled equations, eleven of the paper's figures each with a reading, four interactive diagrams for the things the prose states but does not show, and a survey of the only public implementation — which is not the authors'. `probes.py` and its output ship with it, so every runtime claim can be re-run.
+Two worked examples ship, and they fail in opposite directions — which is the point.
+
+[`examples/robottt`](paper-teardown/examples/robottt) — [RoboTTT](https://arxiv.org/abs/2607.15275), NVIDIA / Stanford / UT Austin. No official code, so a third-party reimplementation is surveyed. Running it finds that one line looks like an ascent step and is a descent step, while another looks fine and doubles the attention branch of every layer it wraps — measured at exactly 2.000000 with the gate zeroed, which defeats the stated purpose of the paper's gating equation.
+
+[`examples/lingbot-va2`](paper-teardown/examples/lingbot-va2) — [LingBot-VA 2.0](https://arxiv.org/abs/2607.08639), Robbyant / Ant Group, 29 authors. Here official code *does* exist: the authors' own organisation, Apache-2.0, 1,863 stars, actively maintained, with this paper's PDF committed at the root. **It implements version 1.0** — the model the paper defines itself against. All five of the paper's mechanisms are absent, all four markers of the thing being departed from are present, and the only arXiv id anywhere in the repository is the previous paper's. Every signal a reader uses to conclude "this is the code for that paper" fires correctly, and the conclusion is wrong.
+
+Both ship `probes.py` and its recorded output, so every claim can be re-run. Both are in English and Chinese, Chinese down to the headings and figure readings.
 
 ## vla-code-review
 

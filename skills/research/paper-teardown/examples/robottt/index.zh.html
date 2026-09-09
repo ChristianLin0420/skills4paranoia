@@ -1637,8 +1637,10 @@ function figure(f) {
     ? '<div class="frame" style="padding:26px 14px;text-align:center;color:var(--muted)">' +
       esc(f.link.note) + ' — <a href="' + f.link.url + '" target="_blank" rel="noopener">' +
       esc(f.link.label) + '</a></div>'
-    : '<div class="frame"><img src="' + (f.dataUri || ("assets/" + f.file)) +
-      '" alt="' + esc(f.caption || "") + '" loading="lazy"></div>';
+    : '<div class="frame">' + (f.files || [f.file]).map((fl, i) =>
+        '<img src="' + ((f.dataUris && f.dataUris[i]) || ("assets/" + fl)) +
+        '" alt="' + esc(f.caption || "") + '" loading="lazy"' +
+        (i ? ' style="margin-top:8px"' : '') + '>').join("") + '</div>';
   return '<figure>' + body + '<figcaption><span class="fnum">' + esc(f.num || "") + '</span>' +
     (f.caption || "") + (f.credit ? ' <span style="color:var(--faint)">— ' + esc(f.credit) + '</span>' : "") +
     '</figcaption>' + reading(f.read) + '</figure>';
@@ -2114,6 +2116,100 @@ DIA.axes2 = function (d) {
       label(front, x0, y0 + rows * rh + 16, mode.note, {anchor:"start", ink:AD, fs:10.5});
     }
     say(d.id).innerHTML = mode.say;
+  };
+  buttons(d.id, d.labels.ctrl, d.modes, d.initial || 0, (i, m) => draw(m));
+  draw(d.modes[d.initial || 0]);
+};
+
+/* ------------------------------------------------------------------ 5. routing
+   Sparse mixture-of-experts: how few of the pool a single token actually wakes.
+   spec: {experts, cols, topk, shared, tokens:[{label, pick:[i..]}], labels, text}  */
+DIA.routing = function (d) {
+  const N = d.experts, cols = d.cols || 16, rows = Math.ceil(N / cols);
+  const W = 840, gapx = 3, gapy = 4, top = 46;
+  const s = svg(W, top + rows * (14 + gapy) + 46); defs(s);
+  stage(d.id).appendChild(s);
+  const lw = gutter(s, [d.labels.shared, d.labels.pool]) + 14;
+  const cw = (W - lw - 8) / cols;
+  const g = node("g"); s.appendChild(g);
+
+  // deterministic pseudo-random pick per token, so the picture is stable across renders
+  const pick = (seed, k) => {
+    const out = new Set(); let x = seed * 9301 + 49297;
+    while (out.size < k) { x = (x * 9301 + 49297) % 233280; out.add(x % N); }
+    return out;
+  };
+  const cells = [];
+  const draw = (ti) => {
+    g.innerHTML = ""; cells.length = 0;
+    const chosen = d.tokens[ti].pick ? new Set(d.tokens[ti].pick) : pick(ti + 1, d.topk);
+    label(g, 6, top - 22, d.labels.pool, {anchor:"start", ink:INK2});
+    box(g, lw, 12, Math.max(96, cw * 2), 20, d.labels.shared,
+        {fill:ASOFT, stroke:A, ink:AD, fs:10.5});
+    label(g, lw + Math.max(96, cw * 2) + 10, 26, d.labels.sharedNote, {anchor:"start", fs:9.5});
+    for (let i = 0; i < N; i++) {
+      const r = Math.floor(i / cols), c = i % cols;
+      const on = chosen.has(i);
+      box(g, lw + c * cw, top + r * (14 + gapy), cw - gapx, 14, "",
+          {rx:2, fill:on ? A : SURF, stroke:on ? A : RULE, sw:on ? 1.2 : 0.8});
+    }
+    label(g, lw, top + rows * (14 + gapy) + 16, d.labels.axis
+      .replace("{k}", d.topk).replace("{N}", N)
+      .replace("{pct}", (100 * d.topk / N).toFixed(1)), {anchor:"start", ink:AD, fs:10.5});
+    say(d.id).innerHTML = d.tokens[ti].say || d.text;
+  };
+  buttons(d.id, d.labels.ctrl, d.tokens, 0, i => draw(i));
+  draw(0);
+};
+
+/* ------------------------------------------------------------------- 6. streams
+   Two pipelines advancing at different rates: predict while you act, and what it
+   costs when the fast one is never corrected.
+   spec: {chunks, modes:[{label, async, reground, say}], labels}                    */
+DIA.streams = function (d) {
+  const n = d.chunks || 4, W = 840, H = 190;
+  const s = svg(W, H); defs(s);
+  stage(d.id).appendChild(s);
+  const lw = gutter(s, [d.labels.predict, d.labels.execute, d.labels.obs]) + 16;
+  const g = node("g"); s.appendChild(g);
+
+  const draw = m => {
+    g.innerHTML = "";
+    const span = W - lw - 14;
+    // synchronous: predict and execute alternate. asynchronous: they overlap.
+    const unit = m.async ? span / n : span / (2 * n);
+    label(g, 6, 40, d.labels.predict, {anchor:"start", ink:AD, fw:500});
+    label(g, 6, 96, d.labels.execute, {anchor:"start", ink:INK2});
+    label(g, 6, 150, d.labels.obs, {anchor:"start", ink:INK2});
+    let stall = 0;
+    for (let i = 0; i < n; i++) {
+      const px = m.async ? lw + i * unit : lw + (2 * i) * unit;
+      const ex = m.async ? lw + (i + 1) * unit : lw + (2 * i + 1) * unit;
+      if (!m.async && i) stall += unit;
+      box(g, px, 24, unit - 6, 26, d.labels.pred + (i + 1),
+          {fs:10.5, fill:AWASH, stroke:A, ink:AD});
+      if (ex + unit - 6 <= W - 8)
+        box(g, ex, 80, unit - 6, 26, d.labels.exec + (i + 1), {fs:10.5, fill:SURF, stroke:RULE});
+      // the drafted latent handed from prediction to execution
+      if (ex + unit - 6 <= W - 8) arrow(g, px + unit / 2, 52, ex + unit / 2 - 4, 78, {stroke:A, head:"ahA"});
+      // the real observation coming back, and whether anything is done with it
+      if (ex + unit - 6 <= W - 8) {
+        const gx = ex + unit / 2;
+        box(g, gx - 9, 132, 18, 18, "", {rx:9, fill:m.reground ? WSOFT : "transparent",
+             stroke:m.reground ? WARN : RULE, dash:m.reground ? "none" : "3 3"});
+        if (m.reground && i < n - 1)
+          arrow(g, gx, 130, px + unit + unit / 2, 54, {stroke:WARN, head:"ahW", sw:1.2,
+            d:`M${gx} 130 C ${gx} 96, ${px+unit+unit/2} 92, ${px+unit+unit/2} 54`});
+      }
+    }
+    if (!m.async && stall > 0) {
+      for (let i = 0; i < n - 1; i++) {
+        const x = lw + (2 * i + 1) * unit;
+        box(g, x, 24, unit - 6, 26, d.labels.idle, {fs:9.5, fill:"transparent",
+            stroke:RULE, dash:"3 3", ink:INK3});
+      }
+    }
+    say(d.id).innerHTML = m.say;
   };
   buttons(d.id, d.labels.ctrl, d.modes, d.initial || 0, (i, m) => draw(m));
   draw(d.modes[d.initial || 0]);

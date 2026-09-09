@@ -6,8 +6,15 @@ Before anything else, establish authorship, because it changes the meaning of ev
 
 | | What a finding means |
 |---|---|
-| **Official** — an author's account, or linked from the paper or project page | Evidence about the paper. A gap between code and text is a finding about the paper. |
+| **Official, and this paper's model** | Evidence about the paper. A gap between code and text is a finding about the paper. |
+| **Official, but a different version** | Evidence about **that version**. Common when a paper is a v2 and the repository was written for the v1. |
 | **Third-party** — anyone else | Evidence about **the reimplementation**. A gap is a finding about the code, and tells you about the paper only where the two agree. |
+
+The middle row is the one that catches people, because every signal points the wrong way. In the
+`lingbot-va2` example the repository is the authors' own organisation, Apache-2.0, actively
+maintained, with the paper's own PDF committed at its root — and it implements the previous
+version of the model, the one the paper defines itself against. **Ownership is not identity.**
+Check the code against the paper's claims, one by one, and let the answer decide.
 
 Record owner, stars, last commit, licence, the commit SHA you read, and the authorship verdict.
 Put the verdict in the report header, not in a footnote — a reader who misses it will misattribute
@@ -61,9 +68,16 @@ three interacting terms into a question about one, and turns a suggestive number
 | Only some parameters train | Count `finetune_parameters()` against the total |
 | A loss mask does not stop state updates | Run with a mask; check the recurrent step counter still reached T |
 
-If you cannot run it — no wheels for the platform, a dependency on hardware you do not have — say
-so plainly in the report and mark every code claim `stated`. Do not let an unrun repo produce
-`verified` claims.
+If you cannot run it — no wheels for the platform, hardware you do not have, weights that were
+never released — say so plainly in the report and do not let an unrun repo produce claims about
+behaviour.
+
+There is still something honest to run. A **static audit** — one check per mechanism the paper
+claims, printing what it looked for and what it found — has the repository itself as its subject,
+so running it earns `verified` for presence and absence while making no behavioural claim at all.
+State the distinction in the report rather than letting the tier imply more than you measured.
+`examples/lingbot-va2/probes.py` is one: nine checks, each labelled with whether the result is what
+this paper would predict.
 
 ## The correspondence table
 

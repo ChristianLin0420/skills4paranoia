@@ -73,7 +73,13 @@ the intent, not what the tensor does.
 Write the probes as a script that prints its measurements, keep it, and ship its output in the
 report. See `reference/code-survey.md`.
 
-**When the code is not the authors'**, say so on every claim it supports, and never merge the two
+**Establish which artefact you are holding before anything else.** Third-party code is the obvious
+case, and not the only one: an official repository can implement a different version of the model
+than the paper describes, and every surface signal — organisation, licence, stars, recent commits,
+even the paper's own PDF committed at the root — will still look right. Check what the code
+contains against what the paper claims, not what the repository is called.
+
+**When the code is not this paper's**, say so on every claim it supports, and never merge the two
 into one story. Produce a **divergence table**: what the paper specifies, what this code does, and
 whether the difference is cosmetic, a defensible choice, or a defect. A reimplementation is
 evidence about the reimplementation. It is evidence about the paper only where they agree.
@@ -86,7 +92,7 @@ Front-loaded, same doctrine as the decks: the argument first, the evidence after
 2. **The claim** — one sentence, then the three numbers that carry the paper.
 3. **The problem** — what was broken before, in the authors' framing and then in yours.
 4. **The method** — one block per mechanism: compiled equation, symbol table, plain reading, the paper's figure.
-5. **Diagrams** — the ones you drew, where the paper has none. Interactive where motion is the idea.
+5. **Diagrams** — the ones you drew, where the paper has none. Interactive where motion is the idea. Six reusable kinds ship in `templates/diagrams.js`: `recurrence`, `truncation`, `maskstrip`, `axes2`, `routing`, `streams`.
 6. **Results** — every figure and table, each with a reading that says what to look at.
 7. **The code** — the survey, the correspondence table, the divergences, the probe output.
 8. **What the paper does not tell you** — unspecified protocol, absent ablations, numbers that do not reconcile, the authors' own stated limitations kept separate from yours.
@@ -144,4 +150,5 @@ recommendation to adopt. It explains and it marks its evidence. Reviewing is a d
 - `reference/structure.md` — section order and what goes in each
 - `templates/teardown.html` — the report
 - `templates/extract_figures.py`, `templates/build.py` — the pipeline
-- `examples/robottt/` — RoboTTT (arXiv 2607.15275), both languages, with a third-party code survey
+- `examples/robottt/` — RoboTTT (arXiv 2607.15275): no official code, so a third-party reimplementation is surveyed and a defect found at runtime
+- `examples/lingbot-va2/` — LingBot-VA 2.0 (arXiv 2607.08639): official code exists, is well maintained, and implements the *previous* version

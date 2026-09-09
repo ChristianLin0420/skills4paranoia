@@ -110,7 +110,7 @@ Doing the research itself.
 | [`experiment-prereg`](skills/research/experiment-prereg) | Pin the measurement contract and freeze it |
 | [`vla-code-review`](skills/research/vla-code-review) | Hunts the engineering failures that never raise and only make the numbers worse |
 | [`baseline-repro`](skills/research/baseline-repro) | Bisects a gap against a published number and ledgers every axis on which the two setups differ, before anyone says "does not reproduce" |
-| [`paper-teardown`](skills/research/paper-teardown) | Rebuilds a paper as an interactive HTML explainer — compiled maths with every symbol given a provenance, the paper's own figures, and a code survey that runs the code |
+| [`paper-teardown`](skills/research/paper-teardown) | Rebuilds a paper as an interactive HTML explainer — compiled maths with every symbol given a provenance, the paper's own figures, and a code survey that runs the code. Two worked examples: one paper with no official code and a defect found at runtime, one whose official repository turns out to implement the previous version |
 
 Complementary: one covers whether you defined what "right" means, the other whether the code is quietly wrong. `paper-teardown` comes before all of them, when you are still deciding whether a method is worth the compute.
 

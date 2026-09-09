@@ -86,6 +86,10 @@ said from what you concluded — that is the same tier discipline as everywhere 
 Draw where the paper has no figure and the idea has motion or structure that prose handles badly:
 a recurrence, a masking pattern, what is detached from what, a before/after of one design choice.
 
+A figure may hold several images. A LaTeX float that stacks two graphics is **one figure** with one
+number and one reading, and should render that way — `files: [...]` rather than two figure blocks.
+Splitting it produces a figure with no reading attached, which quietly breaks the rule above.
+
 Three rules:
 
 - **Original diagrams are `inferred` unless the paper states the structure.** They are your reading rendered as a picture, and a picture asserts more confidently than a sentence.
