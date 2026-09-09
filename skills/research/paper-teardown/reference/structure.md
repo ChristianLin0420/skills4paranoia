@@ -80,6 +80,44 @@ two figures give 88%, and the paper's "87%" is right if the unrounded values are
 whether any pair of unrounded inputs consistent with the display reproduces the claim before calling
 it an inconsistency. Crying wolf here costs you the section.
 
+## Reading order inside a block
+
+Three rules, all of which were learned by getting them wrong first.
+
+**The figure comes before the algebra, not after it.** A mechanism block that runs
+heading → equation → symbol table → three paragraphs → figure puts the picture 60% of the
+way down, so it arrives after everything it was meant to illustrate. Put it straight after
+the one-line lede: title, what this is in a sentence, the picture, then the maths. Use
+`place: "end"` only for a figure that is a conclusion rather than an orientation.
+
+**The chart shows the shape, the table gives the values.** When a block has both, the chart
+goes first. And a table is an *exhibit* — same frame, same caption treatment, same anchor as
+a figure. A bare table followed by a floating caption followed by an unrelated figure reads
+as though the caption belongs to the figure.
+
+**Cross-references are links.** "Figure 2" and "圖 2" in the prose should jump to the exhibit.
+Number every exhibit, derive its id from that number, and resolve references at load time —
+skipping captions (self-linking), headings, and code. A reference to a figure you did not
+reproduce should stay plain text rather than link somewhere wrong.
+
+## One measure, not three
+
+**The content column is the reading measure. Set it once, on the column.**
+
+Capping prose at `68ch` inside a wider column is the default instinct and it is wrong here:
+paragraphs end at one x, figures and tables at another, captions at a third. The step is
+visible on every single figure, and it is what a reader means by "the text doesn't line up
+with the images".
+
+Measure it rather than eyeballing it — collect the bounding boxes of a paragraph, a figure
+frame, a caption, a table, an equation and a diagram, and assert they share a left and a
+right edge:
+
+```js
+[...document.querySelectorAll("main p, main figure .frame, main figcaption, main table")]
+  .map(n => Math.round(n.getBoundingClientRect().right))   // must be one value
+```
+
 ## 9 · Sources
 
 Every URL, commit SHA, arXiv version and licence, each with the date fetched. A teardown is a claim

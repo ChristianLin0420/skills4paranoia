@@ -29,14 +29,18 @@ a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid rgba(58,
 a:hover{border-bottom-color:var(--accent)}
 a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 h1,h2,h3,h4,h5{margin:0;color:var(--ink)}
-p{margin:0 0 16px;max-width:68ch}
-ul,ol{margin:0 0 18px;padding-left:1.15em;max-width:68ch}
+main > section > * , main > section > div > *{max-width:100%}
+p{margin:0 0 16px}
+ul,ol{margin:0 0 18px;padding-left:1.15em}
 li{margin-bottom:9px}
 li::marker{color:var(--accent-deep)}
 strong,b{font-weight:600;color:var(--ink)}
 em{font-style:italic}
 code{font-family:var(--mono);font-size:.86em;background:var(--wash);padding:1px 6px;color:var(--ink)}
-.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+/* The content column IS the reading measure. Capping prose at 68ch inside a wider
+   column gives figures one right edge and text another, and the step is visible on
+   every figure. One width, applied once, here. */
+.wrap{max-width:1024px;margin:0 auto;padding:0 28px}
 
 /* ---------- masthead ---------- */
 .masthead{border-bottom:1px solid var(--rule);padding:22px 0}
@@ -56,7 +60,7 @@ code{font-family:var(--mono);font-size:.86em;background:var(--wash);padding:1px 
       background:var(--frame);color:var(--muted);border-bottom-width:1px}
 a.chip:hover{border-color:var(--accent);color:var(--accent-deep)}
 .chip.lic{background:var(--wash);border-color:var(--accent-soft);color:var(--accent-deep)}
-.hero .lede{font-size:clamp(1.05rem,1.9vw,1.3rem);line-height:1.6;max-width:60ch;
+.hero .lede{font-size:clamp(1.05rem,1.9vw,1.3rem);line-height:1.6;max-width:38em;
             color:var(--body);margin:0 0 10px}
 
 /* ---------- tier legend + filter ---------- */
@@ -109,11 +113,11 @@ h4{font-size:1rem;font-weight:600;margin:26px 0 8px}
 /* one highlighter only. proper nouns get colour, not a second stripe. */
 .mn{font-weight:600;color:var(--name)}
 .oneline{border-left:4px solid var(--accent);background:var(--wash);padding:18px 22px;
-         margin:0 0 30px;max-width:68ch;font-size:1.06rem;line-height:1.62;
+         margin:0 0 30px;font-size:1.06rem;line-height:1.62;
          color:var(--ink);font-weight:500}
 .oneline b{font-weight:700}
 dl.meta{display:grid;grid-template-columns:auto 1fr;gap:5px 18px;font-size:.87rem;
-        margin:0 0 30px;max-width:66ch}
+        margin:0 0 30px}
 dl.meta dt{color:var(--muted)}
 dl.meta dd{margin:0;color:var(--body)}
 .stats{display:flex;flex-wrap:wrap;gap:0;margin:26px 0 8px;border-top:1px solid var(--rule)}
@@ -122,13 +126,13 @@ dl.meta dd{margin:0;color:var(--body)}
 .stats .v em{font-style:normal;color:var(--accent-deep)}
 .stats .k{font-size:.82rem;color:var(--body);margin-top:5px;line-height:1.45}
 .stats .vs{font-family:var(--mono);font-size:.74rem;color:var(--muted);margin-top:4px;line-height:1.4}
-ol.contrib{list-style:none;padding:0;margin:0 0 8px;max-width:68ch}
+ol.contrib{list-style:none;padding:0;margin:0 0 8px}
 ol.contrib li{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:18px 0;
               border-top:1px solid var(--rule-soft);margin:0}
 ol.contrib li:last-child{border-bottom:1px solid var(--rule-soft)}
 ol.contrib .n{font-weight:600;color:var(--accent-deep);font-size:1.05rem;line-height:1.6}
 ol.contrib b{display:block;margin-bottom:3px}
-.caveat{background:var(--wash);padding:20px 24px;margin:26px 0 0;max-width:70ch}
+.caveat{background:var(--wash);padding:20px 24px;margin:26px 0 0}
 .caveat h4{margin:0 0 10px}
 .caveat ul{margin:0}
 .caveat li{font-size:.94rem}
@@ -164,10 +168,21 @@ a.codeline:hover{background:var(--accent-soft)}
 figure{margin:30px 0 8px}
 figure .frame{border:1px solid var(--rule);padding:14px;background:var(--frame)}
 figure img{cursor:zoom-in}
-figcaption{font-size:.83rem;color:var(--muted);line-height:1.6;margin-top:11px;max-width:78ch}
+figcaption{font-size:.83rem;color:var(--muted);line-height:1.6;margin-top:11px}
 figcaption b{color:var(--ink);font-weight:600}
 figcaption .fnum{font-family:var(--mono);color:var(--faint);margin-right:7px}
-.read{border-left:2px solid var(--accent);padding:2px 0 2px 20px;margin:22px 0 34px;max-width:68ch}
+figure.exhibit .frame{padding:0;overflow:hidden}
+figure.exhibit .tbl{margin:0}
+figure.exhibit table.data{min-width:0}
+figure.exhibit table.data th{padding:13px 16px;background:var(--sunk)}
+figure.exhibit table.data th:first-child,figure.exhibit table.data td:first-child{padding-left:16px}
+figure.exhibit table.data td{padding:13px 16px}
+figure.exhibit table.data tbody tr:last-child td{border-bottom:0}
+a.xref{color:var(--accent-deep);border-bottom:1px dotted rgba(58,97,131,.5);white-space:nowrap}
+a.xref:hover{border-bottom-style:solid;background:var(--wash)}
+figure:target{outline:2px solid var(--accent);outline-offset:6px}
+figure{scroll-margin-top:24px}
+.read{border-left:2px solid var(--accent);padding:2px 0 2px 20px;margin:22px 0 34px}
 .read h5{margin:0 0 10px;font-size:.93rem;font-weight:600}
 .read ul{margin:0;padding-left:1.05em}
 .read li{font-size:.95rem;margin-bottom:8px}
@@ -199,8 +214,7 @@ table.data tr[data-jump]:hover td{background:var(--wash)}
 .ctrl button:hover{border-color:var(--accent);color:var(--accent-deep)}
 .ctrl button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ctrl .cl{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.dia .say{margin-top:14px;font-size:.95rem;line-height:1.62;color:var(--body);
-          max-width:70ch;min-height:3.2em}
+.dia .say{margin-top:14px;font-size:.95rem;line-height:1.62;color:var(--body);min-height:3.2em}
 .dia .say b{color:var(--ink);font-weight:600}
 
 /* ---------- code section ---------- */
@@ -215,7 +229,7 @@ details[open] summary:before{content:"▾ "}
 .vd:last-of-type{border-bottom:1px solid var(--rule-soft)}
 .vd h3{margin:0 0 4px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .vd dl.pair{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:14px 0 0;
-            font-size:.94rem;max-width:70ch}
+            font-size:.94rem}
 .vd dl.pair dt{color:var(--muted);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;
                white-space:nowrap;line-height:1.9}
 .vd dl.pair dd{margin:0;line-height:1.62}
@@ -223,10 +237,10 @@ details[open] summary:before{content:"▾ "}
 /* ---------- sources + footer ---------- */
 table.src{border-collapse:collapse;width:100%;font-size:.87rem}
 table.src td{padding:13px 16px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
-table.src td .note{color:var(--muted);font-size:.83rem;line-height:1.55;margin-top:3px;max-width:70ch}
+table.src td .note{color:var(--muted);font-size:.83rem;line-height:1.55;margin-top:3px}
 table.src td.d{font-family:var(--mono);font-size:.76rem;color:var(--faint);white-space:nowrap;text-align:right}
 footer{border-top:1px solid var(--rule);padding:34px 0 60px;font-size:.85rem;color:var(--muted)}
-footer p{max-width:74ch;margin:0 0 10px}
+footer p{margin:0 0 10px}
 
 @media (max-width:900px){
   body{font-size:16px}
@@ -333,18 +347,32 @@ function figure(f) {
         '<img src="' + ((f.dataUris && f.dataUris[i]) || ("assets/" + fl)) +
         '" alt="' + esc(f.caption || "") + '" loading="lazy"' +
         (i ? ' style="margin-top:8px"' : '') + '>').join("") + '</div>';
-  return '<figure>' + body + '<figcaption><span class="fnum">' + esc(f.num || "") + '</span>' +
+  return '<figure' + (f.num ? ' id="' + exhibitId(f.num) + '"' : "") + '>' + body +
+    '<figcaption><span class="fnum">' + esc(f.num || "") + '</span>' +
     (f.caption || "") + (f.credit ? ' <span style="color:var(--faint)">— ' + esc(f.credit) + '</span>' : "") +
     '</figcaption>' + reading(f.read) + '</figure>';
 }
+// \w does not match CJK, so a naive slug collapses 圖 2 and 表 2 onto the same id.
+// \p{L} with the u flag keeps them distinct. Fig./Tab. are normalised to their long forms
+// so a prose "Fig. 12" resolves to the exhibit captioned "Figure 12".
+const XREF_LONG = {"fig.": "figure", "fig": "figure", "tab.": "table", "tab": "table"};
+function exhibitId(num) {
+  if (!num) return "";
+  const m = String(num).trim().match(/^(\S+?)\s*([A-Za-z]?\.?\d+)$/);
+  if (!m) return "x-" + String(num).replace(/[^\p{L}\p{N}.]+/gu, "-").toLowerCase();
+  const w = m[1].toLowerCase();
+  return "x-" + ((XREF_LONG[w] || w) + "-" + m[2]).replace(/[^\p{L}\p{N}.]+/gu, "-").toLowerCase();
+}
 function dtable(t) {
   if (!t) return "";
-  return '<div class="tbl"><table class="data"><thead><tr>' +
+  return '<figure class="exhibit"' + (t.num ? ' id="' + exhibitId(t.num) + '"' : "") + '>' +
+    '<div class="frame"><div class="tbl"><table class="data"><thead><tr>' +
     t.cols.map(c => '<th>' + esc(c) + '</th>').join("") + '</tr></thead><tbody>' +
     t.rows.map(r => '<tr' + (r.best ? ' class="best"' : '') + '>' +
       r.cells.map((c, i) => '<td' + (i ? ' class="n"' : '') + '>' + esc(c) + '</td>').join("") +
-      '</tr>').join("") + '</tbody></table></div>' +
-    (t.caption ? '<figcaption><span class="fnum">' + esc(t.num || "") + '</span>' + t.caption + '</figcaption>' : "");
+      '</tr>').join("") + '</tbody></table></div></div>' +
+    (t.caption ? '<figcaption><span class="fnum">' + esc(t.num || "") + '</span>' + t.caption + '</figcaption>' : "") +
+    reading(t.read) + '</figure>';
 }
 
 /* ===== mechanism ===== */
@@ -367,10 +395,13 @@ function mech(m) {
     '<h3>' + m.title + ' <span class="eqno" style="display:inline;margin:0">' + esc(m.num || "") + '</span> ' +
       tierTag(m.tier) + '</h3>' +
     (m.lede ? '<p class="oneline">' + m.lede + '</p>' : "") +
+    // the paper's own picture of the mechanism orients the reader before the algebra;
+    // at the end of the block it arrives after everything it was meant to illustrate
+    (m.fig && m.fig.place !== "end" ? figure(m.fig) : "") +
     eqs + syms +
     (m.gloss || []).map(g => '<p>' + g + '</p>').join("") +
     (code ? '<div style="margin:14px 0 0">' + code + '</div>' : "") +
-    figure(m.fig) + '</div>';
+    (m.fig && m.fig.place === "end" ? figure(m.fig) : "") + '</div>';
 }
 
 /* ===== sections ===== */
@@ -417,7 +448,7 @@ if ((TEARDOWN.results || []).length)
     '<div id="' + r.id + '" data-tier="' + (r.tier || "stated") + '" style="scroll-margin-top:20px">' +
     '<h3>' + r.title + ' ' + tierTag(r.tier) + '</h3>' +
     (r.lede ? '<p>' + r.lede + '</p>' : "") +
-    dtable(r.table) + figure(r.fig) +
+    figure(r.fig) + dtable(r.table) +
     (r.after ? '<p>' + r.after + '</p>' : "") + '</div>').join(""));
 
 /* code */
@@ -490,6 +521,36 @@ if (hd) {
     '<div class="ctrl" data-ctrl="' + hd.id + '"></div>' +
     '<div class="say" data-say="' + hd.id + '"></div>';
 }
+
+/* ===== cross-references: make every "Figure 2" / "Table 1" / "圖 2" jump to the exhibit =====
+   Text nodes only -- never inside a caption (self-link), a heading, MathML or an anchor. */
+(function () {
+  const ids = new Set([...document.querySelectorAll("figure[id]")].map(f => f.id));
+  const RX = /((?:Figure|Fig\.|Table|Tab\.|圖|表)\s*)([A-Za-z]?\.?\d+)/g;
+  const skip = n => n.closest("figcaption, h1, h2, h3, h4, h5, a, math, .fnum, code, .pre, nav");
+  const walker = document.createTreeWalker(document.getElementById("body"), NodeFilter.SHOW_TEXT);
+  const jobs = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!RX.test(n.nodeValue)) { RX.lastIndex = 0; continue; }
+    RX.lastIndex = 0;
+    if (skip(n.parentElement)) continue;
+    jobs.push(n);
+  }
+  let linked = 0;
+  for (const n of jobs) {
+    const html = n.nodeValue.replace(RX, (m, word, num) => {
+      const id = exhibitId(word.trim() + " " + num);
+      if (!ids.has(id)) return m;                 // reference to a figure not reproduced here
+      linked++;
+      return '<a class="xref" href="#' + id + '">' + esc(m) + '</a>';
+    });
+    if (html === n.nodeValue) continue;
+    const span = document.createElement("span");
+    span.innerHTML = html;
+    n.parentNode.replaceChild(span, n);
+  }
+  document.documentElement.dataset.xrefs = linked;
+})();
 
 /* ===== nav ===== */
 $("#nav").innerHTML = S.map(s =>
