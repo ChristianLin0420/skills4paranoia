@@ -51,31 +51,53 @@ Or from inside a session:
 /plugin install skills4paranoia
 ```
 
-### Codex and other agents (editable copies)
+### Codex, Cursor, and ~80 other agents
 
 ```bash
-npx skills@latest add ChristianLin0420/skills4paranoia
+npx skills@latest add ChristianLin0420/skills4paranoia --agent codex
 ```
 
-The installer asks which skills and which agents. For just one:
+Skills land in **`.agents/skills/<name>/`**, the shared convention Codex reads natively — it
+scans `.agents/skills` from your working directory up to the repository root, and
+`~/.agents/skills` for personal ones. Add `-g` for the personal location, leave it off for
+this project only. A `skills-lock.json` is written, so `npx skills@latest experimental_install`
+restores the same set later.
+
+Pick individual skills, and **repeat `--agent` per agent — a comma-separated list is rejected**:
 
 ```bash
-npx skills@latest add ChristianLin0420/skills4paranoia --skill research-deck --agent claude-code
+npx skills@latest add ChristianLin0420/skills4paranoia --skill paper-teardown --skill grill-deeper --agent codex --agent cursor -y
 ```
+
+Installing for several agents keeps **one copy** in `.agents/skills/` and symlinks the rest to
+it (`.claude/skills/<name> -> ../../.agents/skills/<name>`), so they cannot drift apart.
+`--list` prints every skill without installing, and passing an invalid `--agent` prints the
+full list of valid ones.
+
+Two things worth knowing before running it. The CLI wants **Node ≥ 22.20**; older versions warn
+and still work. And a skill installs with its whole folder, so `paper-teardown` brings **2.2 MB**
+of worked examples with it — that is what the examples are for, but it is not nothing across
+all twelve.
+
+In Codex, invoke one explicitly with `$paper-teardown`, or describe the task and let it match on
+the description. Skills are for *how to do a kind of work*; `AGENTS.md` is for standing rules
+that apply to everything.
 
 ### Manually
 
 ```bash
 git clone https://github.com/ChristianLin0420/skills4paranoia
-cp -R skills4paranoia/skills/*/* ~/.claude/skills/
+mkdir -p ~/.agents/skills && cp -R skills4paranoia/skills/*/* ~/.agents/skills/
 ```
 
-`skills/*/*` flattens every topic into the agent's skill directory — the agent does not know about topics, the layering exists only in this repo. Copy into a project's `.claude/skills/` to scope it to one project.
+`skills/*/*` flattens every topic into the agent's skill directory — the agent does not know
+about topics, the layering exists only in this repo. Use `~/.claude/skills/` for Claude Code, or
+a project's `.agents/skills/` to scope it to one repository.
 
 ### Updating
 
 ```bash
-npx skills@latest update -g -y
+npx skills@latest update -g -y      # -g personal, -p this project, -y skip the scope prompt
 ```
 
 Or, on the plugin route, `claude plugin marketplace update christianlin0420` then `claude plugin update skills4paranoia`, and restart.
